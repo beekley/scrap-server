@@ -85,6 +85,7 @@ export interface MotherboardPart extends BasePart<"MOTHERBOARD"> {
 
 export interface StorageDevicePart extends BasePart<"STORAGE_DEVICE"> {
   storageCapacity: Storage;
+  ioBandwidth?: Throughput;
 }
 
 export type Part =
@@ -150,8 +151,9 @@ export interface Job {
   description: string;
 
   // Requirements & Bottlenecks
-  workRequired: Operations; // Total operations needed
-  requiredStorage: Storage; // Storage footprint
+  operationsRequired: Operations; // Total operations needed
+  totalSize: Storage; // Total storage footprint
+  workingSetSize: Storage; // Minimum working set storage needed
   ioRatio: DataPerOperation; // IO demand: storage transfer needed per operation (Storage / Operations)
 
   // Rewards
@@ -159,6 +161,7 @@ export interface Job {
   rewardPartIds: string[]; // Hardware drops upon completion
 
   // Runtime Progress
-  workCompleted: Operations; // 0 to workRequired
-  servers: ServerNode[];
+  workCompleted: Operations; // 0 to operationsRequired
+  serverNodeIds?: string[]; // IDs of assigned server nodes (supports multi-node)
+  servers?: ServerNode[]; // Assigned server node objects (supports multi-node)
 }

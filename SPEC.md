@@ -103,7 +103,6 @@ Each of these screens navigable via menu.
 | `ram_1gb` | Generic 1GB DDR Stick | RAM | `DDR_LEGACY` | 0 | 1 GB | 5000 MB/s |
 | `hdd_slow` | 250GB Mechanical HDD | STORAGE | `SATA` | 0 | 0 | 60 MB/s |
 | `psu_200` | Sparky 200W PSU | PSU | `STANDARD_ATX` | 0 | 0 | — |
-| `soc_phone` | Cracked Android Phone | SOC_DEVICE | `SHELF_SPACE` | 35 op/s | 2 GB | 30 MB/s (USB) |
 
 ### Sample Jobs
 
