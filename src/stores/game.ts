@@ -30,6 +30,11 @@ export const useGameStore = defineStore('game', () => {
   
   // Game clock: starts at 0, unit is game-seconds
   const gameTimeSeconds = ref<number>(0);
+  const gameSpeed = ref<number>(1); // 0 (paused), 1 (1x), 4 (4x), 16 (16x)
+
+  function setGameSpeed(speed: number) {
+    gameSpeed.value = speed;
+  }
 
   function getPartFromInventory(partId: string): Part | undefined {
     return inventory.value.find(p => p.id === partId) as Part | undefined;
@@ -138,7 +143,7 @@ export const useGameStore = defineStore('game', () => {
     activeJob.value = null;
   }
 
-  function tick(dtSeconds: number = 60) {
+  function tick(dtSeconds: number = 6) {
     gameTimeSeconds.value += dtSeconds;
 
     if (!activeJob.value || !activeJob.value.serverNodeIds || activeJob.value.serverNodeIds.length === 0) {
@@ -178,6 +183,7 @@ export const useGameStore = defineStore('game', () => {
     selectedServerId,
     cash,
     gameTimeSeconds,
+    gameSpeed,
     getPartFromInventory,
     installRootPart,
     installPart,
@@ -186,6 +192,7 @@ export const useGameStore = defineStore('game', () => {
     addServerNode,
     startJob,
     abortJob,
-    tick
+    tick,
+    setGameSpeed
   };
 });

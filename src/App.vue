@@ -17,10 +17,12 @@ const formattedClock = computed(() => {
 });
 
 onMounted(() => {
-  // Game loop ticks every 1 real-second = 1 game-minute (60 game-seconds)
+  // Game loop ticks every 100ms real-life time = 6 game-seconds * speed multiplier
   ticker = setInterval(() => {
-    gameStore.tick(60);
-  }, 1000);
+    if (gameStore.gameSpeed > 0) {
+      gameStore.tick(6 * gameStore.gameSpeed);
+    }
+  }, 100);
 });
 
 onUnmounted(() => {
@@ -34,7 +36,15 @@ onUnmounted(() => {
       <h1 style="margin: 0;">Scavenged Server Sim</h1>
       <div style="display: flex; gap: 20px; align-items: center;">
         <h2 style="margin: 0; color: green;">Cash: ${{ gameStore.cash }}</h2>
-        <h2 style="margin: 0; color: blue;">{{ formattedClock }}</h2>
+        
+        <div style="display: flex; gap: 5px; align-items: center; margin-left: 20px; background: #eee; padding: 4px 8px; border-radius: 6px;">
+          <button :style="{ fontWeight: gameStore.gameSpeed === 0 ? 'bold' : 'normal' }" @click="gameStore.setGameSpeed(0)">⏸️</button>
+          <button :style="{ fontWeight: gameStore.gameSpeed === 1 ? 'bold' : 'normal' }" @click="gameStore.setGameSpeed(1)">1x</button>
+          <button :style="{ fontWeight: gameStore.gameSpeed === 4 ? 'bold' : 'normal' }" @click="gameStore.setGameSpeed(4)">4x</button>
+          <button :style="{ fontWeight: gameStore.gameSpeed === 16 ? 'bold' : 'normal' }" @click="gameStore.setGameSpeed(16)">16x</button>
+        </div>
+        
+        <h2 style="margin: 0; color: blue; min-width: 150px; text-align: right;">{{ formattedClock }}</h2>
       </div>
     </div>
 

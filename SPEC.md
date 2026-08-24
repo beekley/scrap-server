@@ -98,7 +98,7 @@ The UI consists of a single unified page showing all relevant information simult
 ### 4. Game Clock & Pacing
 
 * The UI features a global game clock (e.g., `Day 1, 00:00`).
-* **Time Scale**: 1 real-life second equals 1 simulation tick, which advances the game clock by 1 game-minute (60 game-seconds).
+* **Time Scale**: The simulation ticks every 100 ms of real-life time, advancing the game clock by 6 game-seconds per tick (maintaining the ratio of 1 real-life second to 1 game-minute / 60 game-seconds).
 * **Job Pacing**: Jobs require large amounts of operations (e.g., 500,000 to 2,000,000 ops) so that they take a few real-life minutes to complete on starter hardware.
 
 ---
