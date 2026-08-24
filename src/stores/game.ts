@@ -2,30 +2,48 @@ import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import * as u from 'safe-units';
 import { s, ops, type Job, type Part, type ServerNode, isPartCompatibleWithSlot } from '../types';
-import { createInitialServer, getJobTemplate, getPartTemplate, sampleJobs } from '../seed';
+import { createInitialServer, getJobTemplate, getPartTemplate } from '../seed';
 import { tickJob, canServerRunJob } from '../simulation';
-
-type ScreenType = 'BOUNTY_BOARD' | 'RACK_ASSEMBLY' | 'LIVE_TELEMETRY' | 'JOB_COMPLETE';
 
 export const useGameStore = defineStore('game', () => {
   const inventory = ref<Part[]>([
-    getPartTemplate('cpu_old') as unknown as Part,
-    getPartTemplate('ram_1gb') as unknown as Part,
-    getPartTemplate('hdd_slow') as unknown as Part,
-    getPartTemplate('psu_200') as unknown as Part,
+    getPartTemplate('case_chassis'),
+    getPartTemplate('mb_trash'),
+    getPartTemplate('cpu_old'),
+    getPartTemplate('ram_1gb'),
+    getPartTemplate('hdd_slow'),
+    getPartTemplate('psu_200'),
+  ]);
+  const servers = ref<ServerNode[]>([createInitialServer()]);
+  
+  const availableJobs = ref<Job[]>([
+    getJobTemplate('job_01'),
+    getJobTemplate('job_02'),
+    getJobTemplate('job_03'),
   ]);
 
-  const servers = ref<ServerNode[]>([createInitialServer()]);
-  const availableJobs = ref<Job[]>(sampleJobs.map(j => getJobTemplate(j.id)));
   const activeJob = ref<Job | null>(null);
+  const selectedJobId = ref<string | null>(null);
+  const selectedServerId = ref<string | null>(servers.value[0].id);
   const cash = ref<number>(0);
-  const currentScreen = ref<ScreenType>('BOUNTY_BOARD');
   
   // Game clock: starts at 0, unit is game-seconds
   const gameTimeSeconds = ref<number>(0);
 
   function getPartFromInventory(partId: string): Part | undefined {
     return inventory.value.find(p => p.id === partId);
+  }
+
+  function installRootPart(serverId: string, inventoryPartId: string) {
+    const server = servers.value.find(s => s.id === serverId);
+    if (!server) return;
+
+    const partIndex = inventory.value.findIndex(p => p.id === inventoryPartId);
+    if (partIndex === -1) return;
+
+    const part = inventory.value[partIndex];
+    inventory.value.splice(partIndex, 1);
+    server.installedParts.push(part);
   }
 
   function installPart(serverId: string, slotId: string, partId: string) {
@@ -83,48 +101,39 @@ export const useGameStore = defineStore('game', () => {
   }
 
   function selectJob(jobId: string) {
-    const job = availableJobs.value.find(j => j.id === jobId);
-    if (job) {
-      activeJob.value = job;
-      currentScreen.value = 'RACK_ASSEMBLY';
-    }
+    selectedJobId.value = jobId;
   }
 
-  function startJob(serverId: string) {
-    if (!activeJob.value) return;
+
+  function addServerNode() {
+    const id = `server_${servers.value.length + 1}`;
+    servers.value.push({
+      id,
+      name: `Scrap Node ${servers.value.length + 1}`,
+      installedParts: []
+    });
+    selectedServerId.value = id;
+  }
+
+  function startJob(serverId: string, jobId: string) {
+    // Only one active job at a time for MVP
+    if (activeJob.value) return;
+
     const server = servers.value.find(s => s.id === serverId);
-    if (!server) return;
+    const jobTpl = availableJobs.value.find(j => j.id === jobId);
+    
+    if (!server || !jobTpl) return;
+    if (!canServerRunJob(server as unknown as ServerNode, jobTpl as unknown as Job)) return;
 
-    if (!canServerRunJob(server as unknown as ServerNode, activeJob.value as unknown as Job)) return;
-
-    activeJob.value.serverNodeIds = [serverId];
-    currentScreen.value = 'LIVE_TELEMETRY';
+    // Clone job for execution
+    const newJob = { ...jobTpl };
+    newJob.serverNodeIds = [serverId];
+    newJob.workCompleted = u.Measure.of(0, ops);
+    activeJob.value = newJob;
   }
 
   function abortJob() {
-    if (activeJob.value) {
-      activeJob.value.workCompleted = u.Measure.of(0, ops);
-      activeJob.value.serverNodeIds = [];
-      currentScreen.value = 'RACK_ASSEMBLY';
-    }
-  }
-
-  function claimReward() {
-    if (!activeJob.value) return;
-    
-    // Grant cash
-    cash.value += activeJob.value.rewardCash;
-
-    // Grant parts
-    activeJob.value.rewardPartIds.forEach(templateId => {
-      inventory.value.push(getPartTemplate(templateId));
-    });
-
-    // Remove job from available list and reset active job
-    availableJobs.value = availableJobs.value.filter(j => j.id !== activeJob.value?.id);
     activeJob.value = null;
-
-    currentScreen.value = 'BOUNTY_BOARD';
   }
 
   function tick(dtSeconds: number = 60) {
@@ -142,10 +151,12 @@ export const useGameStore = defineStore('game', () => {
     const result = tickJob(activeJob.value as unknown as Job, server as unknown as ServerNode, dt);
 
     if (result.isCompleted) {
-      // Only switch screen to JOB_COMPLETE if we are in telemetry or rack
-      if (currentScreen.value === 'LIVE_TELEMETRY' || currentScreen.value === 'RACK_ASSEMBLY') {
-        currentScreen.value = 'JOB_COMPLETE';
+      // Payout
+      cash.value += activeJob.value.rewardCash;
+      for (const partId of activeJob.value.rewardPartIds) {
+        inventory.value.push(getPartTemplate(partId));
       }
+      activeJob.value = null;
     }
   }
 
@@ -154,16 +165,18 @@ export const useGameStore = defineStore('game', () => {
     servers,
     availableJobs,
     activeJob,
+    selectedJobId,
+    selectedServerId,
     cash,
-    currentScreen,
     gameTimeSeconds,
     getPartFromInventory,
+    installRootPart,
     installPart,
     removePart,
     selectJob,
+    addServerNode,
     startJob,
     abortJob,
-    claimReward,
-    tick,
+    tick
   };
 });

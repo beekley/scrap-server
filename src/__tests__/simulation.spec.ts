@@ -23,9 +23,8 @@ import {
   calculateComputeDetails,
   calculateEffectiveComputeRate,
   calculateTotalStorage,
-  findFastestWorkingSetPart,
+  calculateWorkingSetAllocation,
   getJobProgress,
-  getWorkingSetThroughput,
   tickJob,
 } from "../simulation";
 
@@ -139,12 +138,12 @@ describe("Simulation Engine & Job Execution Logic", () => {
       expect(canServerRunJob(smallServer, job)).toBe(false);
     });
 
-    it("should reject a job when total storage is met across multiple small parts but no single part can fit the working set", () => {
+    it("should successfully spill over working set across multiple parts when no single part can fit it", () => {
       const fragmentedServer: ServerNode = {
         id: "frag_node",
         name: "Fragmented Node",
         installedParts: [
-          ram1gb, // 1 GB
+          ram1gb, // 1 GB (5000 MB/s)
           {
             id: "ram_1gb_b",
             name: "Generic 1GB DDR Stick B",
@@ -170,15 +169,16 @@ describe("Simulation Engine & Job Execution Logic", () => {
         title: "2GB Working Set Job",
         description: "Test",
         operationsRequired: u.Measure.of(500, ops),
-        totalSize: u.Measure.of(3, GB), // Server has 3 GB total -> passes total
-        workingSetSize: u.Measure.of(2, GB), // But max single part is 1 GB -> fails working set
+        totalSize: u.Measure.of(3, GB),
+        workingSetSize: u.Measure.of(2, GB),
         ioRatio: u.Measure.of(0.2, megabytesPerOp),
         rewardCash: 50,
         rewardPartIds: [],
         workCompleted: u.Measure.of(0, ops),
       };
 
-      expect(canServerRunJob(fragmentedServer, job)).toBe(false);
+      // It CAN run because working set spills over 1GB + 1GB
+      expect(canServerRunJob(fragmentedServer, job)).toBe(true);
     });
 
     it("should support multi-node storage aggregation for future clustering", () => {
@@ -211,36 +211,58 @@ describe("Simulation Engine & Job Execution Logic", () => {
     });
   });
 
-  describe("Working Set Storage & Throughput Bottleneck Resolution", () => {
-    it("should select the fastest capable part when multiple parts fit the working set", () => {
-      // 1GB RAM (5000 MB/s) and 250GB HDD (60 MB/s) both fit 500 MB working set
+  describe("Working Set Storage Allocation & Harmonic Mean", () => {
+    it("should allocate working set entirely to fastest part if it fits", () => {
+      // 500MB working set fits in 1GB RAM (5000 MB/s)
       const workingSet500MB = u.Measure.of(500, u.mega(B));
-      const fastest = findFastestWorkingSetPart(standardServer, workingSet500MB);
-
-      expect(fastest).not.toBeNull();
-      expect(fastest?.part.id).toBe("ram_1gb");
-      expect(getWorkingSetThroughput(standardServer, workingSet500MB).value).toBe(
-        5000 * 1000 * 1000
-      );
+      
+      const alloc = calculateWorkingSetAllocation(standardServer, workingSet500MB);
+      expect(alloc).not.toBeNull();
+      expect(alloc!.length).toBe(1);
+      expect(alloc![0].part.id).toBe("ram_1gb");
+      expect(alloc![0].fraction).toBe(1.0);
     });
 
-    it("should fall back to slower HDD when RAM is too small to fit the working set", () => {
-      // 2GB working set does NOT fit 1GB RAM, must use 250GB HDD (60 MB/s)
+    it("should spill over from RAM to HDD and calculate harmonic mean effective bandwidth", () => {
+      // 2GB working set: 1GB RAM (5000 MB/s) + 1GB HDD (60 MB/s)
       const workingSet2GB = u.Measure.of(2, GB);
-      const fastest = findFastestWorkingSetPart(standardServer, workingSet2GB);
+      const alloc = calculateWorkingSetAllocation(standardServer, workingSet2GB);
 
-      expect(fastest).not.toBeNull();
-      expect(fastest?.part.id).toBe("hdd_slow");
-      expect(getWorkingSetThroughput(standardServer, workingSet2GB).value).toBe(
-        60 * 1000 * 1000
-      );
+      expect(alloc).not.toBeNull();
+      expect(alloc!.length).toBe(2);
+      expect(alloc![0].part.id).toBe("ram_1gb");
+      expect(alloc![0].fraction).toBe(0.5);
+      
+      expect(alloc![1].part.id).toBe("hdd_slow");
+      expect(alloc![1].fraction).toBe(0.5);
+
+      // Now test harmonic mean throughput in compute details
+      const job: Job = {
+        id: "job_spill",
+        title: "Spillover",
+        description: "Test",
+        operationsRequired: u.Measure.of(500, ops),
+        totalSize: u.Measure.of(10, GB),
+        workingSetSize: u.Measure.of(2, GB),
+        ioRatio: u.Measure.of(1, megabytesPerOp), // 1 MB per op for easy math
+        rewardCash: 50,
+        rewardPartIds: [],
+        workCompleted: u.Measure.of(0, ops),
+      };
+
+      const details = calculateComputeDetails(standardServer, job);
+      // Harmonic mean: 1 / (0.5/5000 + 0.5/60) = 1 / (0.0001 + 0.008333333333333333) = 118.577 MB/s
+      // ioLimit = 118.577 MB/s / 1 MB/op = 118.577 op/s
+      // The CPU is 50 op/s, so we should NOT be I/O bottlenecked! (CPU Limit)
+      expect(details.isIoBottlenecked).toBe(false);
+      expect(details.effectiveComputeRate.value).toBe(50);
+      expect(details.workingSetThroughput.value).toBeCloseTo(118.577 * 1000 * 1000, -5);
     });
 
-    it("should return 0 B/s throughput when no part can fit the working set", () => {
+    it("should return null allocation when no parts can fit the working set combined", () => {
       const workingSet500GB = u.Measure.of(500, GB);
-      const throughput = getWorkingSetThroughput(standardServer, workingSet500GB);
-
-      expect(throughput.value).toBe(0);
+      const alloc = calculateWorkingSetAllocation(standardServer, workingSet500GB);
+      expect(alloc).toBeNull();
     });
   });
 
@@ -289,8 +311,8 @@ describe("Simulation Engine & Job Execution Logic", () => {
 
       const details = calculateComputeDetails(standardServer, job);
       expect(details.isIoBottlenecked).toBe(true);
-      expect(details.effectiveComputeRate.value).toBe(24);
-      expect(calculateEffectiveComputeRate(standardServer, job).value).toBe(24);
+      expect(details.effectiveComputeRate.value).toBeCloseTo(47.4308, 3);
+      expect(calculateEffectiveComputeRate(standardServer, job).value).toBeCloseTo(47.4308, 3);
     });
 
     it("should aggregate compute across multiple CPUs across nodes for future scaling", () => {

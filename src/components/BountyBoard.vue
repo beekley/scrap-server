@@ -5,23 +5,33 @@ const gameStore = useGameStore();
 </script>
 
 <template>
-  <div>
+  <div style="border-top: 2px solid #ccc; padding-top: 20px; margin-top: 20px;">
     <h2>Bounty Board</h2>
     <div v-if="gameStore.availableJobs.length === 0">
       <p>No jobs available.</p>
     </div>
-    <ul v-else>
-      <li v-for="job in gameStore.availableJobs" :key="job.id" style="border: 1px solid black; margin-bottom: 10px; padding: 10px;">
-        <h3>{{ job.title }}</h3>
-        <p>{{ job.description }}</p>
-        <p><strong>Operations:</strong> {{ job.operationsRequired.value.toLocaleString() }} op</p>
-        <p><strong>Working Set:</strong> {{ job.workingSetSize.value / 1e9 }} GB</p>
-        <p><strong>Total Size:</strong> {{ job.totalSize.value / 1e9 }} GB</p>
-        <p><strong>IO Ratio:</strong> {{ (job.ioRatio.value / 1e6).toFixed(3) }} MB/op</p>
-        <p><strong>Reward Cash:</strong> ${{ job.rewardCash }}</p>
-        <p><strong>Reward Parts:</strong> {{ job.rewardPartIds.join(', ') }}</p>
-        <button @click="gameStore.selectJob(job.id)">Select Job</button>
-      </li>
-    </ul>
+    <div v-else style="display: flex; gap: 15px; overflow-x: auto; padding-bottom: 10px;">
+      <div 
+        v-for="job in gameStore.availableJobs" 
+        :key="job.id" 
+        class="job-card"
+        style="border: 2px solid; min-width: 300px; padding: 15px; border-radius: 8px; cursor: pointer; transition: all 0.2s ease;"
+        :style="{ borderColor: gameStore.selectedJobId === job.id ? 'blue' : '#ccc', backgroundColor: gameStore.selectedJobId === job.id ? '#f0f8ff' : 'white' }"
+        @click="gameStore.selectJob(job.id)"
+      >
+        <h3 style="margin-top: 0; color: #333;">{{ job.title }}</h3>
+        <p style="font-style: italic; color: #666; margin-bottom: 15px;">{{ job.description }}</p>
+        <div style="font-size: 0.9em;">
+          <p style="margin: 4px 0;"><strong>Operations:</strong> {{ job.operationsRequired.value.toLocaleString() }} op</p>
+          <p style="margin: 4px 0;"><strong>Working Set:</strong> {{ job.workingSetSize.value / 1e9 }} GB</p>
+          <p style="margin: 4px 0;"><strong>Total Size:</strong> {{ job.totalSize.value / 1e9 }} GB</p>
+          <p style="margin: 4px 0;"><strong>IO Ratio:</strong> {{ (job.ioRatio.value / 1e6).toFixed(3) }} MB/op</p>
+        </div>
+        <div style="margin-top: 15px; padding-top: 10px; border-top: 1px dashed #ccc;">
+          <p style="margin: 4px 0; color: green; font-weight: bold;">Reward Cash: ${{ job.rewardCash }}</p>
+          <p style="margin: 4px 0;"><strong>Reward Parts:</strong> {{ job.rewardPartIds.join(', ') }}</p>
+        </div>
+      </div>
+    </div>
   </div>
 </template>

@@ -3,8 +3,7 @@ import { onMounted, onUnmounted, computed } from 'vue';
 import { useGameStore } from './stores/game';
 import BountyBoard from './components/BountyBoard.vue';
 import RackAssembly from './components/RackAssembly.vue';
-import LiveTelemetry from './components/LiveTelemetry.vue';
-import JobComplete from './components/JobComplete.vue';
+import TelemetryCard from './components/TelemetryCard.vue';
 
 const gameStore = useGameStore();
 let ticker: ReturnType<typeof setInterval>;
@@ -30,23 +29,29 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div style="font-family: sans-serif; padding: 20px;">
-    <div style="display: flex; justify-content: space-between; align-items: baseline;">
-      <h1>Scavenged Server Sim</h1>
-      <h2 style="color: blue;">{{ formattedClock }}</h2>
-    </div>
-    
-    <div style="margin-bottom: 20px; border-bottom: 1px solid #ccc; padding-bottom: 10px;">
-      <strong>Debug Nav:</strong>
-      <button @click="gameStore.currentScreen = 'BOUNTY_BOARD'">Bounty Board</button>
-      <button @click="gameStore.currentScreen = 'RACK_ASSEMBLY'">Rack Assembly</button>
-      <span style="margin-left: 20px; font-weight: bold; color: green;">Cash: ${{ gameStore.cash }}</span>
+  <div style="font-family: sans-serif; padding: 20px; max-width: 1400px; margin: 0 auto;">
+    <div style="display: flex; justify-content: space-between; align-items: baseline; border-bottom: 2px solid #ccc; margin-bottom: 20px; padding-bottom: 10px;">
+      <h1 style="margin: 0;">Scavenged Server Sim</h1>
+      <div style="display: flex; gap: 20px; align-items: center;">
+        <h2 style="margin: 0; color: green;">Cash: ${{ gameStore.cash }}</h2>
+        <h2 style="margin: 0; color: blue;">{{ formattedClock }}</h2>
+      </div>
     </div>
 
-    <!-- Active Screen -->
-    <BountyBoard v-if="gameStore.currentScreen === 'BOUNTY_BOARD'" />
-    <RackAssembly v-else-if="gameStore.currentScreen === 'RACK_ASSEMBLY'" />
-    <LiveTelemetry v-else-if="gameStore.currentScreen === 'LIVE_TELEMETRY'" />
-    <JobComplete v-else-if="gameStore.currentScreen === 'JOB_COMPLETE'" />
+    <!-- Main Content -->
+    <div style="display: flex; gap: 20px;">
+      <!-- Left Column: Rack Assembly -->
+      <div style="flex: 2;">
+        <RackAssembly />
+      </div>
+
+      <!-- Right Column: Telemetry -->
+      <div style="flex: 1; min-width: 300px;">
+        <TelemetryCard />
+      </div>
+    </div>
+
+    <!-- Bottom Row: Bounty Board -->
+    <BountyBoard />
   </div>
 </template>

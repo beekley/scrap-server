@@ -27,42 +27,37 @@ export interface JobTickResult {
 /**
  * Detailed telemetry on node compute rate and bottlenecks.
  */
+export interface WorkingSetAllocation {
+  part: Part;
+  allocatedStorage: Storage;
+  fraction: number; // 0.0 to 1.0
+  bandwidth: Throughput;
+}
+
 export interface NodeComputeDetails {
   totalCpuCompute: OperationsPerSecond;
   workingSetThroughput: Throughput;
   ioLimitCompute: OperationsPerSecond;
   effectiveComputeRate: OperationsPerSecond;
   isIoBottlenecked: boolean;
-  activeStoragePart: Part | null;
+  workingSetAllocation: WorkingSetAllocation[] | null;
 }
 
-/**
- * Storage part info normalized for capacity and bandwidth comparisons.
- */
 export interface StoragePartCandidate {
   part: Part;
   capacity: Storage;
   bandwidth: Throughput;
 }
 
-/**
- * Helper to normalize a single server or an array of servers into an array.
- */
 export function normalizeServers(serverOrServers: ServerNode | ServerNode[]): ServerNode[] {
   return Array.isArray(serverOrServers) ? serverOrServers : [serverOrServers];
 }
 
-/**
- * Extracts all installed parts across the given server node(s).
- */
 export function getAllParts(serverOrServers: ServerNode | ServerNode[]): Part[] {
   const servers = normalizeServers(serverOrServers);
   return servers.flatMap((server) => server.installedParts || []);
 }
 
-/**
- * Calculates the total aggregate storage capacity (RAM + Drives) across server node(s).
- */
 export function calculateTotalStorage(serverOrServers: ServerNode | ServerNode[]): Storage {
   const parts = getAllParts(serverOrServers);
   let total: Storage = u.Measure.of(0, B);
@@ -78,9 +73,6 @@ export function calculateTotalStorage(serverOrServers: ServerNode | ServerNode[]
   return total;
 }
 
-/**
- * Collects all storage-capable parts (RAM, STORAGE, STORAGE_DEVICE) across the server node(s).
- */
 export function getStorageCapableParts(
   serverOrServers: ServerNode | ServerNode[]
 ): StoragePartCandidate[] {
@@ -112,64 +104,52 @@ export function getStorageCapableParts(
   return candidates;
 }
 
-/**
- * Finds the single fastest storage part capable of holding the required working set size.
- * Returns null if no single part has enough capacity.
- */
-export function findFastestWorkingSetPart(
+export function calculateWorkingSetAllocation(
   serverOrServers: ServerNode | ServerNode[],
   workingSetSize: Storage
-): StoragePartCandidate | null {
+): WorkingSetAllocation[] | null {
   const candidates = getStorageCapableParts(serverOrServers);
-  const fittingCandidates = candidates.filter((candidate) =>
-    candidate.capacity.gte(workingSetSize)
-  );
+  
+  // Sort descending by bandwidth
+  candidates.sort((a, b) => b.bandwidth.value - a.bandwidth.value);
 
-  if (fittingCandidates.length === 0) {
-    return null;
+  const allocations: WorkingSetAllocation[] = [];
+  let remaining = workingSetSize.value;
+
+  for (const candidate of candidates) {
+    if (remaining <= 0) break;
+    
+    const allocate = Math.min(candidate.capacity.value, remaining);
+    if (allocate > 0) {
+      allocations.push({
+        part: candidate.part,
+        allocatedStorage: u.Measure.of(allocate, B),
+        fraction: allocate / workingSetSize.value,
+        bandwidth: candidate.bandwidth
+      });
+      remaining -= allocate;
+    }
   }
 
-  // Find candidate with maximum bandwidth
-  return fittingCandidates.reduce((fastest, current) =>
-    current.bandwidth.gt(fastest.bandwidth) ? current : fastest
-  );
+  // If we couldn't satisfy the whole working set, return null
+  if (remaining > 1e-9) return null; // Small epsilon for float math
+
+  return allocations;
 }
 
-/**
- * Determines the I/O throughput (in B/s, MB/s) available for a job's working set on the server(s).
- * If no storage part can fit the working set, returns 0 B/s.
- */
-export function getWorkingSetThroughput(
-  serverOrServers: ServerNode | ServerNode[],
-  jobOrWorkingSetSize: Job | Storage
-): Throughput {
-  const workingSetSize =
-    "workingSetSize" in jobOrWorkingSetSize
-      ? jobOrWorkingSetSize.workingSetSize
-      : jobOrWorkingSetSize;
-
-  const candidate = findFastestWorkingSetPart(serverOrServers, workingSetSize);
-  return candidate ? candidate.bandwidth : u.Measure.of(0, bytesPerSecond);
-}
-
-/**
- * Checks if the given server node(s) have sufficient total storage and working set capacity for a job.
- */
 export function canServerRunJob(
   serverOrServers: ServerNode | ServerNode[],
   job: Job
 ): boolean {
   const totalStorage = calculateTotalStorage(serverOrServers);
   const hasSufficientTotalStorage = totalStorage.gte(job.totalSize);
-  const fastestPart = findFastestWorkingSetPart(serverOrServers, job.workingSetSize);
-  const hasSufficientWorkingSet = fastestPart !== null;
+  
+  const allocation = calculateWorkingSetAllocation(serverOrServers, job.workingSetSize);
+  const hasSufficientWorkingSet = allocation !== null;
 
   return hasSufficientTotalStorage && hasSufficientWorkingSet;
 }
 
-/**
- * Calculates detailed compute rate and bottleneck information for a job running on server node(s).
- */
 export function calculateComputeDetails(
   serverOrServers: ServerNode | ServerNode[],
   job: Job
@@ -183,36 +163,47 @@ export function calculateComputeDetails(
     }
   }
 
-  const fastestCandidate = findFastestWorkingSetPart(serverOrServers, job.workingSetSize);
-  const workingSetThroughput = fastestCandidate
-    ? fastestCandidate.bandwidth
-    : u.Measure.of(0, bytesPerSecond);
+  const allocation = calculateWorkingSetAllocation(serverOrServers, job.workingSetSize);
 
-  if (!canServerRunJob(serverOrServers, job) || !fastestCandidate || totalCpuCompute.value === 0) {
+  if (!canServerRunJob(serverOrServers, job) || !allocation || totalCpuCompute.value === 0) {
     return {
       totalCpuCompute,
-      workingSetThroughput,
+      workingSetThroughput: u.Measure.of(0, bytesPerSecond),
       ioLimitCompute: u.Measure.of(0, opsPerSecond),
       effectiveComputeRate: u.Measure.of(0, opsPerSecond),
       isIoBottlenecked: false,
-      activeStoragePart: fastestCandidate ? fastestCandidate.part : null,
+      workingSetAllocation: allocation,
     };
   }
 
-  // If job has 0 io demand, CPU is never bottlenecked by IO
+  let effectiveBandwidthVal = 0;
   if (job.ioRatio.value === 0) {
-    return {
-      totalCpuCompute,
-      workingSetThroughput,
-      ioLimitCompute: u.Measure.of(Infinity, opsPerSecond),
-      effectiveComputeRate: totalCpuCompute,
-      isIoBottlenecked: false,
-      activeStoragePart: fastestCandidate.part,
-    };
+    // Arbitrarily high if IO doesn't matter
+    effectiveBandwidthVal = Infinity;
+  } else {
+    // Harmonic mean for effective bandwidth: 1 / Sum(Fraction_i / Bandwidth_i)
+    let sumInverse = 0;
+    for (const alloc of allocation) {
+      if (alloc.bandwidth.value > 0) {
+        sumInverse += alloc.fraction / alloc.bandwidth.value;
+      } else {
+        // If any part of the working set is on a 0-bandwidth device, throughput is 0
+        sumInverse = Infinity;
+        break;
+      }
+    }
+    effectiveBandwidthVal = sumInverse > 0 ? 1 / sumInverse : 0;
   }
 
-  // Calculate IO-limited compute rate: Throughput / DataPerOperation = OperationsPerSecond
-  const ioLimitCompute: OperationsPerSecond = workingSetThroughput.over(job.ioRatio);
+  const workingSetThroughput = u.Measure.of(effectiveBandwidthVal, bytesPerSecond);
+  
+  let ioLimitCompute: OperationsPerSecond;
+  if (job.ioRatio.value === 0) {
+    ioLimitCompute = u.Measure.of(Infinity, opsPerSecond);
+  } else {
+    ioLimitCompute = workingSetThroughput.over(job.ioRatio);
+  }
+
   const isIoBottlenecked = ioLimitCompute.lt(totalCpuCompute);
   const effectiveComputeRate = isIoBottlenecked ? ioLimitCompute : totalCpuCompute;
 
@@ -222,7 +213,7 @@ export function calculateComputeDetails(
     ioLimitCompute,
     effectiveComputeRate,
     isIoBottlenecked,
-    activeStoragePart: fastestCandidate.part,
+    workingSetAllocation: allocation,
   };
 }
 

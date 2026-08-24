@@ -21,11 +21,17 @@ The execution loop updates at a fixed tick rate (e.g., 1 ticks per minute, `dt =
 
 Jobs have two storage requirements:
 1. **Total Size**: The total amount of data the job entails. The server must have enough total storage capacity (RAM + Drives) to fit this.
-2. **Working Set Size**: The minimum continuous block of storage needed to actively do the computation. This must fit in the server's storage and will determine the I/O bottleneck.
+2. **Working Set Size**: The minimum continuous block of storage needed to actively do the computation.
 
-$$\text{HasSufficientStorage} = \text{Node.totalStorageCapacity} \ge \text{Job.totalSize}$$
+$$\text{HasSufficientStorage} = \text{Node.totalStorageCapacity} \ge \text{Job.totalSize} \text{ and } \text{Node.totalStorageCapacity} \ge \text{Job.workingSetSize}$$
 
-*Note: For the MVP, we assume the working set is optimally placed on the fastest available storage that can fit it (e.g. RAM if it fits, falling back to a fast SSD, or a slow HDD).*
+**Working Set Allocation (Spillover)**: 
+The working set is loaded greedily into the fastest available storage components first (sorted by I/O bandwidth). If the working set exceeds the capacity of the fastest component (e.g., RAM), it spills over into the next fastest components (e.g., SSDs, then HDDs).
+
+Because the CPU must fetch data from these various sources, the overall I/O bottleneck is determined by the **weighted harmonic mean** of the bandwidths, simulating sequential wait times for memory pages:
+
+$$\text{Effective Throughput} = \frac{1}{\sum \frac{V_i}{\text{Bandwidth}_i}}$$
+*(Where $V_i$ is the fraction of the working set stored on component $i$)*
 
 ### Job Progression
 
@@ -60,35 +66,40 @@ To keep the MVP lightweight without sacrificing the assembly puzzle, compatibili
 
 ## UI & State Flow
 
-Each of these screens navigable via menu.
+The UI consists of a single unified page showing all relevant information simultaneously, rather than navigating between distinct screens.
 
-### Screen 1: Bounty Board
+### 1. Rack & Assembly View (Top Section)
 
-* Displays a list of 3–5 available jobs.
-* Each card highlights: Work Volume ($op$), Working Set ($GB$), Total Size ($GB$), IO Intensity ($MB/op$), and Rewards.
-* Action: **Select Job** -> moves to Server Node allocation, where the player chooses a valid server node to start running.
+* **Player Inventory**: Displays unassigned parts available for assembly.
+* **Server Nodes**: 
+  * Players can create additional server nodes in their rack.
+  * A newly created server node starts completely empty.
+  * The player must first install a `CASE`, which provides slots for a `MOTHERBOARD`, which then provides sockets for `CPU`, `RAM`, `STORAGE`, and `PSU`.
+  * **Validity Check**: If an active job is selected, each server node displays a small check indicating whether it passes the `isServerValid` (`canServerRunJob`) requirements to run that specific job.
+  * **Interactions**: Dropdown menus or clicks to insert/remove parts into compatible slots.
+  * **Live Progress**: If a job is running on a server node, the progress bar and current status are displayed directly on that server node's card.
+  * While a job is running on a node, its part slots are locked (disabled).
 
-### Screen 2: Rack & Assembly View
+### 2. Telemetry Card (Visible on Node Selection)
 
-* Left Panel: Player Inventory (unassigned parts).
-* Center Panel: Selected `ServerNode` showing available physical slots.
-* Right Panel: Node telemetry preview:
-* Aggregated Compute ($op/s$)
-* Total RAM ($GB$) & Storage ($GB$)
-* Interactions: Drag or click to insert/remove parts into compatible slots.
+* The telemetry card is only visible when a specific server node is selected.
+* It displays real-time execution gauges for the selected node:
+  * Live compute rate ($op/s$) and active bottleneck indicator (e.g., `Bottleneck: Storage IO (SATA 60 MB/s)` or `Bottleneck: CPU Limit`).
+  * CPU, RAM, and Storage capacity and utilization.
+* Actions: **Start Job** (if valid and not running), **Abort Job** (if running).
 
-### Screen 3: Live Telemetry & Execution
+### 3. Bounty Board (Bottom Section)
 
-* Displays active execution gauges:
-* Progress Bar: $0\% \to 100\%$
-* Real-Time Compute Rate ($op/s$) with active bottleneck indicator (e.g., `Bottleneck: Storage IO (SATA 150 MB/s)` or `Bottleneck: CPU (50 op/s)`).
-* Actions: **Abort Job**
+* Displays a list of available jobs in a card below the rack assembly.
+* Each job highlights: Work Volume ($op$), Working Set ($GB$), Total Size ($GB$), IO Intensity ($MB/op$), and Rewards.
+* Action: **Select Job** -> sets the job as the active target for the rack assembly validity checks.
+* When a job completes, a payout notification is shown and rewards (cash/parts) are added to the inventory.
 
-### Screen 4: Job Complete / Payout
+### 4. Game Clock & Pacing
 
-* Triggered when `workCompleted >= operationsRequired`.
-* Displays rewards earned (scrap parts added to inventory + cash).
-* Action: **Return to Rack** to integrate new parts.
+* The UI features a global game clock (e.g., `Day 1, 00:00`).
+* **Time Scale**: 1 real-life second equals 1 simulation tick, which advances the game clock by 1 game-minute (60 game-seconds).
+* **Job Pacing**: Jobs require large amounts of operations (e.g., 500,000 to 2,000,000 ops) so that they take a few real-life minutes to complete on starter hardware.
 
 ---
 
@@ -98,7 +109,8 @@ Each of these screens navigable via menu.
 
 | ID | Name | Type | Socket / Target | Compute | RAM | IO Speed |
 | --- | --- | --- | --- | --- | --- | --- |
-| `mb_trash` | Salvaged OEM Board | MOTHERBOARD | — | 0 | 0 | 150 MB/s (SATA) |
+| `case_chassis` | Rusty Tower | CASE | `TOWER` | 0 | 0 | — |
+| `mb_trash` | Salvaged OEM Board | MOTHERBOARD | `CHASSIS_MOUNT` | 0 | 0 | 150 MB/s (SATA) |
 | `cpu_old` | Dual-Core E-Waste CPU | CPU | `SOCKET_V1` | 50 op/s | 0 | — |
 | `ram_1gb` | Generic 1GB DDR Stick | RAM | `DDR_LEGACY` | 0 | 1 GB | 5000 MB/s |
 | `hdd_slow` | 250GB Mechanical HDD | STORAGE | `SATA` | 0 | 0 | 60 MB/s |
@@ -106,11 +118,11 @@ Each of these screens navigable via menu.
 
 ### Sample Jobs
 
-| ID | Title | Required Work | Working Set | Total Size | IO Ratio | Reward Cash | Reward Drops |
+| ID | Title | Required Work | Working Set | Total Size | IO Ratio | Reward Drops |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `job_01` | Recover Corrupted Text Archive | 500 op | 1 GB | 10 GB | 0.2 MB/op (Low IO) | $50 | 1x `ram_1gb` |
-| `job_02` | Brute-Force Password Dump | 1,500 op | 1 GB | 2 GB | 0.01 MB/op (Compute Bound) | $120 | 1x `cpu_old` |
-| `job_03` | Scrape Video Metadata | 2,000 op | 2 GB | 50 GB | 2.5 MB/op (IO Bound) | $250 | 1x `psu_200`, 1x `mb_trash` |
+| `job_01` | Recover Corrupted Text Archive | 50,000 op | 1 GB | 10 GB | 0.2 MB/op (Low IO) | 1x `ram_1gb` |
+| `job_02` | Brute-Force Password Dump | 1,500,000 op | 1 GB | 2 GB | 0.01 MB/op (Compute Bound) | 1x `cpu_old` |
+| `job_03` | Scrape Video Metadata | 500,000 op | 2 GB | 50 GB | 2.5 MB/op (IO Bound) | 1x `psu_200`, 1x `mb_trash` |
 
 ---
 

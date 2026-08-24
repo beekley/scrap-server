@@ -80,6 +80,9 @@ export const sampleParts: Part[] = [
     kind: "CASE",
     socketTag: "TOWER",
     powerDraw: u.Measure.of(0, W),
+    slots: [
+      { id: "mb_0", label: "Motherboard Tray", acceptsKind: "MOTHERBOARD", socketTag: "CHASSIS_MOUNT" }
+    ]
   }
 ];
 
@@ -113,29 +116,31 @@ export const sampleJobs: Job[] = [
     id: "job_01",
     title: "Recover Corrupted Text Archive",
     description: "Low IO Job",
-    operationsRequired: u.Measure.of(500000, ops),
+    operationsRequired: u.Measure.of(50000, ops),
     workingSetSize: u.Measure.of(1, GB),
     totalSize: u.Measure.of(10, GB),
     ioRatio: u.Measure.of(0.2, megabytesPerOp),
     rewardCash: 50,
     rewardPartIds: ["ram_1gb"],
+    workCompleted: u.Measure.of(0, ops),
   },
   {
     id: "job_02",
     title: "Brute-Force Password Dump",
     description: "Compute Bound",
-    operationsRequired: u.Measure.of(1500000, ops),
+    operationsRequired: u.Measure.of(150000, ops),
     workingSetSize: u.Measure.of(1, GB),
     totalSize: u.Measure.of(2, GB),
     ioRatio: u.Measure.of(0.01, megabytesPerOp),
     rewardCash: 120,
     rewardPartIds: ["cpu_old"],
+    workCompleted: u.Measure.of(0, ops),
   },
   {
     id: "job_03",
     title: "Scrape Video Metadata",
     description: "IO Bound",
-    operationsRequired: u.Measure.of(500000, ops),
+    operationsRequired: u.Measure.of(50000, ops),
     workingSetSize: u.Measure.of(2, GB),
     totalSize: u.Measure.of(50, GB),
     ioRatio: u.Measure.of(2.5, megabytesPerOp),
@@ -169,10 +174,7 @@ export function getJobTemplate(id: string): Job {
 export function createInitialServer(): ServerNode {
   return {
     id: "server_01",
-    name: "Scrap Rack",
-    installedParts: [
-      getPartTemplate("case_chassis"),
-      getPartTemplate("mb_trash"),
-    ],
+    name: "Scrap Node 1",
+    installedParts: [],
   };
 }
