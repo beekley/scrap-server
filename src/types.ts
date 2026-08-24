@@ -16,18 +16,16 @@ export * from "./units";
 export type CpuSocketTag = "SOCKET_V1" | "SOCKET_V2" | "LGA1155" | "AM4" | (string & {});
 export type RamSocketTag = "DDR_LEGACY" | "DDR_MODERN" | "DDR3" | "DDR4" | (string & {});
 export type StorageSocketTag = "SATA" | "NVME" | "IDE" | "USB" | (string & {});
-export type BusSocketTag = "PCIE" | "PCIE_X16" | "PCIE_X4" | "PCIE_X1" | (string & {});
 export type PowerSocketTag = "STANDARD_ATX" | "PROPRIETARY_12VO" | (string & {});
-export type FanSocketTag = "CHASSIS_FAN" | "CHASSIS_FAN_3PIN" | "CHASSIS_FAN_4PIN" | (string & {});
 export type MotherboardSocketTag = "CHASSIS_MOUNT" | "STANDOFF" | (string & {});
+export type CaseSocketTag = "RACKMOUNT_1U" | "RACKMOUNT_2U" | "RACKMOUNT_4U" | "TOWER" | "DESKTOP" | "SHELF" | (string & {});
 
 export interface SocketTagMap {
+  CASE: CaseSocketTag;
   CPU: CpuSocketTag;
   RAM: RamSocketTag;
   STORAGE: StorageSocketTag;
-  GPU: BusSocketTag;
   PSU: PowerSocketTag;
-  FAN: FanSocketTag;
   MOTHERBOARD: MotherboardSocketTag;
   STORAGE_DEVICE: StorageSocketTag;
 }
@@ -59,6 +57,10 @@ export interface BasePart<K extends PartKind = PartKind> {
   slots?: SlotDefinition[]; // Sockets/slots this part provides (e.g. on a motherboard or chassis)
 }
 
+export interface CasePart extends BasePart<"CASE"> {
+  slots?: SlotDefinition[];
+}
+
 export interface CpuPart extends BasePart<"CPU"> {
   computeRate: OperationsPerSecond; // Base Compute Units per second (CU/s)
 }
@@ -77,18 +79,8 @@ export interface PsuPart extends BasePart<"PSU"> {
   powerCapacity: Power; // Max power supplied in Watts (for PSUs)
 }
 
-export interface FanPart extends BasePart<"FAN"> {
-  coolingPower: Power; // Heat dissipation capacity
-}
-
 export interface MotherboardPart extends BasePart<"MOTHERBOARD"> {
   slots: SlotDefinition[]; // Motherboard always provides slots for CPU, RAM, etc.
-}
-
-export interface GpuPart extends BasePart<"GPU"> {
-  computeRate: OperationsPerSecond; // GPU compute rate in operations per second
-  memoryCapacity: Storage; // VRAM capacity
-  ioBandwidth: Throughput; // Max transfer speed (B/s)
 }
 
 export interface StorageDevicePart extends BasePart<"STORAGE_DEVICE"> {
@@ -96,19 +88,18 @@ export interface StorageDevicePart extends BasePart<"STORAGE_DEVICE"> {
 }
 
 export type Part =
+  | CasePart
   | CpuPart
   | RamPart
   | StoragePart
   | PsuPart
-  | FanPart
   | MotherboardPart
-  | GpuPart
   | StorageDevicePart;
 
 export type PartOfKind<K extends PartKind> = Extract<Part, { kind: K }>;
 
 // ==========================================
-// Compatibility Helpers
+// Compatibility & Validation Helpers
 // ==========================================
 
 export function isPartCompatibleWithSlot<K extends PartKind>(
@@ -116,6 +107,27 @@ export function isPartCompatibleWithSlot<K extends PartKind>(
   slot: SlotDefinition<K>
 ): part is PartOfKind<K> {
   return part.kind === slot.acceptsKind && part.socketTag === slot.socketTag;
+}
+
+/**
+ * Validates whether a ServerNode contains all required components:
+ * case, motherboard, storage, RAM, CPU, and power supply.
+ */
+export function isServerValid(server: ServerNode): boolean {
+  if (!server || !Array.isArray(server.installedParts)) {
+    return false;
+  }
+
+  const kinds = new Set(server.installedParts.map((part) => part.kind));
+
+  const hasCase = kinds.has("CASE");
+  const hasMotherboard = kinds.has("MOTHERBOARD");
+  const hasStorage = kinds.has("STORAGE") || kinds.has("STORAGE_DEVICE");
+  const hasRam = kinds.has("RAM");
+  const hasCpu = kinds.has("CPU");
+  const hasPsu = kinds.has("PSU");
+
+  return hasCase && hasMotherboard && hasStorage && hasRam && hasCpu && hasPsu;
 }
 
 // ==========================================

@@ -59,11 +59,13 @@ To keep the MVP lightweight without sacrificing the assembly puzzle, compatibili
 
 ## UI & State Flow
 
+Each of these screens navigable via menu.
+
 ### Screen 1: Bounty Board
 
 * Displays a list of 3–5 available jobs.
 * Each card highlights: Work Volume ($CU$), RAM floor ($GB$), IO Intensity ($MB/CU$), and Rewards.
-* Action: **Select Job** -> moves to Server Node allocation.
+* Action: **Select Job** -> moves to Server Node allocation, where the player chooses a valid server node to run start running.
 
 ### Screen 2: Rack & Assembly View
 
@@ -74,8 +76,6 @@ To keep the MVP lightweight without sacrificing the assembly puzzle, compatibili
 * Total RAM ($GB$) & Storage ($GB$)
 * Power Balance: $\text{Draw (W)} / \text{Capacity (W)}$ (Green if safe, Red if over capacity)
 * Cooling Balance: $\text{TDP (W)} \text{ vs } \text{Cooling (W)}$
-
-
 * Interactions: Drag or click to insert/remove parts into compatible slots.
 
 ### Screen 3: Live Telemetry & Execution
@@ -83,10 +83,6 @@ To keep the MVP lightweight without sacrificing the assembly puzzle, compatibili
 * Displays active execution gauges:
 * Progress Bar: $0\% \to 100\%$
 * Real-Time Compute Rate ($CU/s$) with active bottleneck indicator (e.g., `Bottleneck: Storage IO (SATA 150 MB/s)` or `Bottleneck: Thermal Throttle (82°C)`).
-* Live Temperature Gauge.
-* Live Wattage Readout.
-
-
 * Actions: **Abort Job** or **Overclock Node** (boost compute by 25%, double heat generation).
 
 ### Screen 4: Job Complete / Payout

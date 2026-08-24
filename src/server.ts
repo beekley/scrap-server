@@ -41,7 +41,7 @@ export function calculateServerAggregates(
   let maxIOBandwidth: Throughput = u.Measure.of(0, bytesPerSecond);
   let totalPowerDraw: Power = u.Measure.of(0, W);
   let totalPowerCapacity: Power = u.Measure.of(0, W);
-  let totalCoolingCapacity: Power = u.Measure.of(0, W);
+  const totalCoolingCapacity: Power = u.Measure.of(0, W);
 
   for (const part of parts) {
     // Power Draw
@@ -75,19 +75,10 @@ export function calculateServerAggregates(
         totalPowerCapacity = totalPowerCapacity.plus(part.powerCapacity);
         break;
 
-      case "FAN":
-        totalCoolingCapacity = totalCoolingCapacity.plus(part.coolingPower);
-        break;
-
-      case "GPU":
-        totalCompute = totalCompute.plus(part.computeRate);
-        totalMemory = totalMemory.plus(part.memoryCapacity);
-        if (part.ioBandwidth.gt(maxIOBandwidth)) {
-          maxIOBandwidth = part.ioBandwidth;
-        }
-        break;
-
       case "MOTHERBOARD":
+        break;
+
+      case "CASE":
         break;
     }
   }
