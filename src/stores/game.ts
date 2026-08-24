@@ -2,7 +2,7 @@ import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import * as u from 'safe-units';
 import { s, ops, type Job, type Part, type ServerNode, isPartCompatibleWithSlot } from '../types';
-import { createInitialServer, getJobTemplate, getPartTemplate } from '../seed';
+import { createInitialServer, getJobTemplate, getPartTemplate } from '../data';
 import { tickJob, canServerRunJob } from '../simulation';
 
 export const useGameStore = defineStore('game', () => {

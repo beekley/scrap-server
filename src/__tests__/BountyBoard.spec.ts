@@ -13,7 +13,7 @@ describe('BountyBoard.vue', () => {
     const store = useGameStore();
     const wrapper = mount(BountyBoard);
 
-    // Check if it renders jobs from seed data
+    // Check if it renders jobs from data
     expect(wrapper.text()).toContain('Recover Corrupted Text Archive');
     expect(wrapper.text()).toContain('Operations:');
   });

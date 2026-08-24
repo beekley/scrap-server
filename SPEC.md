@@ -103,7 +103,14 @@ The UI consists of a single unified page showing all relevant information simult
 
 ---
 
-## Seed Data (MVP Balance Set)
+## Game Data Architecture
+
+The game uses modular data structures to populate parts and jobs instead of a single seed file. Data is located in `src/data/`:
+
+* `src/data/parts/`: Contains categorized hardware lists (e.g. `cpus.ts`, `motherboards.ts`, `cases.ts`).
+* `src/data/jobs/`: Contains categorized job lists (e.g. `early_game.ts`).
+
+These are aggregated in `src/data/index.ts` and loaded by the store.
 
 ### Sample Parts
 
@@ -119,10 +126,11 @@ The UI consists of a single unified page showing all relevant information simult
 ### Sample Jobs
 
 | ID | Title | Required Work | Working Set | Total Size | IO Ratio | Reward Drops |
-| --- | --- | --- | --- | --- | --- | --- | --- |
+| --- | --- | --- | --- | --- | --- | --- |
 | `job_01` | Recover Corrupted Text Archive | 50,000 op | 1 GB | 10 GB | 0.2 MB/op (Low IO) | 1x `ram_1gb` |
 | `job_02` | Brute-Force Password Dump | 1,500,000 op | 1 GB | 2 GB | 0.01 MB/op (Compute Bound) | 1x `cpu_old` |
 | `job_03` | Scrape Video Metadata | 500,000 op | 2 GB | 50 GB | 2.5 MB/op (IO Bound) | 1x `psu_200`, 1x `mb_trash` |
+
 
 ---
 

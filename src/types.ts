@@ -44,6 +44,13 @@ export interface SlotDefinition<K extends PartKind = PartKind> {
   installedPartId?: string | null;
 }
 
+export interface Manufacturer {
+  id: string;
+  name: string;
+  description: string;
+  tier: "BUDGET" | "MIDRANGE" | "ENTHUSIAST" | "INDUSTRIAL";
+}
+
 // ==========================================
 // Parts
 // ==========================================
@@ -54,6 +61,7 @@ export interface BasePart<K extends PartKind = PartKind> {
   kind: K;
   socketTag: SocketTagMap[K];
   powerDraw: Power; // Active power consumed in Watts
+  manufacturerId?: string; // Optional manufacturer reference
   slots?: SlotDefinition[]; // Sockets/slots this part provides (e.g. on a motherboard or chassis)
 }
 
