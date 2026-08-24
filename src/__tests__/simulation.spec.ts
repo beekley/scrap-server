@@ -36,6 +36,8 @@ describe("Simulation Engine & Job Execution Logic", () => {
     kind: "CASE",
     socketTag: "RACKMOUNT_2U",
     powerDraw: u.Measure.of(0, W),
+    rarity: 'COMMON',
+    value: 10,
   };
 
   const mbTrash: MotherboardPart = {
@@ -44,6 +46,8 @@ describe("Simulation Engine & Job Execution Logic", () => {
     kind: "MOTHERBOARD",
     socketTag: "CHASSIS_MOUNT",
     powerDraw: u.Measure.of(15, W),
+    rarity: 'COMMON',
+    value: 10,
     slots: [],
   };
 
@@ -54,6 +58,8 @@ describe("Simulation Engine & Job Execution Logic", () => {
     socketTag: "LGA1155",
     computeRate: u.Measure.of(50, opsPerSecond),
     powerDraw: u.Measure.of(65, W),
+    rarity: 'COMMON',
+    value: 10,
   };
 
   const ram1gb: RamPart = {
@@ -64,6 +70,8 @@ describe("Simulation Engine & Job Execution Logic", () => {
     memoryCapacity: u.Measure.of(1, GB),
     ioBandwidth: u.Measure.of(5000, mBPerSecond),
     powerDraw: u.Measure.of(5, W),
+    rarity: 'COMMON',
+    value: 10,
   };
 
   const hddSlow: StoragePart = {
@@ -74,6 +82,8 @@ describe("Simulation Engine & Job Execution Logic", () => {
     storageCapacity: u.Measure.of(250, GB),
     ioBandwidth: u.Measure.of(60, mBPerSecond),
     powerDraw: u.Measure.of(10, W),
+    rarity: 'COMMON',
+    value: 10,
   };
 
   const psu200: PsuPart = {
@@ -83,6 +93,8 @@ describe("Simulation Engine & Job Execution Logic", () => {
     socketTag: "STANDARD_ATX",
     powerCapacity: u.Measure.of(200, W),
     powerDraw: u.Measure.of(0, W),
+    rarity: 'COMMON',
+    value: 10,
   };
 
   const standardServer: ServerNode = {
@@ -108,6 +120,8 @@ describe("Simulation Engine & Job Execution Logic", () => {
         workingSetSize: u.Measure.of(1, GB),
         ioRatio: u.Measure.of(0.2, megabytesPerOp),
         rewardCash: 50,
+    rewardDescription: 'Some reward',
+    rarity: 'COMMON',
         rewardPartIds: [],
         workCompleted: u.Measure.of(0, ops),
       };
@@ -131,6 +145,8 @@ describe("Simulation Engine & Job Execution Logic", () => {
         workingSetSize: u.Measure.of(1, GB),
         ioRatio: u.Measure.of(0.2, megabytesPerOp),
         rewardCash: 50,
+    rewardDescription: 'Some reward',
+    rarity: 'COMMON',
         rewardPartIds: [],
         workCompleted: u.Measure.of(0, ops),
       };
@@ -152,6 +168,8 @@ describe("Simulation Engine & Job Execution Logic", () => {
             memoryCapacity: u.Measure.of(1, GB),
             ioBandwidth: u.Measure.of(5000, mBPerSecond),
             powerDraw: u.Measure.of(5, W),
+    rarity: 'COMMON',
+    value: 10,
           },
           {
             id: "usb_1gb",
@@ -160,6 +178,8 @@ describe("Simulation Engine & Job Execution Logic", () => {
             socketTag: "USB",
             storageCapacity: u.Measure.of(1, GB),
             powerDraw: u.Measure.of(1, W),
+    rarity: 'COMMON',
+    value: 10,
           },
         ], // Total = 3 GB, but max single part = 1 GB
       };
@@ -173,6 +193,8 @@ describe("Simulation Engine & Job Execution Logic", () => {
         workingSetSize: u.Measure.of(2, GB),
         ioRatio: u.Measure.of(0.2, megabytesPerOp),
         rewardCash: 50,
+    rewardDescription: 'Some reward',
+    rarity: 'COMMON',
         rewardPartIds: [],
         workCompleted: u.Measure.of(0, ops),
       };
@@ -203,6 +225,8 @@ describe("Simulation Engine & Job Execution Logic", () => {
         workingSetSize: u.Measure.of(1, GB),
         ioRatio: u.Measure.of(0.2, megabytesPerOp),
         rewardCash: 100,
+    rewardDescription: 'Some reward',
+    rarity: 'COMMON',
         rewardPartIds: [],
         workCompleted: u.Measure.of(0, ops),
       };
@@ -246,6 +270,8 @@ describe("Simulation Engine & Job Execution Logic", () => {
         workingSetSize: u.Measure.of(2, GB),
         ioRatio: u.Measure.of(1, megabytesPerOp), // 1 MB per op for easy math
         rewardCash: 50,
+    rewardDescription: 'Some reward',
+    rarity: 'COMMON',
         rewardPartIds: [],
         workCompleted: u.Measure.of(0, ops),
       };
@@ -281,6 +307,8 @@ describe("Simulation Engine & Job Execution Logic", () => {
         workingSetSize: u.Measure.of(1, GB),
         ioRatio: u.Measure.of(0.01, megabytesPerOp),
         rewardCash: 120,
+    rewardDescription: 'Some reward',
+    rarity: 'COMMON',
         rewardPartIds: [],
         workCompleted: u.Measure.of(0, ops),
       };
@@ -305,6 +333,8 @@ describe("Simulation Engine & Job Execution Logic", () => {
         workingSetSize: u.Measure.of(2, GB),
         ioRatio: u.Measure.of(2.5, megabytesPerOp),
         rewardCash: 250,
+    rewardDescription: 'Some reward',
+    rarity: 'COMMON',
         rewardPartIds: [],
         workCompleted: u.Measure.of(0, ops),
       };
@@ -330,6 +360,8 @@ describe("Simulation Engine & Job Execution Logic", () => {
             socketTag: "LGA1155",
             computeRate: u.Measure.of(50, opsPerSecond),
             powerDraw: u.Measure.of(65, W),
+    rarity: 'COMMON',
+    value: 10,
           },
           ram1gb, // 5000 MB/s
           hddSlow,
@@ -346,6 +378,8 @@ describe("Simulation Engine & Job Execution Logic", () => {
         workingSetSize: u.Measure.of(1, GB),
         ioRatio: u.Measure.of(0.01, megabytesPerOp), // IO limit = 500,000 op/s
         rewardCash: 100,
+    rewardDescription: 'Some reward',
+    rarity: 'COMMON',
         rewardPartIds: [],
         workCompleted: u.Measure.of(0, ops),
       };
@@ -367,6 +401,8 @@ describe("Simulation Engine & Job Execution Logic", () => {
         workingSetSize: u.Measure.of(1, GB),
         ioRatio: u.Measure.of(0.2, megabytesPerOp), // 5000 / 0.2 = 25,000 op/s limit -> runs at 50 op/s
         rewardCash: 50,
+    rewardDescription: 'Some reward',
+    rarity: 'COMMON',
         rewardPartIds: [],
         workCompleted: u.Measure.of(0, ops),
       };
@@ -393,6 +429,8 @@ describe("Simulation Engine & Job Execution Logic", () => {
         workingSetSize: u.Measure.of(1, GB),
         ioRatio: u.Measure.of(0.2, megabytesPerOp),
         rewardCash: 50,
+    rewardDescription: 'Some reward',
+    rarity: 'COMMON',
         rewardPartIds: [],
         workCompleted: u.Measure.of(400, ops), // 100 ops remaining
       };
@@ -418,6 +456,8 @@ describe("Simulation Engine & Job Execution Logic", () => {
         workingSetSize: u.Measure.of(1, GB),
         ioRatio: u.Measure.of(0.2, megabytesPerOp),
         rewardCash: 50,
+    rewardDescription: 'Some reward',
+    rarity: 'COMMON',
         rewardPartIds: [],
         workCompleted: u.Measure.of(500, ops),
       };
@@ -446,6 +486,8 @@ describe("Simulation Engine & Job Execution Logic", () => {
         workingSetSize: u.Measure.of(1, GB),
         ioRatio: u.Measure.of(0.2, megabytesPerOp),
         rewardCash: 50,
+    rewardDescription: 'Some reward',
+    rarity: 'COMMON',
         rewardPartIds: [],
         workCompleted: u.Measure.of(0, ops),
       };

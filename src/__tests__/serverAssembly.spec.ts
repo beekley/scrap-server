@@ -25,6 +25,8 @@ describe("Server Assembly & Part Requirements", () => {
     kind: "CASE",
     socketTag: "RACKMOUNT_2U",
     powerDraw: u.Measure.of(0, W),
+    rarity: 'COMMON',
+    value: 10,
   };
 
   const mbTrash: MotherboardPart = {
@@ -33,6 +35,8 @@ describe("Server Assembly & Part Requirements", () => {
     kind: "MOTHERBOARD",
     socketTag: "CHASSIS_MOUNT",
     powerDraw: u.Measure.of(15, W),
+    rarity: 'COMMON',
+    value: 10,
     slots: [
       { id: "cpu_0", label: "CPU Socket 0", acceptsKind: "CPU", socketTag: "LGA1155" },
       { id: "ram_0", label: "DDR Slot 0", acceptsKind: "RAM", socketTag: "DDR3" },
@@ -50,6 +54,8 @@ describe("Server Assembly & Part Requirements", () => {
     socketTag: "LGA1155",
     computeRate: u.Measure.of(50, opsPerSecond),
     powerDraw: u.Measure.of(65, W),
+    rarity: 'COMMON',
+    value: 10,
   };
 
   const cpuV2Incompatible: CpuPart = {
@@ -59,6 +65,8 @@ describe("Server Assembly & Part Requirements", () => {
     socketTag: "AM4",
     computeRate: u.Measure.of(120, opsPerSecond),
     powerDraw: u.Measure.of(95, W),
+    rarity: 'COMMON',
+    value: 10,
   };
 
   const ram1gb: RamPart = {
@@ -69,6 +77,8 @@ describe("Server Assembly & Part Requirements", () => {
     memoryCapacity: u.Measure.of(1, GB),
     ioBandwidth: u.Measure.of(150, mBPerSecond),
     powerDraw: u.Measure.of(5, W),
+    rarity: 'COMMON',
+    value: 10,
   };
 
   const hddSlow: StoragePart = {
@@ -79,6 +89,8 @@ describe("Server Assembly & Part Requirements", () => {
     storageCapacity: u.Measure.of(250, GB),
     ioBandwidth: u.Measure.of(60, mBPerSecond),
     powerDraw: u.Measure.of(10, W),
+    rarity: 'COMMON',
+    value: 10,
   };
 
   const usbDrive: StorageDevicePart = {
@@ -88,6 +100,8 @@ describe("Server Assembly & Part Requirements", () => {
     socketTag: "USB",
     storageCapacity: u.Measure.of(32, GB),
     powerDraw: u.Measure.of(1, W),
+    rarity: 'COMMON',
+    value: 10,
   };
 
   const psu200: PsuPart = {
@@ -97,6 +111,8 @@ describe("Server Assembly & Part Requirements", () => {
     socketTag: "STANDARD_ATX",
     powerCapacity: u.Measure.of(200, W),
     powerDraw: u.Measure.of(0, W),
+    rarity: 'COMMON',
+    value: 10,
   };
 
   describe("Valid Server Node Assembly", () => {

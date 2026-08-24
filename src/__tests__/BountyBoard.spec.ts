@@ -14,7 +14,7 @@ describe('BountyBoard.vue', () => {
     const wrapper = mount(BountyBoard);
 
     // Check if it renders jobs from data
-    expect(wrapper.text()).toContain('Recover Corrupted Text Archive');
+    expect(wrapper.text()).toContain(store.availableJobs[0]!.title);
     expect(wrapper.text()).toContain('Operations:');
   });
 

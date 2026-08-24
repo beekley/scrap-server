@@ -19,7 +19,12 @@ const gameStore = useGameStore();
         :style="{ borderColor: gameStore.selectedJobId === job.id ? 'blue' : '#ccc', backgroundColor: gameStore.selectedJobId === job.id ? '#f0f8ff' : 'white' }"
         @click="gameStore.selectJob(job.id)"
       >
-        <h3 style="margin-top: 0; color: #333;">{{ job.title }}</h3>
+        <div style="display: flex; justify-content: space-between; align-items: start;">
+          <h3 style="margin-top: 0; color: #333;">{{ job.title }}</h3>
+          <span :style="{ fontWeight: 'bold', fontSize: '0.8em', padding: '2px 6px', borderRadius: '4px', backgroundColor: '#eee', color: job.rarity === 'MYTHIC' ? 'purple' : job.rarity === 'RARE' ? 'blue' : job.rarity === 'UNCOMMON' ? 'green' : 'gray' }">
+            {{ job.rarity }}
+          </span>
+        </div>
         <p style="font-style: italic; color: #666; margin-bottom: 15px;">{{ job.description }}</p>
         <div style="font-size: 0.9em;">
           <p style="margin: 4px 0;"><strong>Operations:</strong> {{ job.operationsRequired.value.toLocaleString() }} op</p>
@@ -28,8 +33,8 @@ const gameStore = useGameStore();
           <p style="margin: 4px 0;"><strong>IO Ratio:</strong> {{ (job.ioRatio.value / 1e6).toFixed(3) }} MB/op</p>
         </div>
         <div style="margin-top: 15px; padding-top: 10px; border-top: 1px dashed #ccc;">
-          <p style="margin: 4px 0; color: green; font-weight: bold;">Reward Cash: ${{ job.rewardCash }}</p>
-          <p style="margin: 4px 0;"><strong>Reward Parts:</strong> {{ job.rewardPartIds.join(', ') }}</p>
+          <p style="margin: 4px 0; color: green; font-weight: bold;">Reward:</p>
+          <p style="margin: 4px 0;">{{ job.rewardDescription }}</p>
         </div>
       </div>
     </div>

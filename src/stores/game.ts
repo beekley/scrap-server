@@ -2,7 +2,8 @@ import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import * as u from 'safe-units';
 import { s, ops, type Job, type Part, type ServerNode, isPartCompatibleWithSlot } from '../types';
-import { createInitialServer, getJobTemplate, getPartTemplate } from '../data';
+import { createInitialServer, getPartTemplate } from '../data';
+import { generateProceduralJob } from '../generators';
 import { tickJob, canServerRunJob } from '../simulation';
 
 export const useGameStore = defineStore('game', () => {
@@ -17,9 +18,9 @@ export const useGameStore = defineStore('game', () => {
   const servers = ref<ServerNode[]>([createInitialServer()]);
   
   const availableJobs = ref<Job[]>([
-    getJobTemplate('job_01'),
-    getJobTemplate('job_02'),
-    getJobTemplate('job_03'),
+    generateProceduralJob(),
+    generateProceduralJob(),
+    generateProceduralJob(),
   ]);
 
   const activeJob = ref<Job | null>(null);
@@ -157,6 +158,13 @@ export const useGameStore = defineStore('game', () => {
       for (const partId of activeJob.value.rewardPartIds) {
         inventory.value.push(getPartTemplate(partId));
       }
+      
+      // Remove old job and replace with new one
+      const oldJobIndex = availableJobs.value.findIndex(j => j.id === activeJob.value?.id);
+      if (oldJobIndex !== -1) {
+        availableJobs.value.splice(oldJobIndex, 1, generateProceduralJob());
+      }
+      
       activeJob.value = null;
     }
   }

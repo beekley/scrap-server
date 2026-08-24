@@ -8,6 +8,8 @@ export const motherboards: MotherboardPart[] = [
     kind: 'MOTHERBOARD',
     socketTag: 'ATX',
     manufacturerId: 'mfg_haodyn',
+    rarity: 'UNCOMMON',
+    value: 50,
     powerDraw: u.Measure.of(15, W),
     slots: [
       { id: 'cpu_0', label: 'LGA1155 Socket', acceptsKind: 'CPU', socketTag: 'LGA1155' },
@@ -24,6 +26,8 @@ export const motherboards: MotherboardPart[] = [
     kind: 'MOTHERBOARD',
     socketTag: 'ATX',
     manufacturerId: 'mfg_xblaze',
+    rarity: 'RARE',
+    value: 120,
     powerDraw: u.Measure.of(25, W),
     slots: [
       { id: 'cpu_0', label: 'AM4 Socket', acceptsKind: 'CPU', socketTag: 'AM4' },

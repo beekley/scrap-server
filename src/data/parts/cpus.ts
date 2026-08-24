@@ -8,6 +8,8 @@ export const cpus: CpuPart[] = [
     kind: 'CPU',
     socketTag: 'LGA1155',
     manufacturerId: 'mfg_acc',
+    rarity: 'MYTHIC',
+    value: 250,
     computeRate: u.Measure.of(300, opsPerSecond),
     powerDraw: u.Measure.of(65, W),
   },
@@ -17,6 +19,8 @@ export const cpus: CpuPart[] = [
     kind: 'CPU',
     socketTag: 'AM4',
     manufacturerId: 'mfg_acc',
+    rarity: 'MYTHIC',
+    value: 250,
     computeRate: u.Measure.of(1500, opsPerSecond),
     powerDraw: u.Measure.of(75, W),
   }

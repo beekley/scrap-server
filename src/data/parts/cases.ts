@@ -8,6 +8,8 @@ export const cases: CasePart[] = [
     kind: 'CASE',
     socketTag: 'ATX_MID_TOWER',
     manufacturerId: 'mfg_techmaker',
+    rarity: 'COMMON',
+    value: 20,
     powerDraw: u.Measure.of(0, W),
     slots: [
       { id: 'mb_0', label: 'Motherboard Tray', acceptsKind: 'MOTHERBOARD', socketTag: 'ATX' }
@@ -19,6 +21,8 @@ export const cases: CasePart[] = [
     kind: 'CASE',
     socketTag: 'ATX_MID_TOWER',
     manufacturerId: 'mfg_xblaze',
+    rarity: 'RARE',
+    value: 120,
     powerDraw: u.Measure.of(15, W), // RGB uses power!
     slots: [
       { id: 'mb_0', label: 'Motherboard Tray', acceptsKind: 'MOTHERBOARD', socketTag: 'ATX' }

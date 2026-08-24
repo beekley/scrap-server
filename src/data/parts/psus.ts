@@ -8,6 +8,8 @@ export const psus: PsuPart[] = [
     kind: 'PSU',
     socketTag: 'STANDARD_ATX',
     manufacturerId: 'mfg_techmaker',
+    rarity: 'COMMON',
+    value: 20,
     powerCapacity: u.Measure.of(300, W),
     powerDraw: u.Measure.of(0, W),
   },
@@ -17,6 +19,8 @@ export const psus: PsuPart[] = [
     kind: 'PSU',
     socketTag: 'STANDARD_ATX',
     manufacturerId: 'mfg_xblaze',
+    rarity: 'RARE',
+    value: 120,
     powerCapacity: u.Measure.of(650, W),
     powerDraw: u.Measure.of(0, W),
   }

@@ -52,6 +52,11 @@ export interface Manufacturer {
 }
 
 // ==========================================
+// Generation & Rarity
+// ==========================================
+export type Rarity = "COMMON" | "UNCOMMON" | "RARE" | "MYTHIC";
+
+// ==========================================
 // Parts
 // ==========================================
 
@@ -63,6 +68,8 @@ export interface BasePart<K extends PartKind = PartKind> {
   powerDraw: Power; // Active power consumed in Watts
   manufacturerId?: string; // Optional manufacturer reference
   slots?: SlotDefinition[]; // Sockets/slots this part provides (e.g. on a motherboard or chassis)
+  rarity: Rarity;
+  value: number; // Base monetary value
 }
 
 export interface CasePart extends BasePart<"CASE"> {
@@ -157,6 +164,7 @@ export interface Job {
   id: string;
   title: string;
   description: string;
+  rarity: Rarity;
 
   // Requirements & Bottlenecks
   operationsRequired: Operations; // Total operations needed
@@ -167,6 +175,7 @@ export interface Job {
   // Rewards
   rewardCash: number;
   rewardPartIds: string[]; // Hardware drops upon completion
+  rewardDescription: string; // Generic description of the reward (e.g. "Lot of 4 RAM sticks")
 
   // Runtime Progress
   workCompleted: Operations; // 0 to operationsRequired
