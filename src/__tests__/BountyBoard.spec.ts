@@ -25,7 +25,7 @@ describe('BountyBoard.vue', () => {
     const jobCards = wrapper.findAll('.job-card');
     expect(jobCards.length).toBeGreaterThan(0);
     
-    await jobCards[0].trigger('click');
+    await jobCards[0]!.trigger('click');
 
     expect(store.selectedJobId).not.toBeNull();
   });

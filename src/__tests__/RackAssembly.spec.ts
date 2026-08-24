@@ -17,7 +17,7 @@ describe('RackAssembly.vue', () => {
 
     expect(wrapper.text()).toContain('Inventory');
     expect(wrapper.text()).toContain('Servers (1)');
-    expect(wrapper.text()).toContain(store.servers[0].name);
+    expect(wrapper.text()).toContain(store.servers[0]!.name);
   });
 
   it('allows installing a compatible part from inventory via dropdown', async () => {
@@ -26,7 +26,7 @@ describe('RackAssembly.vue', () => {
 
     // Initial server is empty, install a case
     const casePart = store.inventory.find(p => p.kind === 'CASE');
-    store.installPart(store.servers[0].id, 'N/A', casePart!.id); // Wait, empty server means we need a way to slot the case.
+    store.installPart(store.servers[0]!.id, 'N/A', casePart!.id); // Wait, empty server means we need a way to slot the case.
     
     // Let's just check the Add Server Node button instead for UI test
     expect(wrapper.text()).toContain('+ Add Server Node');

@@ -32,7 +32,7 @@ describe('TelemetryCard.vue', () => {
     const store = useGameStore();
     const wrapper = mount(TelemetryCard);
 
-    store.selectedJobId = store.availableJobs[0].id;
+    store.selectedJobId = store.availableJobs[0]!.id;
     // For MVP, server starts empty, so it will say lacks requirements
     await wrapper.vm.$nextTick();
     expect(wrapper.text()).toContain('Server lacks requirements to run this job');

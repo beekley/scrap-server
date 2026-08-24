@@ -7,12 +7,12 @@ import { tickJob, canServerRunJob } from '../simulation';
 
 export const useGameStore = defineStore('game', () => {
   const inventory = ref<Part[]>([
-    getPartTemplate('case_chassis'),
-    getPartTemplate('mb_trash'),
-    getPartTemplate('cpu_old'),
-    getPartTemplate('ram_1gb'),
-    getPartTemplate('hdd_slow'),
-    getPartTemplate('psu_200'),
+    getPartTemplate('case_techmaker_atx'),
+    getPartTemplate('mb_haodyn_h61'),
+    getPartTemplate('cpu_acc_vectra_1155'),
+    getPartTemplate('ram_techmaker_4gb_ddr3'),
+    getPartTemplate('hdd_techmaker_500gb'),
+    getPartTemplate('psu_techmaker_300w'),
   ]);
   const servers = ref<ServerNode[]>([createInitialServer()]);
   
@@ -24,14 +24,14 @@ export const useGameStore = defineStore('game', () => {
 
   const activeJob = ref<Job | null>(null);
   const selectedJobId = ref<string | null>(null);
-  const selectedServerId = ref<string | null>(servers.value[0].id);
+  const selectedServerId = ref<string | null>(servers.value[0]?.id ?? null);
   const cash = ref<number>(0);
   
   // Game clock: starts at 0, unit is game-seconds
   const gameTimeSeconds = ref<number>(0);
 
   function getPartFromInventory(partId: string): Part | undefined {
-    return inventory.value.find(p => p.id === partId);
+    return inventory.value.find(p => p.id === partId) as Part | undefined;
   }
 
   function installRootPart(serverId: string, inventoryPartId: string) {
@@ -42,8 +42,9 @@ export const useGameStore = defineStore('game', () => {
     if (partIndex === -1) return;
 
     const part = inventory.value[partIndex];
+    if (!part) return;
     inventory.value.splice(partIndex, 1);
-    server.installedParts.push(part);
+    server.installedParts.push(part as unknown as Part);
   }
 
   function installPart(serverId: string, slotId: string, partId: string) {

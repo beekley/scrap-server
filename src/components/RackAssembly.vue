@@ -24,13 +24,13 @@ function getServerProgressPercent(serverId: string) {
   return null;
 }
 
-function checkServerValidity(server: ServerNode) {
+function checkServerValidity(server: ServerNode | unknown) {
   if (!selectedJob.value) return null;
   return canServerRunJob(server as unknown as ServerNode, selectedJob.value as unknown as Job);
 }
 
 function getCompatibleInventoryParts(slot: SlotDefinition): Part[] {
-  return gameStore.inventory.filter(p => isPartCompatibleWithSlot(p as unknown as Part, slot));
+  return (gameStore.inventory as unknown as Part[]).filter(p => isPartCompatibleWithSlot(p, slot));
 }
 
 function handleSlotChange(slotId: string, event: Event) {

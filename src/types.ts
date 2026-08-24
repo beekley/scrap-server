@@ -13,12 +13,12 @@ export * from "./units";
 // Sockets & Part Kinds
 // ==========================================
 
-export type CpuSocketTag = "SOCKET_V1" | "SOCKET_V2" | "LGA1155" | "AM4" | (string & {});
-export type RamSocketTag = "DDR_LEGACY" | "DDR_MODERN" | "DDR3" | "DDR4" | (string & {});
+export type CpuSocketTag = "LGA1155" | "AM4" | (string & {});
+export type RamSocketTag = "DDR3" | "DDR4" | (string & {});
 export type StorageSocketTag = "SATA" | "NVME" | "IDE" | "USB" | (string & {});
-export type PowerSocketTag = "STANDARD_ATX" | "PROPRIETARY_12VO" | (string & {});
+export type PowerSocketTag = "STANDARD_ATX" | (string & {});
 export type MotherboardSocketTag = "CHASSIS_MOUNT" | "STANDOFF" | (string & {});
-export type CaseSocketTag = "RACKMOUNT_1U" | "RACKMOUNT_2U" | "RACKMOUNT_4U" | "TOWER" | "DESKTOP" | "SHELF" | (string & {});
+export type CaseSocketTag = "RACKMOUNT_1U" | "RACKMOUNT_2U" | "RACKMOUNT_4U" | "ATX_MID_TOWER" | (string & {});
 
 export interface SocketTagMap {
   CASE: CaseSocketTag;

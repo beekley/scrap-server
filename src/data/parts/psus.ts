@@ -3,11 +3,21 @@ import { W, type PsuPart } from '../../types';
 
 export const psus: PsuPart[] = [
   {
-    id: 'psu_200',
-    name: 'Sparky 200W PSU',
+    id: 'psu_techmaker_300w',
+    name: 'TechMaker 300W Budget PSU',
     kind: 'PSU',
     socketTag: 'STANDARD_ATX',
-    powerCapacity: u.Measure.of(200, W),
+    manufacturerId: 'mfg_techmaker',
+    powerCapacity: u.Measure.of(300, W),
+    powerDraw: u.Measure.of(0, W),
+  },
+  {
+    id: 'psu_xblaze_650w',
+    name: 'XBlaze Supernova 650W',
+    kind: 'PSU',
+    socketTag: 'STANDARD_ATX',
+    manufacturerId: 'mfg_xblaze',
+    powerCapacity: u.Measure.of(650, W),
     powerDraw: u.Measure.of(0, W),
   }
 ];

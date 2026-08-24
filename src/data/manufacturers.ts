@@ -18,5 +18,11 @@ export const manufacturers: Manufacturer[] = [
     name: 'XBlaze',
     description: 'An American brand famous for high-performance, gaming-focused hardware with aggressive styling.',
     tier: 'ENTHUSIAST'
+  },
+  {
+    id: 'mfg_acc',
+    name: 'ACC (Advanced Computer Components)',
+    description: 'An old-school manufacturer of processors and NVMe storage renowned for high-reliability computing.',
+    tier: 'INDUSTRIAL'
   }
 ];

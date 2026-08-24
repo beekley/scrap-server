@@ -59,10 +59,10 @@ To keep the MVP lightweight without sacrificing the assembly puzzle, compatibili
 
 * **Rule:** A Part can be slotted into a Node if the Node possesses an unoccupied `SlotDefinition` where `SlotDefinition.type === Part.type` and `SlotDefinition.socketTag === Part.socketTag`.
 * **MVP Sockets:**
-* CPU Sockets: `SOCKET_V1` (e.g., legacy scrap CPUs), `SOCKET_V2` (mid-tier CPUs).
-* RAM Slots: `DDR_LEGACY`, `DDR_MODERN`.
-* Bus Slots: `SATA` (for Storage), `PCIE` (for add-on cards/GPUs).
-* Power: `STANDARD_ATX_POWER`.
+* CPU Sockets: `LGA1155`, `AM4`.
+* RAM Slots: `DDR3`, `DDR4`.
+* Bus Slots: `SATA` (for Storage), `NVME` (for M.2 Storage), `PCIE` (for add-on cards/GPUs).
+* Power: `STANDARD_ATX`.
 
 ## UI & State Flow
 
@@ -116,20 +116,21 @@ These are aggregated in `src/data/index.ts` and loaded by the store.
 
 | ID | Name | Type | Socket / Target | Compute | RAM | IO Speed |
 | --- | --- | --- | --- | --- | --- | --- |
-| `case_chassis` | Rusty Tower | CASE | `TOWER` | 0 | 0 | — |
-| `mb_trash` | Salvaged OEM Board | MOTHERBOARD | `CHASSIS_MOUNT` | 0 | 0 | 150 MB/s (SATA) |
-| `cpu_old` | Dual-Core E-Waste CPU | CPU | `SOCKET_V1` | 50 op/s | 0 | — |
-| `ram_1gb` | Generic 1GB DDR Stick | RAM | `DDR_LEGACY` | 0 | 1 GB | 5000 MB/s |
-| `hdd_slow` | 250GB Mechanical HDD | STORAGE | `SATA` | 0 | 0 | 60 MB/s |
-| `psu_200` | Sparky 200W PSU | PSU | `STANDARD_ATX` | 0 | 0 | — |
+| `case_techmaker_atx` | TechMaker Basic ATX Case | CASE | `TOWER` | 0 | 0 | — |
+| `mb_haodyn_h61` | Haodyn H61-M | MOTHERBOARD | `ATX` | 0 | 0 | 500 MB/s (SATA3) |
+| `cpu_acc_vectra_1155` | ACC Vectra-II 1155 | CPU | `LGA1155` | 300 op/s | 0 | — |
+| `ram_techmaker_4gb_ddr3` | TechMaker Value 4GB DDR3 | RAM | `DDR3` | 0 | 4 GB | 10,000 MB/s |
+| `hdd_techmaker_500gb` | TechMaker 500GB HDD | STORAGE | `SATA3` | 0 | 0 | 100 MB/s |
+| `nvme_acc_datacore_1tb` | ACC DataCore Pro 1TB NVMe | STORAGE | `NVME` | 0 | 0 | 3,500 MB/s |
+| `psu_techmaker_300w` | TechMaker 300W Budget PSU | PSU | `STANDARD_ATX` | 0 | 0 | — |
 
 ### Sample Jobs
 
 | ID | Title | Required Work | Working Set | Total Size | IO Ratio | Reward Drops |
 | --- | --- | --- | --- | --- | --- | --- |
-| `job_01` | Recover Corrupted Text Archive | 50,000 op | 1 GB | 10 GB | 0.2 MB/op (Low IO) | 1x `ram_1gb` |
-| `job_02` | Brute-Force Password Dump | 1,500,000 op | 1 GB | 2 GB | 0.01 MB/op (Compute Bound) | 1x `cpu_old` |
-| `job_03` | Scrape Video Metadata | 500,000 op | 2 GB | 50 GB | 2.5 MB/op (IO Bound) | 1x `psu_200`, 1x `mb_trash` |
+| `job_01` | Recover Corrupted Text Archive | 50,000 op | 1 GB | 10 GB | 0.2 MB/op (Low IO) | 1x `ram_techmaker_4gb_ddr3` |
+| `job_02` | Brute-Force Password Dump | 150,000 op | 1 GB | 2 GB | 0.01 MB/op (Compute Bound) | 1x `cpu_acc_vectra_1155` |
+| `job_03` | Scrape Video Metadata | 50,000 op | 2 GB | 50 GB | 2.5 MB/op (IO Bound) | 1x `psu_techmaker_300w`, 1x `hdd_techmaker_500gb` |
 
 
 ---

@@ -11,7 +11,7 @@ export const earlyGameJobs: Job[] = [
     totalSize: u.Measure.of(10, GB),
     ioRatio: u.Measure.of(0.2, megabytesPerOp),
     rewardCash: 50,
-    rewardPartIds: ['ram_1gb'],
+    rewardPartIds: ['ram_techmaker_4gb_ddr3'],
     workCompleted: u.Measure.of(0, ops),
   },
   {
@@ -23,7 +23,7 @@ export const earlyGameJobs: Job[] = [
     totalSize: u.Measure.of(2, GB),
     ioRatio: u.Measure.of(0.01, megabytesPerOp),
     rewardCash: 120,
-    rewardPartIds: ['cpu_old'],
+    rewardPartIds: ['cpu_acc_vectra_1155'],
     workCompleted: u.Measure.of(0, ops),
   },
   {
@@ -35,7 +35,7 @@ export const earlyGameJobs: Job[] = [
     totalSize: u.Measure.of(50, GB),
     ioRatio: u.Measure.of(2.5, megabytesPerOp),
     rewardCash: 250,
-    rewardPartIds: ['psu_200', 'mb_trash'],
+    rewardPartIds: ['psu_techmaker_300w', 'hdd_techmaker_500gb'],
     workCompleted: u.Measure.of(0, ops),
   }
 ];

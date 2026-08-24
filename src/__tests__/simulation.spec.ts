@@ -51,7 +51,7 @@ describe("Simulation Engine & Job Execution Logic", () => {
     id: "cpu_old",
     name: "Dual-Core E-Waste CPU",
     kind: "CPU",
-    socketTag: "SOCKET_V1",
+    socketTag: "LGA1155",
     computeRate: u.Measure.of(50, opsPerSecond),
     powerDraw: u.Measure.of(65, W),
   };
@@ -60,7 +60,7 @@ describe("Simulation Engine & Job Execution Logic", () => {
     id: "ram_1gb",
     name: "Generic 1GB DDR Stick",
     kind: "RAM",
-    socketTag: "DDR_LEGACY",
+    socketTag: "DDR3",
     memoryCapacity: u.Measure.of(1, GB),
     ioBandwidth: u.Measure.of(5000, mBPerSecond),
     powerDraw: u.Measure.of(5, W),
@@ -148,7 +148,7 @@ describe("Simulation Engine & Job Execution Logic", () => {
             id: "ram_1gb_b",
             name: "Generic 1GB DDR Stick B",
             kind: "RAM",
-            socketTag: "DDR_LEGACY",
+            socketTag: "DDR3",
             memoryCapacity: u.Measure.of(1, GB),
             ioBandwidth: u.Measure.of(5000, mBPerSecond),
             powerDraw: u.Measure.of(5, W),
@@ -219,8 +219,8 @@ describe("Simulation Engine & Job Execution Logic", () => {
       const alloc = calculateWorkingSetAllocation(standardServer, workingSet500MB);
       expect(alloc).not.toBeNull();
       expect(alloc!.length).toBe(1);
-      expect(alloc![0].part.id).toBe("ram_1gb");
-      expect(alloc![0].fraction).toBe(1.0);
+      expect(alloc![0]!.part.id).toBe("ram_1gb");
+      expect(alloc![0]!.fraction).toBe(1.0);
     });
 
     it("should spill over from RAM to HDD and calculate harmonic mean effective bandwidth", () => {
@@ -230,11 +230,11 @@ describe("Simulation Engine & Job Execution Logic", () => {
 
       expect(alloc).not.toBeNull();
       expect(alloc!.length).toBe(2);
-      expect(alloc![0].part.id).toBe("ram_1gb");
-      expect(alloc![0].fraction).toBe(0.5);
+      expect(alloc![0]!.part.id).toBe("ram_1gb");
+      expect(alloc![0]!.fraction).toBe(0.5);
       
-      expect(alloc![1].part.id).toBe("hdd_slow");
-      expect(alloc![1].fraction).toBe(0.5);
+      expect(alloc![1]!.part.id).toBe("hdd_slow");
+      expect(alloc![1]!.fraction).toBe(0.5);
 
       // Now test harmonic mean throughput in compute details
       const job: Job = {
@@ -327,7 +327,7 @@ describe("Simulation Engine & Job Execution Logic", () => {
             id: "cpu_old_2",
             name: "Dual-Core E-Waste CPU 2",
             kind: "CPU",
-            socketTag: "SOCKET_V1",
+            socketTag: "LGA1155",
             computeRate: u.Measure.of(50, opsPerSecond),
             powerDraw: u.Measure.of(65, W),
           },
