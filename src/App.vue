@@ -3,7 +3,6 @@ import { onMounted, onUnmounted, computed } from 'vue';
 import { useGameStore } from './stores/game';
 import BountyBoard from './components/BountyBoard.vue';
 import RackAssembly from './components/RackAssembly.vue';
-import TelemetryCard from './components/TelemetryCard.vue';
 
 const gameStore = useGameStore();
 let ticker: ReturnType<typeof setInterval>;
@@ -50,14 +49,9 @@ onUnmounted(() => {
 
     <!-- Main Content -->
     <div style="display: flex; gap: 20px;">
-      <!-- Left Column: Rack Assembly -->
-      <div style="flex: 2;">
+      <!-- Left Column: Rack Assembly (which now includes the ContextPanel) -->
+      <div style="flex: 1;">
         <RackAssembly />
-      </div>
-
-      <!-- Right Column: Telemetry -->
-      <div style="flex: 1; min-width: 300px;">
-        <TelemetryCard />
       </div>
     </div>
 

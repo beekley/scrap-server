@@ -16,10 +16,10 @@ describe('App', () => {
     
     // Check that child components are rendered
     expect(wrapper.text()).toContain('Bounty Board');
-    expect(wrapper.text()).toContain('Rack Assembly');
+    expect(wrapper.text()).toContain('Server Room (Assembly)');
     
-    // Telemetry is rendered because selectedServer is implicitly set to the first server
-    expect(wrapper.text()).toContain('Telemetry:');
+    // ContextPanel is rendered because selectedItemId is implicitly set to the first server
+    expect(wrapper.text()).toContain('Server:');
   });
 
   it('formats and advances the game clock correctly on tick', async () => {

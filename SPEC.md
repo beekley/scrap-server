@@ -68,16 +68,17 @@ To keep the MVP lightweight without sacrificing the assembly puzzle, compatibili
 
 The UI consists of a single unified page showing all relevant information simultaneously, rather than navigating between distinct screens.
 
-### 1. Rack & Assembly View (Top Section)
+### 1. Server Room & Assembly (Top Section)
 
-* **Player Inventory**: Displays unassigned parts available for assembly.
-* **Server Nodes**: 
-  * Players can create additional server nodes in their rack.
-  * A newly created server node starts completely empty.
-  * The player must first install a `CASE`, which provides slots for a `MOTHERBOARD`, which then provides sockets for `CPU`, `RAM`, `STORAGE`, and `PSU`.
-  * **Validity Check**: If an active job is selected, each server node displays a small check indicating whether it passes the `isServerValid` (`canServerRunJob`) requirements to run that specific job.
-  * **Interactions**: Dropdown menus or clicks to insert/remove parts into compatible slots.
-  * **Live Progress**: If a job is running on a server node, the progress bar and current status are displayed directly on that server node's card.
+* **2D Server Room**: Displays a front-facing 2D grid room.
+  * Parts and server cases have physical dimensions (1 unit = 1cm) and live in the room.
+  * Players can drag and drop parts within the room. Parts respond to gravity and stack on top of each other or the floor.
+  * All `CASE` parts automatically act as independent `ServerNode`s placed loosely in the room.
+* **Node Configuration**:
+  * Clicking a server case in the room selects it, revealing the Node Configuration panel.
+  * **Validity Check**: If an active job is selected, the selected server displays a small check indicating whether it passes the `isServerValid` (`canServerRunJob`) requirements to run that specific job.
+  * **Interactions**: Dropdown menus to insert/remove parts into compatible slots of the selected server. Removing a part drops it into the room. (Drag-and-drop to install is planned for later).
+  * **Live Progress**: If a job is running on the selected server node, the progress bar and current status are displayed in the config panel.
   * While a job is running on a node, its part slots are locked (disabled).
 
 ### 2. Telemetry Card (Visible on Node Selection)
@@ -137,6 +138,8 @@ These are aggregated in `src/data/index.ts` and loaded by the store.
 
 ## Out of Scope for MVP (Future Work)
 
+* Physical Server Racks (`RACK` parts) to mount cases into.
+* Drag-and-drop parts directly into server case slots (currently using dropdowns).
 * Power delivery and calculation (Node power draw vs PSU capacity).
 * Thermal simulation (Heat generation vs Cooling capacity, thermal throttling).
 * Inter-node networking clusters (distributed compute across multi-chassis links).

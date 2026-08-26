@@ -7,15 +7,32 @@ import { generateProceduralJob } from '../generators';
 import { tickJob, canServerRunJob } from '../simulation';
 
 export const useGameStore = defineStore('game', () => {
-  const inventory = ref<Part[]>([
-    getPartTemplate('case_techmaker_atx'),
-    getPartTemplate('mb_haodyn_h61'),
-    getPartTemplate('cpu_acc_vectra_1155'),
-    getPartTemplate('ram_techmaker_4gb_ddr3'),
-    getPartTemplate('hdd_techmaker_500gb'),
-    getPartTemplate('psu_techmaker_300w'),
-  ]);
-  const servers = ref<ServerNode[]>([createInitialServer()]);
+  function createStarterServer(): ServerNode {
+    const c = getPartTemplate('case_techmaker_atx');
+    const mb = getPartTemplate('mb_haodyn_h61');
+    const cpu = getPartTemplate('cpu_acc_vectra_1155');
+    const ram = getPartTemplate('ram_techmaker_4gb_ddr3');
+    const hdd = getPartTemplate('hdd_techmaker_500gb');
+    const psu = getPartTemplate('psu_techmaker_300w');
+
+    // Wire up slots
+    c.slots![0].installedPartId = mb.id;
+    mb.slots!.find(s => s.id === 'cpu_0')!.installedPartId = cpu.id;
+    mb.slots!.find(s => s.id === 'ram_0')!.installedPartId = ram.id;
+    mb.slots!.find(s => s.id === 'sata_0')!.installedPartId = hdd.id;
+    mb.slots!.find(s => s.id === 'psu_0')!.installedPartId = psu.id;
+
+    return {
+      id: 'server_01',
+      name: 'Scrap Node 1',
+      installedParts: [c, mb, cpu, ram, hdd, psu],
+      x: 10,
+      y: 10 // Let gravity handle dropping it
+    };
+  }
+
+  const inventory = ref<Part[]>([]);
+  const servers = ref<ServerNode[]>([createStarterServer()]);
   
   const availableJobs = ref<Job[]>([
     generateProceduralJob(),
@@ -25,7 +42,7 @@ export const useGameStore = defineStore('game', () => {
 
   const activeJob = ref<Job | null>(null);
   const selectedJobId = ref<string | null>(null);
-  const selectedServerId = ref<string | null>(servers.value[0]?.id ?? null);
+  const selectedItemId = ref<string | null>(servers.value[0]?.id ?? null);
   const cash = ref<number>(0);
   
   // Game clock: starts at 0, unit is game-seconds
@@ -97,6 +114,9 @@ export const useGameStore = defineStore('game', () => {
             const partToRemove = server.installedParts[partIndex];
             if (partToRemove) {
               server.installedParts.splice(partIndex, 1);
+              // Drop in room near server
+              partToRemove.x = (server.x || 10) + 5;
+              partToRemove.y = (server.y || 10) - 20; 
               inventory.value.push(partToRemove);
             }
           }
@@ -107,19 +127,22 @@ export const useGameStore = defineStore('game', () => {
     }
   }
 
-  function selectJob(jobId: string) {
-    selectedJobId.value = jobId;
+  function moveItem(id: string, x: number, y: number) {
+    const part = inventory.value.find(p => p.id === id);
+    if (part) {
+      part.x = x;
+      part.y = y;
+      return;
+    }
+    const server = servers.value.find(s => s.id === id);
+    if (server) {
+      server.x = x;
+      server.y = y;
+    }
   }
 
-
-  function addServerNode() {
-    const id = `server_${servers.value.length + 1}`;
-    servers.value.push({
-      id,
-      name: `Scrap Node ${servers.value.length + 1}`,
-      installedParts: []
-    });
-    selectedServerId.value = id;
+  function selectJob(jobId: string) {
+    selectedJobId.value = jobId;
   }
 
   function startJob(serverId: string, jobId: string) {
@@ -161,7 +184,21 @@ export const useGameStore = defineStore('game', () => {
       // Payout
       cash.value += activeJob.value.rewardCash;
       for (const partId of activeJob.value.rewardPartIds) {
-        inventory.value.push(getPartTemplate(partId));
+        const part = getPartTemplate(partId);
+        part.x = 20 + Math.random() * 50; // Random drop location
+        part.y = 10;
+        
+        if (part.kind === 'CASE') {
+          servers.value.push({
+            id: `server_${servers.value.length + 1}_${Math.random().toString(36).substring(2,8)}`,
+            name: `Scrap Node ${servers.value.length + 1}`,
+            installedParts: [part],
+            x: part.x,
+            y: part.y
+          });
+        } else {
+          inventory.value.push(part);
+        }
       }
       
       // Remove old job and replace with new one
@@ -180,7 +217,7 @@ export const useGameStore = defineStore('game', () => {
     availableJobs,
     activeJob,
     selectedJobId,
-    selectedServerId,
+    selectedItemId,
     cash,
     gameTimeSeconds,
     gameSpeed,
@@ -188,8 +225,8 @@ export const useGameStore = defineStore('game', () => {
     installRootPart,
     installPart,
     removePart,
+    moveItem,
     selectJob,
-    addServerNode,
     startJob,
     abortJob,
     tick,

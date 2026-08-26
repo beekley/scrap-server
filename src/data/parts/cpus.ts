@@ -10,6 +10,8 @@ export const cpus: CpuPart[] = [
     manufacturerId: 'mfg_acc',
     rarity: 'MYTHIC',
     value: 250,
+    width: 4,
+    height: 4,
     computeRate: u.Measure.of(300, opsPerSecond),
     powerDraw: u.Measure.of(65, W),
   },
@@ -21,6 +23,8 @@ export const cpus: CpuPart[] = [
     manufacturerId: 'mfg_acc',
     rarity: 'MYTHIC',
     value: 250,
+    width: 4,
+    height: 4,
     computeRate: u.Measure.of(1500, opsPerSecond),
     powerDraw: u.Measure.of(75, W),
   }

@@ -70,6 +70,12 @@ export interface BasePart<K extends PartKind = PartKind> {
   slots?: SlotDefinition[]; // Sockets/slots this part provides (e.g. on a motherboard or chassis)
   rarity: Rarity;
   value: number; // Base monetary value
+
+  // Physical Dimensions & Location (1 unit = 1cm)
+  width: number;
+  height: number;
+  x?: number; // Position in the room (when loose)
+  y?: number; // Position in the room (when loose)
 }
 
 export interface CasePart extends BasePart<"CASE"> {
@@ -154,6 +160,8 @@ export interface ServerNode {
   id: string;
   name: string;
   installedParts: Part[];
+  x?: number; // Position in the room
+  y?: number; // Position in the room
 }
 
 // ==========================================
