@@ -22,7 +22,7 @@ describe('ContextPanel.vue', () => {
     // Default has server selected
     const wrapper = mount(ContextPanel);
 
-    expect(wrapper.text()).toContain('Server: Scrap Node 1');
+    expect(wrapper.text()).toContain('Server Node: Scrap Node 1');
     expect(wrapper.text()).toContain('Utilization');
     expect(wrapper.text()).toContain('RAM:');
     expect(wrapper.text()).toContain('Storage:');

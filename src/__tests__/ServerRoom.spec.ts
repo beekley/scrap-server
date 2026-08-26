@@ -39,14 +39,14 @@ describe('ServerRoom.vue', () => {
     const store = useGameStore();
     const wrapper = mount(ServerRoom);
     
-    const firstServer = wrapper.find('.is-server');
-    expect(firstServer.exists()).toBe(true);
+    const items = wrapper.findAll('.room-item');
+    expect(items.length).toBeGreaterThan(0);
 
     // Initial state check
-    const initialSelectedId = store.selectedItemId;
-    
-    // Simulate mousedown
-    await firstServer.trigger('mousedown', { button: 0 });
+    expect(store.selectedItemId).toBe(store.servers[0]!.id);
+
+    // Click on the first item
+    await items[0]!.trigger('mousedown', { button: 0 });
     
     // The clicked server should now be selected (it might be the same one, but the logic should fire)
     expect(store.selectedItemId).toBe(store.servers[0].id);

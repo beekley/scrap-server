@@ -70,24 +70,23 @@ The UI consists of a single unified page showing all relevant information simult
 
 ### 1. Server Room & Assembly (Top Section)
 
-* **2D Server Room**: Displays a front-facing 2D grid room.
+* **2D Server Room**: Displays a front-facing 2D grid room representing physical space.
   * Parts and server cases have physical dimensions (1 unit = 1cm) and live in the room.
-  * Players can drag and drop parts within the room. Parts respond to gravity and stack on top of each other or the floor.
+  * Players can drag and drop parts within the room. 
+  * **Strict Physics**: Dragging prevents pulling items out from underneath other stacked items. Dropping an item simulates gravity, falling to the lowest possible space where its center-of-gravity is supported. Drag operations highlight blue for valid drops and red for invalid drops (where an item lacks a balanced resting place).
   * All `CASE` parts automatically act as independent `ServerNode`s placed loosely in the room.
-* **Node Configuration**:
-  * Clicking a server case in the room selects it, revealing the Node Configuration panel.
-  * **Validity Check**: If an active job is selected, the selected server displays a small check indicating whether it passes the `isServerValid` (`canServerRunJob`) requirements to run that specific job.
-  * **Interactions**: Dropdown menus to insert/remove parts into compatible slots of the selected server. Removing a part drops it into the room. (Drag-and-drop to install is planned for later).
-  * **Live Progress**: If a job is running on the selected server node, the progress bar and current status are displayed in the config panel.
-  * While a job is running on a node, its part slots are locked (disabled).
 
-### 2. Telemetry Card (Visible on Node Selection)
+### 2. Context Panel (Visible on Selection)
 
-* The telemetry card is only visible when a specific server node is selected.
-* It displays real-time execution gauges for the selected node:
-  * Live compute rate ($op/s$) and active bottleneck indicator (e.g., `Bottleneck: Storage IO (SATA 60 MB/s)` or `Bottleneck: CPU Limit`).
-  * CPU, RAM, and Storage capacity and utilization.
-* Actions: **Start Job** (if valid and not running), **Abort Job** (if running).
+* Clicking any item in the server room reveals the **Context Panel** for that item, unifying component details and telemetry.
+* **Server Node Panel**: If the selected item is a Server Node (Case), this panel displays:
+  * **Live Progress**: Start Job, Abort Job, and real-time progress bars.
+  * **Telemetry**: Live compute rate ($op/s$) and active bottleneck indicator (e.g., `Bottleneck: Storage I/O` or `Bottleneck: CPU Limit`).
+  * **Utilization**: CPU, RAM, and Storage capacities.
+* **Part Info Panel**: Displays hardware details (Kind, Value, Power Draw, Compute, Bandwidth) for the specific selected part.
+  * **Recursive Sockets**: If the part has sockets (e.g., Motherboard, Case), its slots are rendered as an indented tree with dropdowns to install compatible components. Any installed child parts that also have sockets are rendered recursively beneath them.
+  * **Inspection & Navigation**: Users can click "Inspect" next to any installed part in the slot tree to dive into that specific part's details. A navigation button ("↑ Up to [Parent Part]") allows traversing back up the hierarchy.
+  * While a job is running on a server node, its part slots are locked (disabled).
 
 ### 3. Bounty Board (Bottom Section)
 

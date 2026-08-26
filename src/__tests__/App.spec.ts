@@ -19,7 +19,7 @@ describe('App', () => {
     expect(wrapper.text()).toContain('Server Room (Assembly)');
     
     // ContextPanel is rendered because selectedItemId is implicitly set to the first server
-    expect(wrapper.text()).toContain('Server:');
+    expect(wrapper.text()).toContain('Server Node:');
   });
 
   it('formats and advances the game clock correctly on tick', async () => {

@@ -14,6 +14,6 @@ describe('RackAssembly.vue', () => {
     const wrapper = mount(RackAssembly);
 
     expect(wrapper.text()).toContain('Server Room (Assembly)');
-    expect(wrapper.text()).toContain('Server: ' + store.servers[0]!.name);
+    expect(wrapper.text()).toContain('Server Node: ' + store.servers[0]!.name);
   });
 });

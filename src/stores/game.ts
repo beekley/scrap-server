@@ -27,7 +27,7 @@ export const useGameStore = defineStore('game', () => {
       name: 'Scrap Node 1',
       installedParts: [c, mb, cpu, ram, hdd, psu],
       x: 10,
-      y: 10 // Let gravity handle dropping it
+      y: 250 - c.height // Placed directly on the floor
     };
   }
 
@@ -51,6 +51,72 @@ export const useGameStore = defineStore('game', () => {
 
   function setGameSpeed(speed: number) {
     gameSpeed.value = speed;
+  }
+
+  const ROOM_WIDTH = 100;
+  const ROOM_HEIGHT = 250;
+
+  function getRoomItems() {
+    const items = [];
+    for (const s of servers.value) {
+      const casePart = s.installedParts.find(p => p.kind === 'CASE');
+      if (casePart) {
+        items.push({ id: s.id, x: s.x ?? 0, y: s.y ?? 0, width: casePart.width, height: casePart.height });
+      }
+    }
+    for (const p of inventory.value) {
+      items.push({ id: p.id, x: p.x ?? 0, y: p.y ?? 0, width: p.width, height: p.height });
+    }
+    return items;
+  }
+
+  function isEmptySpace(x: number, y: number, width: number, height: number, ignoreId: string, items: any[]) {
+    if (x < 0 || x + width > ROOM_WIDTH) return false;
+    if (y < 0 || y + height > ROOM_HEIGHT) return false;
+    for (const other of items) {
+      if (other.id === ignoreId) continue;
+      const overlapX = x < other.x + other.width && x + width > other.x;
+      const overlapY = y < other.y + other.height && y + height > other.y;
+      if (overlapX && overlapY) return false;
+    }
+    return true;
+  }
+
+  function isSupported(x: number, y: number, width: number, height: number, ignoreId: string, items: any[]) {
+    if (y + height >= ROOM_HEIGHT) return true;
+    const centerX = x + width / 2;
+    for (const other of items) {
+      if (other.id === ignoreId) continue;
+      if (y + height === other.y && centerX >= other.x && centerX <= other.x + other.width) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  function isValidPlacement(x: number, y: number, width: number, height: number, ignoreId: string, items: any[]) {
+    return isEmptySpace(x, y, width, height, ignoreId, items) && isSupported(x, y, width, height, ignoreId, items);
+  }
+
+  function findValidDropLocation(width: number, height: number, ignoreId: string = ''): { x: number, y: number } {
+    const items = getRoomItems();
+    let bestX = 0;
+    let bestY = -1;
+
+    for (let x = 0; x <= ROOM_WIDTH - width; x += 5) {
+      let y = ROOM_HEIGHT - height;
+      while (y >= 0 && !isValidPlacement(x, y, width, height, ignoreId, items)) {
+        y--;
+      }
+      if (y > bestY) {
+        bestY = y;
+        bestX = x;
+        if (bestY === ROOM_HEIGHT - height) break;
+      }
+    }
+    
+    if (bestY >= 0) return { x: bestX, y: bestY };
+    return { x: 0, y: 0 };
   }
 
   function getPartFromInventory(partId: string): Part | undefined {
@@ -114,9 +180,10 @@ export const useGameStore = defineStore('game', () => {
             const partToRemove = server.installedParts[partIndex];
             if (partToRemove) {
               server.installedParts.splice(partIndex, 1);
-              // Drop in room near server
-              partToRemove.x = (server.x || 10) + 5;
-              partToRemove.y = (server.y || 10) - 20; 
+              // Drop in room at a valid location
+              const loc = findValidDropLocation(partToRemove.width, partToRemove.height, partToRemove.id);
+              partToRemove.x = loc.x;
+              partToRemove.y = loc.y;
               inventory.value.push(partToRemove);
             }
           }
@@ -185,8 +252,9 @@ export const useGameStore = defineStore('game', () => {
       cash.value += activeJob.value.rewardCash;
       for (const partId of activeJob.value.rewardPartIds) {
         const part = getPartTemplate(partId);
-        part.x = 20 + Math.random() * 50; // Random drop location
-        part.y = 10;
+        const loc = findValidDropLocation(part.width, part.height, part.id);
+        part.x = loc.x;
+        part.y = loc.y;
         
         if (part.kind === 'CASE') {
           servers.value.push({
