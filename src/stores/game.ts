@@ -2,9 +2,10 @@ import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import * as u from 'safe-units';
 import { s, ops, type Job, type Part, type ServerNode, isPartCompatibleWithSlot } from '../types';
-import { createInitialServer, getPartTemplate } from '../data';
+import { getPartTemplate } from '../data';
 import { generateProceduralJob } from '../generators';
 import { tickJob, canServerRunJob } from '../simulation';
+import { findValidDropLocation, type RoomRect } from '../utils/physics';
 
 export const useGameStore = defineStore('game', () => {
   function createStarterServer(): ServerNode {
@@ -16,7 +17,7 @@ export const useGameStore = defineStore('game', () => {
     const psu = getPartTemplate('psu_techmaker_300w');
 
     // Wire up slots
-    c.slots![0].installedPartId = mb.id;
+    c.slots![0]!.installedPartId = mb.id;
     mb.slots!.find(s => s.id === 'cpu_0')!.installedPartId = cpu.id;
     mb.slots!.find(s => s.id === 'ram_0')!.installedPartId = ram.id;
     mb.slots!.find(s => s.id === 'sata_0')!.installedPartId = hdd.id;
@@ -53,11 +54,8 @@ export const useGameStore = defineStore('game', () => {
     gameSpeed.value = speed;
   }
 
-  const ROOM_WIDTH = 100;
-  const ROOM_HEIGHT = 250;
-
-  function getRoomItems() {
-    const items = [];
+  function getRoomItems(): RoomRect[] {
+    const items: RoomRect[] = [];
     for (const s of servers.value) {
       const casePart = s.installedParts.find(p => p.kind === 'CASE');
       if (casePart) {
@@ -68,55 +66,6 @@ export const useGameStore = defineStore('game', () => {
       items.push({ id: p.id, x: p.x ?? 0, y: p.y ?? 0, width: p.width, height: p.height });
     }
     return items;
-  }
-
-  function isEmptySpace(x: number, y: number, width: number, height: number, ignoreId: string, items: any[]) {
-    if (x < 0 || x + width > ROOM_WIDTH) return false;
-    if (y < 0 || y + height > ROOM_HEIGHT) return false;
-    for (const other of items) {
-      if (other.id === ignoreId) continue;
-      const overlapX = x < other.x + other.width && x + width > other.x;
-      const overlapY = y < other.y + other.height && y + height > other.y;
-      if (overlapX && overlapY) return false;
-    }
-    return true;
-  }
-
-  function isSupported(x: number, y: number, width: number, height: number, ignoreId: string, items: any[]) {
-    if (y + height >= ROOM_HEIGHT) return true;
-    const centerX = x + width / 2;
-    for (const other of items) {
-      if (other.id === ignoreId) continue;
-      if (y + height === other.y && centerX >= other.x && centerX <= other.x + other.width) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  function isValidPlacement(x: number, y: number, width: number, height: number, ignoreId: string, items: any[]) {
-    return isEmptySpace(x, y, width, height, ignoreId, items) && isSupported(x, y, width, height, ignoreId, items);
-  }
-
-  function findValidDropLocation(width: number, height: number, ignoreId: string = ''): { x: number, y: number } {
-    const items = getRoomItems();
-    let bestX = 0;
-    let bestY = -1;
-
-    for (let x = 0; x <= ROOM_WIDTH - width; x += 5) {
-      let y = ROOM_HEIGHT - height;
-      while (y >= 0 && !isValidPlacement(x, y, width, height, ignoreId, items)) {
-        y--;
-      }
-      if (y > bestY) {
-        bestY = y;
-        bestX = x;
-        if (bestY === ROOM_HEIGHT - height) break;
-      }
-    }
-    
-    if (bestY >= 0) return { x: bestX, y: bestY };
-    return { x: 0, y: 0 };
   }
 
   function getPartFromInventory(partId: string): Part | undefined {
@@ -181,7 +130,7 @@ export const useGameStore = defineStore('game', () => {
             if (partToRemove) {
               server.installedParts.splice(partIndex, 1);
               // Drop in room at a valid location
-              const loc = findValidDropLocation(partToRemove.width, partToRemove.height, partToRemove.id);
+              const loc = findValidDropLocation(partToRemove.width, partToRemove.height, getRoomItems(), partToRemove.id);
               partToRemove.x = loc.x;
               partToRemove.y = loc.y;
               inventory.value.push(partToRemove);
@@ -252,7 +201,7 @@ export const useGameStore = defineStore('game', () => {
       cash.value += activeJob.value.rewardCash;
       for (const partId of activeJob.value.rewardPartIds) {
         const part = getPartTemplate(partId);
-        const loc = findValidDropLocation(part.width, part.height, part.id);
+        const loc = findValidDropLocation(part.width, part.height, getRoomItems(), part.id);
         part.x = loc.x;
         part.y = loc.y;
         

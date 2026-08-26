@@ -6,12 +6,7 @@ import {
   type PartKind, 
   type CasePart, 
   type MotherboardPart, 
-  type CpuPart, 
-  type RamPart, 
-  type StoragePart, 
-  type StorageDevicePart, 
-  type PsuPart,
-  ops, GB, MB, megabytesPerOp, opsPerSecond, W
+  ops, GB, megabytesPerOp
 } from '../types';
 import { allParts as parts } from '../data/index';
 
@@ -56,8 +51,8 @@ export function generateServerReward(rarity: Rarity): { description: string, par
   
   const targetRarity = (cases.length > 0 && mobos.length > 0) ? rarity : 'COMMON';
   
-  const casePart = pickRandomElement(getPartsByRarity('CASE', targetRarity)) as CasePart;
-  const moboPart = pickRandomElement(getPartsByRarity('MOTHERBOARD', targetRarity)) as MotherboardPart;
+  const casePart = pickRandomElement(getPartsByRarity('CASE', targetRarity)) as CasePart | undefined;
+  const moboPart = pickRandomElement(getPartsByRarity('MOTHERBOARD', targetRarity)) as MotherboardPart | undefined;
   
   if (!casePart || !moboPart) {
     return generateCashReward(rarity); 
@@ -90,13 +85,15 @@ export function generateServerReward(rarity: Rarity): { description: string, par
 
 export function generateBundleReward(rarity: Rarity): { description: string, partIds: string[], cash: number } {
   const kinds: PartKind[] = ['RAM', 'STORAGE', 'CPU'];
-  const kind = pickRandomElement(kinds)!;
+  const kind = pickRandomElement(kinds) ?? 'RAM';
   
   let validParts = getPartsByRarity(kind, rarity);
   if (validParts.length === 0) validParts = getPartsByRarity(kind, 'COMMON');
   if (validParts.length === 0) return generateCashReward(rarity);
   
-  const selectedPart = pickRandomElement(validParts)!;
+  const selectedPart = pickRandomElement(validParts);
+  if (!selectedPart) return generateCashReward(rarity);
+
   const quantity = getRandomInt(2, 4);
   
   const generatedIds = Array(quantity).fill(selectedPart.id);
@@ -151,7 +148,7 @@ export function generateProceduralJob(): Job {
     case 'MYTHIC': diffMultiplier = 20; break;
   }
   
-  const title = pickRandomElement(JOB_TITLES)!;
+  const title = pickRandomElement(JOB_TITLES) ?? 'Unknown Task';
   
   const baseOps = getRandomInt(50, 150) * 1000;
   const totalOps = baseOps * diffMultiplier;

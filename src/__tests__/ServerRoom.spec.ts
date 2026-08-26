@@ -1,9 +1,10 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import ServerRoom from '../components/ServerRoom.vue';
 import { useGameStore } from '../stores/game';
-
+import * as u from 'safe-units';
+import { W, GB, mBPerSecond } from '../types';
 describe('ServerRoom.vue', () => {
   beforeEach(() => {
     setActivePinia(createPinia());
@@ -21,12 +22,12 @@ describe('ServerRoom.vue', () => {
       x: 10,
       y: 10,
       socketTag: 'DDR4',
-      powerDraw: { value: 1, unit: 'W' },
+      powerDraw: u.Measure.of(1, W),
       rarity: 'COMMON',
       value: 10,
-      memoryCapacity: { value: 4, unit: 'GB' },
-      ioBandwidth: { value: 100, unit: 'mB/s' }
-    } as any);
+      memoryCapacity: u.Measure.of(4, GB),
+      ioBandwidth: u.Measure.of(100, mBPerSecond)
+    });
 
     const wrapper = mount(ServerRoom);
     
@@ -49,6 +50,6 @@ describe('ServerRoom.vue', () => {
     await items[0]!.trigger('mousedown', { button: 0 });
     
     // The clicked server should now be selected (it might be the same one, but the logic should fire)
-    expect(store.selectedItemId).toBe(store.servers[0].id);
+    expect(store.selectedItemId).toBe(store.servers[0]!.id);
   });
 });

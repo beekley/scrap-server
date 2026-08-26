@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { computed } from 'vue';
 import { useGameStore } from '../stores/game';
 import { isPartCompatibleWithSlot, type Part, type SlotDefinition, type ServerNode } from '../types';
 import PartSlots from './PartSlots.vue';

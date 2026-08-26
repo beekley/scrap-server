@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useGameStore } from '../stores/game';
+import { formatOps, formatGB, formatMB } from '../utils/formatting';
 
 const gameStore = useGameStore();
 </script>
@@ -27,10 +28,10 @@ const gameStore = useGameStore();
         </div>
         <p style="font-style: italic; color: #666; margin-bottom: 15px;">{{ job.description }}</p>
         <div style="font-size: 0.9em;">
-          <p style="margin: 4px 0;"><strong>Operations:</strong> {{ job.operationsRequired.value.toLocaleString() }} op</p>
-          <p style="margin: 4px 0;"><strong>Working Set:</strong> {{ job.workingSetSize.value / 1e9 }} GB</p>
-          <p style="margin: 4px 0;"><strong>Total Size:</strong> {{ job.totalSize.value / 1e9 }} GB</p>
-          <p style="margin: 4px 0;"><strong>IO Ratio:</strong> {{ (job.ioRatio.value / 1e6).toFixed(3) }} MB/op</p>
+          <p style="margin: 4px 0;"><strong>Operations:</strong> {{ formatOps(job.operationsRequired.value) }} op</p>
+          <p style="margin: 4px 0;"><strong>Working Set:</strong> {{ formatGB(job.workingSetSize.value) }} GB</p>
+          <p style="margin: 4px 0;"><strong>Total Size:</strong> {{ formatGB(job.totalSize.value) }} GB</p>
+          <p style="margin: 4px 0;"><strong>IO Ratio:</strong> {{ formatMB(job.ioRatio.value) }} MB/op</p>
         </div>
         <div style="margin-top: 15px; padding-top: 10px; border-top: 1px dashed #ccc;">
           <p style="margin: 4px 0; color: green; font-weight: bold;">Reward:</p>

@@ -30,27 +30,26 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div style="font-family: sans-serif; padding: 20px; max-width: 1400px; margin: 0 auto;">
-    <div style="display: flex; justify-content: space-between; align-items: baseline; border-bottom: 2px solid #ccc; margin-bottom: 20px; padding-bottom: 10px;">
-      <h1 style="margin: 0;">Scavenged Server Sim</h1>
-      <div style="display: flex; gap: 20px; align-items: center;">
-        <h2 style="margin: 0; color: green;">Cash: ${{ gameStore.cash }}</h2>
+  <div class="app-container">
+    <div class="header">
+      <h1 class="title">Scavenged Server Sim</h1>
+      <div class="status-bar">
+        <h2 class="cash">Cash: ${{ gameStore.cash }}</h2>
         
-        <div style="display: flex; gap: 5px; align-items: center; margin-left: 20px; background: #eee; padding: 4px 8px; border-radius: 6px;">
-          <button :style="{ fontWeight: gameStore.gameSpeed === 0 ? 'bold' : 'normal' }" @click="gameStore.setGameSpeed(0)">⏸️</button>
-          <button :style="{ fontWeight: gameStore.gameSpeed === 1 ? 'bold' : 'normal' }" @click="gameStore.setGameSpeed(1)">1x</button>
-          <button :style="{ fontWeight: gameStore.gameSpeed === 4 ? 'bold' : 'normal' }" @click="gameStore.setGameSpeed(4)">4x</button>
-          <button :style="{ fontWeight: gameStore.gameSpeed === 16 ? 'bold' : 'normal' }" @click="gameStore.setGameSpeed(16)">16x</button>
+        <div class="speed-controls">
+          <button :class="{ active: gameStore.gameSpeed === 0 }" @click="gameStore.setGameSpeed(0)">⏸️</button>
+          <button :class="{ active: gameStore.gameSpeed === 1 }" @click="gameStore.setGameSpeed(1)">1x</button>
+          <button :class="{ active: gameStore.gameSpeed === 4 }" @click="gameStore.setGameSpeed(4)">4x</button>
+          <button :class="{ active: gameStore.gameSpeed === 16 }" @click="gameStore.setGameSpeed(16)">16x</button>
         </div>
         
-        <h2 style="margin: 0; color: blue; min-width: 150px; text-align: right;">{{ formattedClock }}</h2>
+        <h2 class="clock">{{ formattedClock }}</h2>
       </div>
     </div>
 
     <!-- Main Content -->
-    <div style="display: flex; gap: 20px;">
-      <!-- Left Column: Rack Assembly (which now includes the ContextPanel) -->
-      <div style="flex: 1;">
+    <div class="main-content">
+      <div class="rack-column">
         <RackAssembly />
       </div>
     </div>
@@ -59,3 +58,60 @@ onUnmounted(() => {
     <BountyBoard />
   </div>
 </template>
+
+<style scoped>
+.app-container {
+  font-family: sans-serif;
+  padding: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  border-bottom: 2px solid #ccc;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+}
+.title {
+  margin: 0;
+}
+.status-bar {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+.cash {
+  margin: 0;
+  color: green;
+}
+.speed-controls {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  margin-left: 20px;
+  background: #eee;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+.speed-controls button {
+  cursor: pointer;
+}
+.speed-controls button.active {
+  font-weight: bold;
+}
+.clock {
+  margin: 0;
+  color: blue;
+  min-width: 150px;
+  text-align: right;
+}
+.main-content {
+  display: flex;
+  gap: 20px;
+}
+.rack-column {
+  flex: 1;
+}
+</style>

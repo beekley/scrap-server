@@ -2,7 +2,8 @@
 import { computed } from 'vue';
 import { useGameStore } from '../stores/game';
 import { getJobProgress, canServerRunJob, calculateComputeDetails, calculateTotalStorage } from '../simulation';
-import { isPartCompatibleWithSlot, type Part, type SlotDefinition, type Job, type ServerNode } from '../types';
+import { type Job, type ServerNode } from '../types';
+import { formatGB, formatMB, formatOps } from '../utils/formatting';
 
 import PartSlots from './PartSlots.vue';
 
@@ -69,7 +70,7 @@ const telemetry = computed(() => {
   if (!jobContext) return null;
   try {
     return calculateComputeDetails(selectedServer.value as unknown as ServerNode, jobContext as unknown as Job);
-  } catch(e) {
+  } catch {
     return null;
   }
 });
@@ -82,8 +83,7 @@ const totalStorage = computed(() => {
 const totalRam = computed(() => {
   if (!selectedServer.value) return 0;
   return selectedServer.value.installedParts
-    .filter(p => p.kind === 'RAM')
-    .reduce((acc, p) => acc + (p as any).memoryCapacity.value, 0);
+    .reduce((acc, p) => p.kind === 'RAM' ? acc + p.memoryCapacity.value : acc, 0);
 });
 
 const usedStorage = computed(() => {
@@ -127,6 +127,13 @@ const isServerValid = computed(() => {
   if (!selectedServer.value || !selectedJob.value) return false;
   return canServerRunJob(selectedServer.value as unknown as ServerNode, selectedJob.value as unknown as Job);
 });
+
+// Typed getters to avoid template 'any' and narrowing issues
+const asCpu = computed(() => displayedPart.value?.kind === 'CPU' ? displayedPart.value : null);
+const asRam = computed(() => displayedPart.value?.kind === 'RAM' ? displayedPart.value : null);
+const asStorage = computed(() => (displayedPart.value?.kind === 'STORAGE' || displayedPart.value?.kind === 'STORAGE_DEVICE') ? displayedPart.value : null);
+const asPsu = computed(() => displayedPart.value?.kind === 'PSU' ? displayedPart.value : null);
+
 </script>
 
 <template>
@@ -167,14 +174,14 @@ const isServerValid = computed(() => {
       <!-- Utilization Metrics -->
       <div style="margin-top: 20px; border-top: 2px solid #eee; padding-top: 10px;">
         <h4 style="margin-top: 0;">Utilization</h4>
-        <p style="margin: 2px 0;"><strong>CPU:</strong> {{ usedCpu }} op/s / {{ totalCpu }} op/s</p>
-        <p style="margin: 2px 0;"><strong>RAM:</strong> {{ (usedRam / 1e9).toFixed(1) }} GB / {{ (totalRam / 1e9).toFixed(1) }} GB</p>
-        <p style="margin: 2px 0;"><strong>Storage:</strong> {{ (usedStorage / 1e9).toFixed(1) }} GB / {{ (totalStorage / 1e9).toFixed(1) }} GB</p>
+        <p style="margin: 2px 0;"><strong>CPU:</strong> {{ formatOps(usedCpu) }} op/s / {{ formatOps(totalCpu) }} op/s</p>
+        <p style="margin: 2px 0;"><strong>RAM:</strong> {{ formatGB(usedRam) }} GB / {{ formatGB(totalRam) }} GB</p>
+        <p style="margin: 2px 0;"><strong>Storage:</strong> {{ formatGB(usedStorage) }} GB / {{ formatGB(totalStorage) }} GB</p>
       </div>
 
       <!-- Compute Rates -->
       <div style="margin-top: 10px;" v-if="telemetry && (isRunningJob || isServerValid)">
-        <p style="margin: 2px 0;"><strong>Working Set I/O:</strong> {{ (telemetry.workingSetThroughput.value / 1e6).toFixed(1) }} MB/s</p>
+        <p style="margin: 2px 0;"><strong>Working Set I/O:</strong> {{ formatMB(telemetry.workingSetThroughput.value) }} MB/s</p>
         <p :style="{ color: telemetry.isIoBottlenecked ? 'orange' : 'blue', margin: '2px 0' }">
           <strong>Bottleneck:</strong> {{ telemetry.isIoBottlenecked ? 'Storage I/O' : 'CPU Limit' }}
         </p>
@@ -195,22 +202,22 @@ const isServerValid = computed(() => {
       </h3>
       <p><strong>Kind:</strong> {{ displayedPart.kind }}</p>
       <p><strong>Socket:</strong> {{ displayedPart.socketTag }}</p>
-      <p><strong>Power Draw:</strong> {{ (displayedPart as any).powerDraw?.value || 0 }} W</p>
+      <p><strong>Power Draw:</strong> {{ displayedPart.powerDraw?.value || 0 }} W</p>
       <p><strong>Value:</strong> ${{ displayedPart.value }}</p>
 
-      <div v-if="displayedPart.kind === 'CPU'" style="margin-top: 10px;">
-        <p><strong>Compute Rate:</strong> {{ (displayedPart as any).computeRate?.value }} op/s</p>
+      <div v-if="asCpu" style="margin-top: 10px;">
+        <p><strong>Compute Rate:</strong> {{ formatOps(asCpu.computeRate?.value || 0) }} op/s</p>
       </div>
-      <div v-if="displayedPart.kind === 'RAM'" style="margin-top: 10px;">
-        <p><strong>Capacity:</strong> {{ (displayedPart as any).memoryCapacity?.value / 1e9 }} GB</p>
-        <p><strong>Bandwidth:</strong> {{ (displayedPart as any).ioBandwidth?.value / 1e6 }} MB/s</p>
+      <div v-if="asRam" style="margin-top: 10px;">
+        <p><strong>Capacity:</strong> {{ formatGB(asRam.memoryCapacity?.value || 0) }} GB</p>
+        <p><strong>Bandwidth:</strong> {{ formatMB(asRam.ioBandwidth?.value || 0) }} MB/s</p>
       </div>
-      <div v-if="displayedPart.kind === 'STORAGE' || displayedPart.kind === 'STORAGE_DEVICE'" style="margin-top: 10px;">
-        <p><strong>Capacity:</strong> {{ (displayedPart as any).storageCapacity?.value / 1e9 }} GB</p>
-        <p><strong>Bandwidth:</strong> {{ (displayedPart as any).ioBandwidth?.value / 1e6 }} MB/s</p>
+      <div v-if="asStorage" style="margin-top: 10px;">
+        <p><strong>Capacity:</strong> {{ formatGB(asStorage.storageCapacity?.value || 0) }} GB</p>
+        <p v-if="'ioBandwidth' in asStorage && asStorage.ioBandwidth"><strong>Bandwidth:</strong> {{ formatMB(asStorage.ioBandwidth.value) }} MB/s</p>
       </div>
-      <div v-if="displayedPart.kind === 'PSU'" style="margin-top: 10px;">
-        <p><strong>Power Capacity:</strong> {{ (displayedPart as any).powerCapacity?.value }} W</p>
+      <div v-if="asPsu" style="margin-top: 10px;">
+        <p><strong>Power Capacity:</strong> {{ asPsu.powerCapacity?.value || 0 }} W</p>
       </div>
 
       <!-- SLOTS -->

@@ -18,7 +18,7 @@ describe('ContextPanel.vue', () => {
   });
 
   it('renders server details for selected server', () => {
-    const store = useGameStore();
+    useGameStore();
     // Default has server selected
     const wrapper = mount(ContextPanel);
 

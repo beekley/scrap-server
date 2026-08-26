@@ -37,7 +37,7 @@ describe("Simulation Engine & Job Execution Logic", () => {
     socketTag: "RACKMOUNT_2U",
     powerDraw: u.Measure.of(0, W),
     rarity: 'COMMON',
-    value: 10,
+    value: 10, width: 10, height: 10,
   };
 
   const mbTrash: MotherboardPart = {
@@ -47,7 +47,7 @@ describe("Simulation Engine & Job Execution Logic", () => {
     socketTag: "CHASSIS_MOUNT",
     powerDraw: u.Measure.of(15, W),
     rarity: 'COMMON',
-    value: 10,
+    value: 10, width: 10, height: 10,
     slots: [],
   };
 
@@ -59,7 +59,7 @@ describe("Simulation Engine & Job Execution Logic", () => {
     computeRate: u.Measure.of(50, opsPerSecond),
     powerDraw: u.Measure.of(65, W),
     rarity: 'COMMON',
-    value: 10,
+    value: 10, width: 10, height: 10,
   };
 
   const ram1gb: RamPart = {
@@ -71,7 +71,7 @@ describe("Simulation Engine & Job Execution Logic", () => {
     ioBandwidth: u.Measure.of(5000, mBPerSecond),
     powerDraw: u.Measure.of(5, W),
     rarity: 'COMMON',
-    value: 10,
+    value: 10, width: 10, height: 10,
   };
 
   const hddSlow: StoragePart = {
@@ -83,7 +83,7 @@ describe("Simulation Engine & Job Execution Logic", () => {
     ioBandwidth: u.Measure.of(60, mBPerSecond),
     powerDraw: u.Measure.of(10, W),
     rarity: 'COMMON',
-    value: 10,
+    value: 10, width: 10, height: 10,
   };
 
   const psu200: PsuPart = {
@@ -94,7 +94,7 @@ describe("Simulation Engine & Job Execution Logic", () => {
     powerCapacity: u.Measure.of(200, W),
     powerDraw: u.Measure.of(0, W),
     rarity: 'COMMON',
-    value: 10,
+    value: 10, width: 10, height: 10,
   };
 
   const standardServer: ServerNode = {
@@ -169,7 +169,7 @@ describe("Simulation Engine & Job Execution Logic", () => {
             ioBandwidth: u.Measure.of(5000, mBPerSecond),
             powerDraw: u.Measure.of(5, W),
     rarity: 'COMMON',
-    value: 10,
+    value: 10, width: 10, height: 10,
           },
           {
             id: "usb_1gb",
@@ -179,7 +179,7 @@ describe("Simulation Engine & Job Execution Logic", () => {
             storageCapacity: u.Measure.of(1, GB),
             powerDraw: u.Measure.of(1, W),
     rarity: 'COMMON',
-    value: 10,
+    value: 10, width: 10, height: 10,
           },
         ], // Total = 3 GB, but max single part = 1 GB
       };
@@ -361,7 +361,7 @@ describe("Simulation Engine & Job Execution Logic", () => {
             computeRate: u.Measure.of(50, opsPerSecond),
             powerDraw: u.Measure.of(65, W),
     rarity: 'COMMON',
-    value: 10,
+    value: 10, width: 10, height: 10,
           },
           ram1gb, // 5000 MB/s
           hddSlow,

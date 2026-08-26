@@ -1,5 +1,5 @@
 import * as u from 'safe-units';
-import { ops, type Job, type Part, type ServerNode } from '../types';
+import { ops, type Job, type Part, type SlotDefinition } from '../types';
 import { allParts } from './parts';
 import { allJobs } from './jobs';
 import { manufacturers } from './manufacturers';
@@ -21,7 +21,7 @@ export function getPartTemplate(id: string): Part {
   cloned.id = instanceId;
 
   if ('slots' in cloned && cloned.slots) {
-    cloned.slots = cloned.slots.map((s: any) => ({ ...s }));
+    cloned.slots = cloned.slots.map((s: SlotDefinition) => ({ ...s }));
   }
 
   return cloned as Part;
@@ -41,10 +41,3 @@ export function getJobTemplate(id: string): Job {
   };
 }
 
-export function createInitialServer(): ServerNode {
-  return {
-    id: 'server_01',
-    name: 'Scrap Node 1',
-    installedParts: [],
-  };
-}
