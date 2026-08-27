@@ -5,6 +5,7 @@ import type {
   Power,
   Storage,
   Throughput,
+  Currency,
 } from "./units";
 
 export * from "./units";
@@ -181,7 +182,7 @@ export interface Job {
   ioRatio: DataPerOperation; // IO demand: storage transfer needed per operation (Storage / Operations)
 
   // Rewards
-  rewardCash: number;
+  rewardEtc: Currency;
   rewardPartIds: string[]; // Hardware drops upon completion
   rewardDescription: string; // Generic description of the reward (e.g. "Lot of 4 RAM sticks")
 

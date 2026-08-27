@@ -2,12 +2,13 @@
 
 ## Overview & Core Loop
 
-A simulation game where players assemble scrap electronics to run compute jobs, earn salvage rewards, and upgrade their rack to tackle higher-tier workloads. The core loop is:
+A simulation game where players assemble scrap electronics to run compute jobs, earn salvage rewards and EarthCoin ($ETC), and upgrade their rack to tackle higher-tier workloads. The core loop is:
 
 1. Player selects a job from the bounty board.
 2. Player starts a job running on exactly one server node.
-3. (Time progresses) Once the job is complete, the player receives a reward of parts.
-4. Player upgrades their servers and can run harder jobs.
+3. (Time progresses) Server parts consume power, draining the player's EarthCoin balance.
+4. Once the job is complete, the player receives a reward of parts and/or $ETC.
+5. Player upgrades their servers and can run harder jobs.
 
 ## Core Data Models
 
@@ -51,7 +52,15 @@ $$\text{Job.workCompleted} += \text{effectiveOpsRate} \times dt$$
 3. If the job reaches full progress, then it is done and the player receives the reward in their inventory.
 
 $$\text{Progress} = \min\left(1.0, \frac{\text{Job.workCompleted}}{\text{Job.operationsRequired}}\right)$$
+    
+### Power & Economy (EarthCoin)
 
+Instead of cash, the game economy runs on a cryptocurrency called EarthCoin ($ETC). 
+
+* **Power Draw**: Every simulation tick, all installed components (excluding PSUs) across all server nodes draw power in Watts.
+* **Idle Power**: Servers without an active job run in a low-power idle state, consuming only 1% of their cumulative maximum power draw.
+* **Cost**: The calculated energy consumption (in kWh) is billed every tick at a rate of 0.0001 $ETC per kWh.
+* **Out of Power State**: If the player's $ETC balance cannot cover the power cost for the tick, the servers are halted. An `Out of Power` warning banner is displayed, and jobs will no longer make progress until the player gains more $ETC.
 
 ## Minimal Part Compatibility System
 
@@ -139,7 +148,7 @@ These are aggregated in `src/data/index.ts` and loaded by the store.
 
 * Physical Server Racks (`RACK` parts) to mount cases into.
 * Drag-and-drop parts directly into server case slots (currently using dropdowns).
-* Power delivery and calculation (Node power draw vs PSU capacity).
+* Power capacity limits (Node power draw vs PSU capacity is not yet strictly enforced).
 * Thermal simulation (Heat generation vs Cooling capacity, thermal throttling).
 * Inter-node networking clusters (distributed compute across multi-chassis links).
 * Cable routing / 2D wire drag-and-drop.

@@ -6,6 +6,7 @@ const Basis = {
   time: "s",
   power: "W",
   temperature: "°C",
+  currency: "ETC",
 } as const;
 
 export type GameBasis = typeof Basis;
@@ -16,6 +17,7 @@ export const GameUnitSystem = u.UnitSystem.from<GameBasis>({
   time: "s",
   power: "W",
   temperature: "°C",
+  currency: "ETC",
 });
 
 // ==========================================
@@ -27,6 +29,7 @@ export const bytes = u.Measure.dimension(GameUnitSystem, "storage");
 export const seconds = u.Measure.dimension(GameUnitSystem, "time");
 export const watts = u.Measure.dimension(GameUnitSystem, "power");
 export const celsius = u.Measure.dimension(GameUnitSystem, "temperature");
+export const currency = u.Measure.dimension(GameUnitSystem, "currency");
 
 // ==========================================
 // Quantities & Types
@@ -47,6 +50,9 @@ export type Power<N = number> = u.LiftMeasure<typeof watts, N>;
 
 export const Temperature = celsius;
 export type Temperature<N = number> = u.LiftMeasure<typeof celsius, N>;
+
+export const Currency = currency;
+export type Currency<N = number> = u.LiftMeasure<typeof currency, N>;
 
 // Derived Quantities
 export const OperationsPerSecond = Operations.over(Time);
@@ -108,3 +114,6 @@ export const kW = u.kilo(watts);
 
 // Temperature
 export const degC = celsius.withSymbol("°C");
+
+// Currency
+export const ETC = currency.withSymbol("ETC");

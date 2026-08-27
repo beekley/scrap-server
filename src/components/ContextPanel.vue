@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useGameStore } from '../stores/game';
-import { getJobProgress, canServerRunJob, calculateComputeDetails, calculateTotalStorage } from '../simulation';
+import { getJobProgress, canServerRunJob, calculateComputeDetails, calculateTotalStorage, calculateServerPowerDraw } from '../simulation';
 import { type Job, type ServerNode } from '../types';
 import { formatGB, formatMB, formatOps } from '../utils/formatting';
 
@@ -56,12 +56,14 @@ const parentPart = computed(() => {
   return null;
 });
 
-const activeJob = computed(() => gameStore.activeJob);
+const activeJobs = computed(() => gameStore.activeJobs);
+const activeJob = computed(() => {
+  if (!parentServer.value) return null;
+  return activeJobs.value.find(j => j.serverNodeIds?.includes(parentServer.value!.id)) || null;
+});
 const selectedJob = computed(() => gameStore.availableJobs.find(j => j.id === gameStore.selectedJobId));
 
-const isRunningJob = computed(() => {
-  return activeJob.value && activeJob.value.serverNodeIds?.includes(parentServer.value?.id || '');
-});
+const isRunningJob = computed(() => !!activeJob.value);
 
 // Telemetry logic (only relevant when viewing Server Node)
 const telemetry = computed(() => {
@@ -123,6 +125,15 @@ const progressPercent = computed(() => {
   return (getJobProgress(activeJob.value as unknown as Job) * 100).toFixed(1);
 });
 
+const serverPowerDraw = computed(() => {
+  if (!selectedServer.value) return 0;
+  return calculateServerPowerDraw(selectedServer.value as unknown as ServerNode, isRunningJob.value);
+});
+
+const cpuPercent = computed(() => totalCpu.value > 0 ? (usedCpu.value / totalCpu.value * 100).toFixed(1) : '0.0');
+const ramPercent = computed(() => totalRam.value > 0 ? (usedRam.value / totalRam.value * 100).toFixed(1) : '0.0');
+const storagePercent = computed(() => totalStorage.value > 0 ? (usedStorage.value / totalStorage.value * 100).toFixed(1) : '0.0');
+
 const isServerValid = computed(() => {
   if (!selectedServer.value || !selectedJob.value) return false;
   return canServerRunJob(selectedServer.value as unknown as ServerNode, selectedJob.value as unknown as Job);
@@ -158,25 +169,25 @@ const asPsu = computed(() => displayedPart.value?.kind === 'PSU' ? displayedPart
           <div :style="{ width: progressPercent + '%', background: 'green', height: '100%' }"></div>
         </div>
         <div style="margin-top: 10px;">
-          <button @click="gameStore.abortJob()">Abort Job</button>
+          <button @click="gameStore.abortJob(activeJob.id)">Abort Job</button>
         </div>
       </div>
       
       <div v-else-if="selectedJob" style="margin: 20px 0; padding: 10px; border: 2px solid #ccc; background: #fafafa;">
         <h3 style="margin-top: 0;">Preview: {{ selectedJob.title }}</h3>
-        <button :disabled="!isServerValid || !!gameStore.activeJob" @click="gameStore.startJob(selectedServer.id, selectedJob.id)">
+        <button :disabled="!isServerValid" @click="gameStore.startJob(selectedServer.id, selectedJob.id)">
           Start Job
         </button>
-        <p v-if="gameStore.activeJob" style="color: orange; margin-top: 5px;">Another job is currently running.</p>
-        <p v-else-if="!isServerValid" style="color: red; margin-top: 5px;">Server lacks requirements to run this job.</p>
+        <p v-if="!isServerValid" style="color: red; margin-top: 5px;">Server lacks requirements to run this job.</p>
       </div>
 
       <!-- Utilization Metrics -->
       <div style="margin-top: 20px; border-top: 2px solid #eee; padding-top: 10px;">
         <h4 style="margin-top: 0;">Utilization</h4>
-        <p style="margin: 2px 0;"><strong>CPU:</strong> {{ formatOps(usedCpu) }} op/s / {{ formatOps(totalCpu) }} op/s</p>
-        <p style="margin: 2px 0;"><strong>RAM:</strong> {{ formatGB(usedRam) }} GB / {{ formatGB(totalRam) }} GB</p>
-        <p style="margin: 2px 0;"><strong>Storage:</strong> {{ formatGB(usedStorage) }} GB / {{ formatGB(totalStorage) }} GB</p>
+        <p style="margin: 2px 0;"><strong>Power:</strong> {{ serverPowerDraw.toFixed(1) }} W</p>
+        <p style="margin: 2px 0;"><strong>CPU:</strong> {{ formatOps(usedCpu) }} op/s / {{ formatOps(totalCpu) }} op/s ({{ cpuPercent }}%)</p>
+        <p style="margin: 2px 0;"><strong>RAM:</strong> {{ formatGB(usedRam) }} GB / {{ formatGB(totalRam) }} GB ({{ ramPercent }}%)</p>
+        <p style="margin: 2px 0;"><strong>Storage:</strong> {{ formatGB(usedStorage) }} GB / {{ formatGB(totalStorage) }} GB ({{ storagePercent }}%)</p>
       </div>
 
       <!-- Compute Rates -->

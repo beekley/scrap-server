@@ -1,11 +1,12 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import * as u from 'safe-units';
-import { s, ops, type Job, type Part, type ServerNode, isPartCompatibleWithSlot } from '../types';
+import { s, ops, type Job, type Part, type ServerNode, isPartCompatibleWithSlot, type Currency, ETC, W, type Power } from '../types';
 import { getPartTemplate } from '../data';
 import { generateProceduralJob } from '../generators';
-import { tickJob, canServerRunJob } from '../simulation';
+import { tickJob, canServerRunJob, calculateServerPowerDraw } from '../simulation';
 import { findValidDropLocation, type RoomRect } from '../utils/physics';
+import { autoAssembleRewards } from '../utils/assembly';
 
 export const useGameStore = defineStore('game', () => {
   function createStarterServer(): ServerNode {
@@ -41,10 +42,13 @@ export const useGameStore = defineStore('game', () => {
     generateProceduralJob(),
   ]);
 
-  const activeJob = ref<Job | null>(null);
+  const activeJobs = ref<Job[]>([]);
   const selectedJobId = ref<string | null>(null);
   const selectedItemId = ref<string | null>(servers.value[0]?.id ?? null);
-  const cash = ref<number>(0);
+  
+  const etc = ref<Currency>(u.Measure.of(0.025, ETC));
+  const currentPowerDraw = ref<Power>(u.Measure.of(0, W));
+  const outOfPower = ref<boolean>(false);
   
   // Game clock: starts at 0, unit is game-seconds
   const gameTimeSeconds = ref<number>(0);
@@ -162,8 +166,9 @@ export const useGameStore = defineStore('game', () => {
   }
 
   function startJob(serverId: string, jobId: string) {
-    // Only one active job at a time for MVP
-    if (activeJob.value) return;
+    // Prevent running multiple jobs on the same server
+    const isServerBusy = activeJobs.value.some(j => j.serverNodeIds?.includes(serverId));
+    if (isServerBusy) return;
 
     const server = servers.value.find(s => s.id === serverId);
     const jobTpl = availableJobs.value.find(j => j.id === jobId);
@@ -175,56 +180,76 @@ export const useGameStore = defineStore('game', () => {
     const newJob = { ...jobTpl };
     newJob.serverNodeIds = [serverId];
     newJob.workCompleted = u.Measure.of(0, ops);
-    activeJob.value = newJob;
+    activeJobs.value.push(newJob);
   }
 
-  function abortJob() {
-    activeJob.value = null;
+  function abortJob(jobId?: string) {
+    if (jobId) {
+      const index = activeJobs.value.findIndex(j => j.id === jobId);
+      if (index !== -1) {
+        activeJobs.value.splice(index, 1);
+      }
+    }
   }
 
   function tick(dtSeconds: number = 6) {
     gameTimeSeconds.value += dtSeconds;
 
-    if (!activeJob.value || !activeJob.value.serverNodeIds || activeJob.value.serverNodeIds.length === 0) {
-      return;
+    // Power calculation
+    let totalWatts = 0;
+    for (const server of servers.value) {
+      const isRunningJob = activeJobs.value.some(j => j.serverNodeIds?.includes(server.id));
+      totalWatts += calculateServerPowerDraw(server as unknown as ServerNode, isRunningJob);
     }
 
-    const serverId = activeJob.value.serverNodeIds[0];
-    const server = servers.value.find(s => s.id === serverId);
-    if (!server) return;
+    currentPowerDraw.value = u.Measure.of(totalWatts, W);
+    
+    const kwh = (totalWatts / 1000) * (dtSeconds / 3600);
+    const cost = kwh * 0.0001;
 
-    const dt = u.Measure.of(dtSeconds, s);
-    const result = tickJob(activeJob.value as unknown as Job, server as unknown as ServerNode, dt);
+    if (etc.value.value >= cost) {
+      etc.value = u.Measure.of(etc.value.value - cost, ETC);
+      outOfPower.value = false;
+    } else {
+      etc.value = u.Measure.of(0, ETC);
+      outOfPower.value = true;
+    }
 
-    if (result.isCompleted) {
-      // Payout
-      cash.value += activeJob.value.rewardCash;
-      for (const partId of activeJob.value.rewardPartIds) {
-        const part = getPartTemplate(partId);
-        const loc = findValidDropLocation(part.width, part.height, getRoomItems(), part.id);
-        part.x = loc.x;
-        part.y = loc.y;
-        
-        if (part.kind === 'CASE') {
-          servers.value.push({
-            id: `server_${servers.value.length + 1}_${Math.random().toString(36).substring(2,8)}`,
-            name: `Scrap Node ${servers.value.length + 1}`,
-            installedParts: [part],
-            x: part.x,
-            y: part.y
-          });
-        } else {
-          inventory.value.push(part);
+    if (!outOfPower.value) {
+      for (let i = activeJobs.value.length - 1; i >= 0; i--) {
+        const job = activeJobs.value[i];
+        if (job && job.serverNodeIds && job.serverNodeIds.length > 0) {
+          const serverId = job.serverNodeIds[0];
+          const server = servers.value.find(s => s.id === serverId);
+          if (server) {
+            const dt = u.Measure.of(dtSeconds, s);
+            const result = tickJob(job as unknown as Job, server as unknown as ServerNode, dt);
+
+            if (result.isCompleted) {
+              // Payout
+              etc.value = u.Measure.of(etc.value.value + job.rewardEtc.value, ETC);
+              
+              const { newServers, leftoverParts } = autoAssembleRewards(
+                job.rewardPartIds,
+                servers.value.length,
+                getRoomItems,
+                findValidDropLocation
+              );
+
+              servers.value.push(...newServers);
+              inventory.value.push(...leftoverParts);
+              
+              // Remove old job and replace with new one
+              const oldJobIndex = availableJobs.value.findIndex(j => j.id === job.id);
+              if (oldJobIndex !== -1) {
+                availableJobs.value.splice(oldJobIndex, 1, generateProceduralJob());
+              }
+              
+              activeJobs.value.splice(i, 1);
+            }
+          }
         }
       }
-      
-      // Remove old job and replace with new one
-      const oldJobIndex = availableJobs.value.findIndex(j => j.id === activeJob.value?.id);
-      if (oldJobIndex !== -1) {
-        availableJobs.value.splice(oldJobIndex, 1, generateProceduralJob());
-      }
-      
-      activeJob.value = null;
     }
   }
 
@@ -232,10 +257,12 @@ export const useGameStore = defineStore('game', () => {
     inventory,
     servers,
     availableJobs,
-    activeJob,
+    activeJobs,
     selectedJobId,
     selectedItemId,
-    cash,
+    etc,
+    currentPowerDraw,
+    outOfPower,
     gameTimeSeconds,
     gameSpeed,
     getPartFromInventory,

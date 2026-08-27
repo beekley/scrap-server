@@ -6,7 +6,8 @@ import {
   type PartKind, 
   type CasePart, 
   type MotherboardPart, 
-  ops, GB, megabytesPerOp
+  type Currency,
+  ops, GB, megabytesPerOp, ETC
 } from '../types';
 import { allParts as parts } from '../data/index';
 
@@ -45,7 +46,7 @@ function getCompatiblePartsByRarity(kind: PartKind, rarity: Rarity, socketTag: s
   return parts.filter((p: Part) => p.kind === kind && p.rarity === rarity && p.socketTag === socketTag);
 }
 
-export function generateServerReward(rarity: Rarity): { description: string, partIds: string[], cash: number } {
+export function generateServerReward(rarity: Rarity): { description: string, partIds: string[], etc: Currency } {
   const cases = getPartsByRarity('CASE', rarity);
   const mobos = getPartsByRarity('MOTHERBOARD', rarity);
   
@@ -55,7 +56,7 @@ export function generateServerReward(rarity: Rarity): { description: string, par
   const moboPart = pickRandomElement(getPartsByRarity('MOTHERBOARD', targetRarity)) as MotherboardPart | undefined;
   
   if (!casePart || !moboPart) {
-    return generateCashReward(rarity); 
+    return generateEtcReward(rarity); 
   }
 
   const generatedIds: string[] = [casePart.id, moboPart.id];
@@ -79,20 +80,20 @@ export function generateServerReward(rarity: Rarity): { description: string, par
   return {
     description: `A complete ${targetRarity.toLowerCase()} server`,
     partIds: generatedIds,
-    cash: 0
+    etc: u.Measure.of(0, ETC)
   };
 }
 
-export function generateBundleReward(rarity: Rarity): { description: string, partIds: string[], cash: number } {
+export function generateBundleReward(rarity: Rarity): { description: string, partIds: string[], etc: Currency } {
   const kinds: PartKind[] = ['RAM', 'STORAGE', 'CPU'];
   const kind = pickRandomElement(kinds) ?? 'RAM';
   
   let validParts = getPartsByRarity(kind, rarity);
   if (validParts.length === 0) validParts = getPartsByRarity(kind, 'COMMON');
-  if (validParts.length === 0) return generateCashReward(rarity);
+  if (validParts.length === 0) return generateEtcReward(rarity);
   
   const selectedPart = pickRandomElement(validParts);
-  if (!selectedPart) return generateCashReward(rarity);
+  if (!selectedPart) return generateEtcReward(rarity);
 
   const quantity = getRandomInt(2, 4);
   
@@ -101,11 +102,11 @@ export function generateBundleReward(rarity: Rarity): { description: string, par
   return {
     description: `Bundle of ${quantity}x ${selectedPart.name}`,
     partIds: generatedIds,
-    cash: 0
+    etc: u.Measure.of(0, ETC)
   };
 }
 
-export function generateCashReward(rarity: Rarity): { description: string, partIds: string[], cash: number } {
+export function generateEtcReward(rarity: Rarity): { description: string, partIds: string[], etc: Currency } {
   let multiplier = 1;
   switch (rarity) {
     case 'COMMON': multiplier = 1; break;
@@ -114,12 +115,15 @@ export function generateCashReward(rarity: Rarity): { description: string, partI
     case 'MYTHIC': multiplier = 15; break;
   }
   
-  const cash = getRandomInt(100 * multiplier, 200 * multiplier);
+  // Scale cash reward to ~0.01 ETC for COMMON
+  const baseValue = Math.random() * 0.01 + 0.005; // 0.005 to 0.015
+  const rawEtc = baseValue * multiplier;
+  const roundedEtc = Math.round(rawEtc * 10000) / 10000;
   
   return {
-    description: `$${cash} Cash Reward`,
+    description: `${roundedEtc.toFixed(4)} $ETC Reward`,
     partIds: [],
-    cash: cash
+    etc: u.Measure.of(roundedEtc, ETC)
   };
 }
 
@@ -156,11 +160,12 @@ export function generateProceduralJob(): Job {
   const rewardTypeRoll = Math.random();
   let reward;
   
-  if (rewardTypeRoll < 0.4) {
-    reward = generateCashReward(rarity);
-  } else if (rewardTypeRoll < 0.8) {
+  // decrease probability of cash
+  if (rewardTypeRoll < 0.1) { // 10% chance
+    reward = generateEtcReward(rarity);
+  } else if (rewardTypeRoll < 0.55) { // 45% chance
     reward = generateBundleReward(rarity);
-  } else {
+  } else { // 45% chance
     reward = generateServerReward(rarity);
   }
 
@@ -177,7 +182,7 @@ export function generateProceduralJob(): Job {
     totalSize: u.Measure.of(getRandomInt(5, 50) * diffMultiplier, GB),
     ioRatio: u.Measure.of(Math.random() * 2 + 0.1, megabytesPerOp), 
     
-    rewardCash: reward.cash,
+    rewardEtc: reward.etc,
     rewardPartIds: reward.partIds,
     rewardDescription: reward.description,
     

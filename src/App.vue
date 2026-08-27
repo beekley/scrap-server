@@ -31,10 +31,15 @@ onUnmounted(() => {
 
 <template>
   <div class="app-container">
+    <div v-if="gameStore.outOfPower" style="background: red; color: white; padding: 10px; text-align: center; font-weight: bold; margin-bottom: 20px; border-radius: 4px;">
+      ⚠️ INSUFFICIENT FUNDS FOR POWER - SERVERS HALTED ⚠️
+    </div>
+    
     <div class="header">
       <h1 class="title">Scavenged Server Sim</h1>
       <div class="status-bar">
-        <h2 class="cash">Cash: ${{ gameStore.cash }}</h2>
+        <h2 class="cash">EarthCoin: {{ gameStore.etc.value.toFixed(4) }} $ETC</h2>
+        <h2 class="power" style="color: orange; margin: 0;">Power: {{ gameStore.currentPowerDraw.value.toFixed(0) }} W</h2>
         
         <div class="speed-controls">
           <button :class="{ active: gameStore.gameSpeed === 0 }" @click="gameStore.setGameSpeed(0)">⏸️</button>

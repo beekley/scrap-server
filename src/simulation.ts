@@ -284,3 +284,16 @@ export function tickJob(
     isCompleted,
   };
 }
+
+/**
+ * Calculates the current power draw of a server node in Watts, taking into account idle state.
+ */
+export function calculateServerPowerDraw(server: ServerNode, isRunningJob: boolean): number {
+  let serverWatts = 0;
+  for (const part of server.installedParts) {
+    if (part.kind !== 'PSU') {
+      serverWatts += part.powerDraw.value;
+    }
+  }
+  return isRunningJob ? serverWatts : serverWatts * 0.01;
+}
