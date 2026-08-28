@@ -1,5 +1,5 @@
-import * as u from 'safe-units';
-import { W, type CasePart } from '../../types';
+import * as u from 'safe-units'
+import { W, ETC, type CasePart } from '../../types'
 
 export const cases: CasePart[] = [
   {
@@ -9,13 +9,13 @@ export const cases: CasePart[] = [
     socketTag: 'ATX_MID_TOWER',
     manufacturerId: 'mfg_techmaker',
     rarity: 'COMMON',
-    value: 20,
+    value: u.Measure.of(0.01, ETC),
     width: 20,
     height: 45,
     powerDraw: u.Measure.of(0, W),
     slots: [
-      { id: 'mb_0', label: 'Motherboard Tray', acceptsKind: 'MOTHERBOARD', socketTag: 'ATX' }
-    ]
+      { id: 'mb_0', label: 'Motherboard Tray', acceptsKind: 'MOTHERBOARD', socketTag: 'ATX' },
+    ],
   },
   {
     id: 'case_xblaze_rgb',
@@ -24,12 +24,12 @@ export const cases: CasePart[] = [
     socketTag: 'ATX_MID_TOWER',
     manufacturerId: 'mfg_xblaze',
     rarity: 'RARE',
-    value: 120,
+    value: u.Measure.of(0.06, ETC),
     width: 20,
     height: 45,
     powerDraw: u.Measure.of(15, W), // RGB uses power!
     slots: [
-      { id: 'mb_0', label: 'Motherboard Tray', acceptsKind: 'MOTHERBOARD', socketTag: 'ATX' }
-    ]
-  }
-];
+      { id: 'mb_0', label: 'Motherboard Tray', acceptsKind: 'MOTHERBOARD', socketTag: 'ATX' },
+    ],
+  },
+]

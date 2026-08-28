@@ -1,7 +1,26 @@
-import * as u from 'safe-units';
-import { W, type MotherboardPart } from '../../types';
+import * as u from 'safe-units'
+import { W, ETC, type MotherboardPart } from '../../types'
 
 export const motherboards: MotherboardPart[] = [
+  {
+    id: 'mb_techmaker_am2',
+    name: 'TechMaker Legacy AM2',
+    kind: 'MOTHERBOARD',
+    socketTag: 'ATX',
+    manufacturerId: 'mfg_techmaker',
+    rarity: 'COMMON',
+    value: u.Measure.of(15 / 2000, ETC),
+    width: 24,
+    height: 30,
+    powerDraw: u.Measure.of(10, W),
+    slots: [
+      { id: 'cpu_0', label: 'AM2 Socket', acceptsKind: 'CPU', socketTag: 'AM2' },
+      { id: 'ram_0', label: 'DDR2 Slot 1', acceptsKind: 'RAM', socketTag: 'DDR2' },
+      { id: 'ram_1', label: 'DDR2 Slot 2', acceptsKind: 'RAM', socketTag: 'DDR2' },
+      { id: 'sata_0', label: 'SATA2 Port 1', acceptsKind: 'STORAGE', socketTag: 'SATA3' },
+      { id: 'psu_0', label: 'ATX Power', acceptsKind: 'PSU', socketTag: 'STANDARD_ATX' },
+    ],
+  },
   {
     id: 'mb_haodyn_h61',
     name: 'Haodyn H61-M',
@@ -9,7 +28,7 @@ export const motherboards: MotherboardPart[] = [
     socketTag: 'ATX',
     manufacturerId: 'mfg_haodyn',
     rarity: 'UNCOMMON',
-    value: 50,
+    value: u.Measure.of(50 / 2000, ETC),
     width: 24,
     height: 30,
     powerDraw: u.Measure.of(15, W),
@@ -29,7 +48,7 @@ export const motherboards: MotherboardPart[] = [
     socketTag: 'ATX',
     manufacturerId: 'mfg_xblaze',
     rarity: 'RARE',
-    value: 120,
+    value: u.Measure.of(120 / 2000, ETC),
     width: 24,
     height: 30,
     powerDraw: u.Measure.of(25, W),
@@ -41,5 +60,5 @@ export const motherboards: MotherboardPart[] = [
       { id: 'm2_0', label: 'M.2 NVMe Slot', acceptsKind: 'STORAGE', socketTag: 'NVME' },
       { id: 'psu_0', label: 'ATX Power', acceptsKind: 'PSU', socketTag: 'STANDARD_ATX' },
     ],
-  }
-];
+  },
+]

@@ -1,53 +1,77 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, computed } from 'vue';
-import { useGameStore } from './stores/game';
-import BountyBoard from './components/BountyBoard.vue';
-import RackAssembly from './components/RackAssembly.vue';
+import { onMounted, onUnmounted, computed } from 'vue'
+import { useGameStore } from './stores/game'
+import BountyBoard from './components/BountyBoard.vue'
+import RackAssembly from './components/RackAssembly.vue'
 
-const gameStore = useGameStore();
-let ticker: ReturnType<typeof setInterval>;
+const gameStore = useGameStore()
+let ticker: ReturnType<typeof setInterval>
 
 const formattedClock = computed(() => {
-  const totalMinutes = Math.floor(gameStore.gameTimeSeconds / 60);
-  const days = Math.floor(totalMinutes / (24 * 60));
-  const hours = Math.floor((totalMinutes % (24 * 60)) / 60);
-  const mins = totalMinutes % 60;
-  return `Day ${days + 1}, ${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
-});
+  const totalMinutes = Math.floor(gameStore.gameTimeSeconds / 60)
+  const days = Math.floor(totalMinutes / (24 * 60))
+  const hours = Math.floor((totalMinutes % (24 * 60)) / 60)
+  const mins = totalMinutes % 60
+  return `Day ${days + 1}, ${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`
+})
 
 onMounted(() => {
   // Game loop ticks every 100ms real-life time = 6 game-seconds * speed multiplier
   ticker = setInterval(() => {
     if (gameStore.gameSpeed > 0) {
-      gameStore.tick(6 * gameStore.gameSpeed);
+      gameStore.tick(6 * gameStore.gameSpeed)
     }
-  }, 100);
-});
+  }, 100)
+})
 
 onUnmounted(() => {
-  clearInterval(ticker);
-});
+  clearInterval(ticker)
+})
 </script>
 
 <template>
   <div class="app-container">
-    <div v-if="gameStore.outOfPower" style="background: red; color: white; padding: 10px; text-align: center; font-weight: bold; margin-bottom: 20px; border-radius: 4px;">
+    <div
+      v-if="gameStore.outOfPower"
+      style="
+        background: red;
+        color: white;
+        padding: 10px;
+        text-align: center;
+        font-weight: bold;
+        margin-bottom: 20px;
+        border-radius: 4px;
+      "
+    >
       ⚠️ INSUFFICIENT FUNDS FOR POWER - SERVERS HALTED ⚠️
     </div>
-    
+
     <div class="header">
       <h1 class="title">Scavenged Server Sim</h1>
       <div class="status-bar">
         <h2 class="cash">EarthCoin: {{ gameStore.etc.value.toFixed(4) }} $ETC</h2>
-        <h2 class="power" style="color: orange; margin: 0;">Power: {{ gameStore.currentPowerDraw.value.toFixed(0) }} W</h2>
-        
+        <h2 class="power" style="color: orange; margin: 0">
+          Power: {{ gameStore.currentPowerDraw.value.toFixed(0) }} W
+        </h2>
+
         <div class="speed-controls">
-          <button :class="{ active: gameStore.gameSpeed === 0 }" @click="gameStore.setGameSpeed(0)">⏸️</button>
-          <button :class="{ active: gameStore.gameSpeed === 1 }" @click="gameStore.setGameSpeed(1)">1x</button>
-          <button :class="{ active: gameStore.gameSpeed === 4 }" @click="gameStore.setGameSpeed(4)">4x</button>
-          <button :class="{ active: gameStore.gameSpeed === 16 }" @click="gameStore.setGameSpeed(16)">16x</button>
+          <button :class="{ active: gameStore.gameSpeed === 0 }" @click="gameStore.setGameSpeed(0)">
+            ⏸️
+          </button>
+          <button :class="{ active: gameStore.gameSpeed === 1 }" @click="gameStore.setGameSpeed(1)">
+            1x
+          </button>
+          <button :class="{ active: gameStore.gameSpeed === 4 }" @click="gameStore.setGameSpeed(4)">
+            4x
+          </button>
+          <button
+            :class="{ active: gameStore.gameSpeed === 16 }"
+            @click="gameStore.setGameSpeed(16)"
+          >
+            16x
+          </button>
         </div>
-        
+
         <h2 class="clock">{{ formattedClock }}</h2>
       </div>
     </div>

@@ -1,26 +1,26 @@
 <script setup lang="ts">
-import { computed } from 'vue';
-import { useGameStore } from '../stores/game';
-import type { Part, ServerNode } from '../types';
-import { useDraggable } from '../composables/useDraggable';
-import { ROOM_WIDTH, ROOM_HEIGHT, type RoomRect } from '../utils/physics';
+import { computed } from 'vue'
+import { useGameStore } from '../stores/game'
+import type { Part, ServerNode } from '../types'
+import { useDraggable } from '../composables/useDraggable'
+import { ROOM_WIDTH, ROOM_HEIGHT, type RoomRect } from '../utils/physics'
 
-const gameStore = useGameStore();
+const gameStore = useGameStore()
 
-const SCALE = 3; // 1 unit = 3px
+const SCALE = 3 // 1 unit = 3px
 
 interface RoomItem extends RoomRect {
-  name: string;
-  kind: string;
-  isServer: boolean;
-  ref: ServerNode | Part;
+  name: string
+  kind: string
+  isServer: boolean
+  ref: ServerNode | Part
 }
 
 const roomItems = computed<RoomItem[]>(() => {
-  const items: RoomItem[] = [];
+  const items: RoomItem[] = []
 
   for (const s of gameStore.servers) {
-    const casePart = s.installedParts.find(p => p.kind === 'CASE');
+    const casePart = s.installedParts.find((p) => p.kind === 'CASE')
     if (casePart) {
       items.push({
         id: s.id, // Using server ID for selecting
@@ -31,8 +31,8 @@ const roomItems = computed<RoomItem[]>(() => {
         x: s.x ?? 0,
         y: s.y ?? 0,
         isServer: true,
-        ref: s as unknown as ServerNode
-      });
+        ref: s as unknown as ServerNode,
+      })
     }
   }
 
@@ -46,45 +46,46 @@ const roomItems = computed<RoomItem[]>(() => {
       x: p.x ?? 0,
       y: p.y ?? 0,
       isServer: false,
-      ref: p as unknown as Part
-    });
+      ref: p as unknown as Part,
+    })
   }
 
-  return items;
-});
+  return items
+})
 
 const { draggedItemId, dragX, dragY, isDragValid, handleMouseDown } = useDraggable(roomItems, {
   scale: SCALE,
   onMoveItem: (id, x, y) => gameStore.moveItem(id, x, y),
-  onSelect: (id) => { gameStore.selectedItemId = id; }
-});
+  onSelect: (id) => {
+    gameStore.selectedItemId = id
+  },
+})
 </script>
 
 <template>
   <div class="server-room-wrapper">
     <h3>Server Room</h3>
-    <div 
-      id="server-room-container" 
+    <div
+      id="server-room-container"
       class="room-container"
       :style="{ width: ROOM_WIDTH * SCALE + 'px', height: ROOM_HEIGHT * SCALE + 'px' }"
     >
-      <div 
-        v-for="item in roomItems" 
+      <div
+        v-for="item in roomItems"
         :key="item.id"
         class="room-item"
-        :class="{ 
+        :class="{
           'is-selected': gameStore.selectedItemId === item.id,
           'is-dragging': draggedItemId === item.id,
-          'is-invalid': draggedItemId === item.id && !isDragValid
+          'is-invalid': draggedItemId === item.id && !isDragValid,
         }"
         :style="{
           width: item.width * SCALE + 'px',
           height: item.height * SCALE + 'px',
-          transform: `translate(${(draggedItemId === item.id ? dragX : item.x) * SCALE}px, ${(draggedItemId === item.id ? dragY : item.y) * SCALE}px)`
+          transform: `translate(${(draggedItemId === item.id ? dragX : item.x) * SCALE}px, ${(draggedItemId === item.id ? dragY : item.y) * SCALE}px)`,
         }"
         @mousedown="handleMouseDown($event, item.id)"
-      >
-      </div>
+      ></div>
     </div>
   </div>
 </template>

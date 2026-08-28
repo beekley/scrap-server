@@ -7,7 +7,7 @@ A simulation game where players assemble scrap electronics to run compute jobs, 
 1. Player selects a job from the bounty board.
 2. Player starts a job running on exactly one server node.
 3. (Time progresses) Server parts consume power, draining the player's EarthCoin balance.
-4. Once the job is complete, the player receives a reward of parts and/or $ETC.
+4. Once the job is complete, the player receives a reward of parts, bundles, or complete server builds.
 5. Player upgrades their servers and can run harder jobs.
 
 ## Core Data Models
@@ -102,7 +102,7 @@ The UI consists of a single unified page showing all relevant information simult
 * Displays a list of available jobs in a card below the rack assembly.
 * Each job highlights: Work Volume ($op$), Working Set ($GB$), Total Size ($GB$), IO Intensity ($MB/op$), and Rewards.
 * Action: **Select Job** -> sets the job as the active target for the rack assembly validity checks.
-* When a job completes, a payout notification is shown and rewards (cash/parts) are added to the inventory.
+* When a job completes, a payout notification is shown and rewards (loot parts) are added to the inventory.
 
 ### 4. Game Clock & Pacing
 
@@ -126,10 +126,10 @@ These are aggregated in `src/data/index.ts` and loaded by the store.
 | ID | Name | Type | Socket / Target | Compute | RAM | IO Speed |
 | --- | --- | --- | --- | --- | --- | --- |
 | `case_techmaker_atx` | TechMaker Basic ATX Case | CASE | `TOWER` | 0 | 0 | — |
-| `mb_haodyn_h61` | Haodyn H61-M | MOTHERBOARD | `ATX` | 0 | 0 | 500 MB/s (SATA3) |
-| `cpu_acc_vectra_1155` | ACC Vectra-II 1155 | CPU | `LGA1155` | 300 op/s | 0 | — |
-| `ram_techmaker_4gb_ddr3` | TechMaker Value 4GB DDR3 | RAM | `DDR3` | 0 | 4 GB | 10,000 MB/s |
-| `hdd_techmaker_500gb` | TechMaker 500GB HDD | STORAGE | `SATA3` | 0 | 0 | 100 MB/s |
+| `mb_techmaker_am2` | TechMaker Legacy AM2 | MOTHERBOARD | `ATX` | 0 | 0 | 500 MB/s (SATA3) |
+| `cpu_acc_titan_legacy_4200` | ACC Titan Legacy 4200 | CPU | `AM2` | 40 op/s | 0 | — |
+| `ram_techmaker_512mb` | TechMaker Old 512MB DDR2 | RAM | `DDR2` | 0 | 0.5 GB | 3,200 MB/s |
+| `hdd_techmaker_250gb` | TechMaker 250GB HDD | STORAGE | `SATA3` | 0 | 0 | 80 MB/s |
 | `nvme_acc_datacore_1tb` | ACC DataCore Pro 1TB NVMe | STORAGE | `NVME` | 0 | 0 | 3,500 MB/s |
 | `psu_techmaker_300w` | TechMaker 300W Budget PSU | PSU | `STANDARD_ATX` | 0 | 0 | — |
 
@@ -137,9 +137,9 @@ These are aggregated in `src/data/index.ts` and loaded by the store.
 
 | ID | Title | Required Work | Working Set | Total Size | IO Ratio | Reward Drops |
 | --- | --- | --- | --- | --- | --- | --- |
-| `job_01` | Recover Corrupted Text Archive | 50,000 op | 1 GB | 10 GB | 0.2 MB/op (Low IO) | 1x `ram_techmaker_4gb_ddr3` |
-| `job_02` | Brute-Force Password Dump | 150,000 op | 1 GB | 2 GB | 0.01 MB/op (Compute Bound) | 1x `cpu_acc_vectra_1155` |
-| `job_03` | Scrape Video Metadata | 50,000 op | 2 GB | 50 GB | 2.5 MB/op (IO Bound) | 1x `psu_techmaker_300w`, 1x `hdd_techmaker_500gb` |
+| `job_01` | Recover Corrupted Text Archive | 50,000 op | 1 GB | 10 GB | 0.2 MB/op (Low IO) | 1x `ram_techmaker_512mb` |
+| `job_02` | Brute-Force Password Dump | 150,000 op | 1 GB | 2 GB | 0.01 MB/op (Compute Bound) | 1x `cpu_acc_titan_legacy_4200` |
+| `job_03` | Scrape Video Metadata | 50,000 op | 2 GB | 50 GB | 2.5 MB/op (IO Bound) | 1x `psu_techmaker_300w`, 1x `hdd_techmaker_250gb` |
 
 
 ---

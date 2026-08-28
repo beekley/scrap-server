@@ -1,18 +1,29 @@
-import { getPartTemplate } from '../data';
-import { isPartCompatibleWithSlot, type Part, type ServerNode, type SlotDefinition, type PartKind } from '../types';
-import type { RoomRect } from './physics';
+import { getPartTemplate } from '../data'
+import {
+  isPartCompatibleWithSlot,
+  type Part,
+  type ServerNode,
+  type SlotDefinition,
+  type PartKind,
+} from '../types'
+import type { RoomRect } from './physics'
 
 export function autoAssembleRewards(
   rewardPartIds: string[],
   existingServersCount: number,
   getRoomItems: () => RoomRect[],
-  findValidDropLocation: (w: number, h: number, items: RoomRect[], id: string) => { x: number; y: number }
+  findValidDropLocation: (
+    w: number,
+    h: number,
+    items: RoomRect[],
+    id: string,
+  ) => { x: number; y: number },
 ): { newServers: ServerNode[]; leftoverParts: Part[] } {
-  const rewardedParts = rewardPartIds.map(id => getPartTemplate(id));
-  const cases = rewardedParts.filter(p => p.kind === 'CASE');
-  const otherParts = rewardedParts.filter(p => p.kind !== 'CASE');
+  const rewardedParts = rewardPartIds.map((id) => getPartTemplate(id))
+  const cases = rewardedParts.filter((p) => p.kind === 'CASE')
+  const otherParts = rewardedParts.filter((p) => p.kind !== 'CASE')
 
-  const newServers: ServerNode[] = [];
+  const newServers: ServerNode[] = []
 
   for (const c of cases) {
     const newServer: ServerNode = {
@@ -21,23 +32,25 @@ export function autoAssembleRewards(
       installedParts: [c],
       x: 0,
       y: 0,
-    };
+    }
 
-    let changed = true;
+    let changed = true
     while (changed) {
-      changed = false;
+      changed = false
       for (const p of newServer.installedParts) {
-        if (!p.slots) continue;
+        if (!p.slots) continue
         for (const slot of p.slots) {
           if (!slot.installedPartId) {
-            const index = otherParts.findIndex(op => isPartCompatibleWithSlot(op, slot as SlotDefinition<PartKind>));
+            const index = otherParts.findIndex((op) =>
+              isPartCompatibleWithSlot(op, slot as SlotDefinition<PartKind>),
+            )
             if (index !== -1) {
-              const op = otherParts[index];
+              const op = otherParts[index]
               if (op) {
-                slot.installedPartId = op.id;
-                newServer.installedParts.push(op);
-                otherParts.splice(index, 1);
-                changed = true;
+                slot.installedPartId = op.id
+                newServer.installedParts.push(op)
+                otherParts.splice(index, 1)
+                changed = true
               }
             }
           }
@@ -45,19 +58,19 @@ export function autoAssembleRewards(
       }
     }
 
-    const loc = findValidDropLocation(c.width, c.height, getRoomItems(), newServer.id);
-    newServer.x = loc.x;
-    newServer.y = loc.y;
+    const loc = findValidDropLocation(c.width, c.height, getRoomItems(), newServer.id)
+    newServer.x = loc.x
+    newServer.y = loc.y
 
-    newServers.push(newServer);
+    newServers.push(newServer)
   }
 
   // Anything left goes to inventory
   for (const part of otherParts) {
-    const loc = findValidDropLocation(part.width, part.height, getRoomItems(), part.id);
-    part.x = loc.x;
-    part.y = loc.y;
+    const loc = findValidDropLocation(part.width, part.height, getRoomItems(), part.id)
+    part.x = loc.x
+    part.y = loc.y
   }
 
-  return { newServers, leftoverParts: otherParts };
+  return { newServers, leftoverParts: otherParts }
 }

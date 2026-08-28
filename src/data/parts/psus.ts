@@ -1,5 +1,5 @@
-import * as u from 'safe-units';
-import { W, type PsuPart } from '../../types';
+import * as u from 'safe-units'
+import { W, ETC, type PsuPart } from '../../types'
 
 export const psus: PsuPart[] = [
   {
@@ -9,7 +9,7 @@ export const psus: PsuPart[] = [
     socketTag: 'STANDARD_ATX',
     manufacturerId: 'mfg_techmaker',
     rarity: 'COMMON',
-    value: 20,
+    value: u.Measure.of(20 / 2000, ETC),
     width: 15,
     height: 8,
     powerCapacity: u.Measure.of(300, W),
@@ -22,10 +22,10 @@ export const psus: PsuPart[] = [
     socketTag: 'STANDARD_ATX',
     manufacturerId: 'mfg_xblaze',
     rarity: 'RARE',
-    value: 120,
+    value: u.Measure.of(120 / 2000, ETC),
     width: 15,
     height: 8,
     powerCapacity: u.Measure.of(650, W),
     powerDraw: u.Measure.of(0, W),
-  }
-];
+  },
+]

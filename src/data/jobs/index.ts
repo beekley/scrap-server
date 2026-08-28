@@ -1,3 +1,3 @@
-import type { Job } from '../../types';
+import type { Job } from '../../types'
 
-export const allJobs: Job[] = [];
+export const allJobs: Job[] = []
