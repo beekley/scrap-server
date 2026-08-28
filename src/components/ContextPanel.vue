@@ -83,10 +83,7 @@ const telemetry = computed(() => {
   const jobContext = isRunningJob.value ? activeJob.value : selectedJob.value
   if (!jobContext) return null
   try {
-    return calculateComputeDetails(
-      selectedServer.value as ServerNode,
-      jobContext as Job,
-    )
+    return calculateComputeDetails(selectedServer.value as ServerNode, jobContext as Job)
   } catch {
     return null
   }
@@ -166,10 +163,7 @@ import { isServerValid } from '../types'
 
 const canRunJob = computed(() => {
   if (!selectedServer.value || !selectedJob.value) return false
-  return canServerRunJob(
-    selectedServer.value as ServerNode,
-    selectedJob.value as Job,
-  )
+  return canServerRunJob(selectedServer.value as ServerNode, selectedJob.value as Job)
 })
 
 const isServerComplete = computed(() => {

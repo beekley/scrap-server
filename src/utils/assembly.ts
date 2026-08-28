@@ -17,13 +17,18 @@ export function autoAssembleRewards(
     h: number,
     items: RoomRect[],
     id: string,
+    minX?: number,
+    maxX?: number,
   ) => { x: number; y: number },
+  minX?: number,
+  maxX?: number,
 ): { newServers: ServerNode[]; leftoverParts: Part[] } {
   const rewardedParts = rewardPartIds.map((id) => getPartTemplate(id))
   const cases = rewardedParts.filter((p) => p.kind === 'CASE')
   const otherParts = rewardedParts.filter((p) => p.kind !== 'CASE')
 
   const newServers: ServerNode[] = []
+  const currentItems = getRoomItems()
 
   for (const c of cases) {
     const newServer: ServerNode = {
@@ -58,18 +63,20 @@ export function autoAssembleRewards(
       }
     }
 
-    const loc = findValidDropLocation(c.width, c.height, getRoomItems(), newServer.id)
+    const loc = findValidDropLocation(c.width, c.height, currentItems, newServer.id, minX, maxX)
     newServer.x = loc.x
     newServer.y = loc.y
+    currentItems.push({ id: newServer.id, x: loc.x, y: loc.y, width: c.width, height: c.height })
 
     newServers.push(newServer)
   }
 
   // Anything left goes to inventory
   for (const part of otherParts) {
-    const loc = findValidDropLocation(part.width, part.height, getRoomItems(), part.id)
+    const loc = findValidDropLocation(part.width, part.height, currentItems, part.id, minX, maxX)
     part.x = loc.x
     part.y = loc.y
+    currentItems.push({ id: part.id, x: loc.x, y: loc.y, width: part.width, height: part.height })
   }
 
   return { newServers, leftoverParts: otherParts }

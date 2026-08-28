@@ -16,7 +16,12 @@ import {
 import { getPartTemplate } from '../data'
 import { generateProceduralJob } from '../generators'
 import { tickJob, canServerRunJob, calculateServerPowerDraw } from '../simulation'
-import { findValidDropLocation, type RoomRect } from '../utils/physics'
+import {
+  findValidDropLocation,
+  type RoomRect,
+  TRANSFER_ZONE_START_X,
+  TRANSFER_ZONE_WIDTH,
+} from '../utils/physics'
 import { autoAssembleRewards } from '../utils/assembly'
 
 export const useGameStore = defineStore('game', () => {
@@ -63,7 +68,7 @@ export const useGameStore = defineStore('game', () => {
 
   // Game clock: starts at 0, unit is game-seconds
   const gameTimeSeconds = ref<number>(0)
-  const gameSpeed = ref<number>(1) // 0 (paused), 1 (1x), 4 (4x), 16 (16x)
+  const gameSpeed = ref<number>(1) // 0 (paused), 1 (1x), 4 (4x), 16 (16x), 64 (64x)
 
   function setGameSpeed(speed: number) {
     gameSpeed.value = speed
@@ -214,8 +219,61 @@ export const useGameStore = defineStore('game', () => {
     }
   }
 
+  const pendingRewardPartIds = ref<string[]>([])
+  const currentDay = ref<number>(0)
+  const showTransferPanel = ref<boolean>(false)
+
+  function sellTransferPanel() {
+    let totalValue = 0
+
+    // Remove servers in transfer zone
+    for (let i = servers.value.length - 1; i >= 0; i--) {
+      const server = servers.value[i]
+      if (server && server.x !== undefined && server.x >= TRANSFER_ZONE_START_X) {
+        for (const part of server.installedParts) {
+          totalValue += part.value.value
+        }
+        servers.value.splice(i, 1)
+      }
+    }
+
+    // Remove inventory parts in transfer zone
+    for (let i = inventory.value.length - 1; i >= 0; i--) {
+      const part = inventory.value[i]
+      if (part && part.x !== undefined && part.x >= TRANSFER_ZONE_START_X) {
+        totalValue += part.value.value
+        inventory.value.splice(i, 1)
+      }
+    }
+
+    const earned = totalValue * 0.25
+    etc.value = u.Measure.of(etc.value.value + earned, ETC)
+    showTransferPanel.value = false
+    setGameSpeed(1)
+  }
+
   function tick(dtSeconds: number = 6) {
     gameTimeSeconds.value += dtSeconds
+
+    const day = Math.floor(gameTimeSeconds.value / 86400)
+    if (day > currentDay.value && gameTimeSeconds.value > 0) {
+      currentDay.value = day
+      setGameSpeed(0)
+      showTransferPanel.value = true
+
+      const { newServers, leftoverParts } = autoAssembleRewards(
+        pendingRewardPartIds.value,
+        servers.value.length,
+        getRoomItems,
+        findValidDropLocation,
+        TRANSFER_ZONE_START_X,
+        TRANSFER_ZONE_START_X + TRANSFER_ZONE_WIDTH,
+      )
+
+      servers.value.push(...newServers)
+      inventory.value.push(...leftoverParts)
+      pendingRewardPartIds.value = []
+    }
 
     // Power calculation
     let totalWatts = 0
@@ -248,16 +306,8 @@ export const useGameStore = defineStore('game', () => {
             const result = tickJob(job as Job, server as ServerNode, dt)
 
             if (result.isCompleted) {
-              // Payout
-              const { newServers, leftoverParts } = autoAssembleRewards(
-                job.rewardPartIds,
-                servers.value.length,
-                getRoomItems,
-                findValidDropLocation,
-              )
-
-              servers.value.push(...newServers)
-              inventory.value.push(...leftoverParts)
+              // Payout - queue up rewards
+              pendingRewardPartIds.value.push(...job.rewardPartIds)
 
               // Remove old job and replace with new one
               const oldJobIndex = availableJobs.value.findIndex((j) => j.id === job.id)
@@ -285,6 +335,7 @@ export const useGameStore = defineStore('game', () => {
     outOfPower,
     gameTimeSeconds,
     gameSpeed,
+    showTransferPanel,
     getPartFromInventory,
     installRootPart,
     installPart,
@@ -295,5 +346,6 @@ export const useGameStore = defineStore('game', () => {
     abortJob,
     tick,
     setGameSpeed,
+    sellTransferPanel,
   }
 })

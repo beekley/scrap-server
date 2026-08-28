@@ -2,10 +2,8 @@ import * as u from 'safe-units'
 import {
   B,
   bytesPerSecond,
-  ops,
   opsPerSecond,
   type Job,
-  type Operations,
   type OperationsPerSecond,
   type Part,
   type ServerNode,
@@ -74,7 +72,9 @@ export function calculateTotalStorage(serverOrServers: ServerNode | ServerNode[]
   return total
 }
 
-export function calculateTotalStorageBandwidth(serverOrServers: ServerNode | ServerNode[]): Throughput {
+export function calculateTotalStorageBandwidth(
+  serverOrServers: ServerNode | ServerNode[],
+): Throughput {
   const parts = getAllParts(serverOrServers)
   let totalBW: Throughput = u.Measure.of(0, bytesPerSecond)
 
@@ -153,9 +153,9 @@ export function calculateWorkingSetAllocation(
 
 export function canServerRunJob(serverOrServers: ServerNode | ServerNode[], job: Job): boolean {
   const servers = normalizeServers(serverOrServers)
-  
+
   // All nodes must be valid
-  if (!servers.every(s => isServerValid(s))) {
+  if (!servers.every((s) => isServerValid(s))) {
     return false
   }
 
@@ -249,24 +249,24 @@ export function calculateEffectiveComputeRate(
  * Returns current job progress fraction between 0.0 and 1.0.
  */
 export function getJobProgress(job: Job): number {
-  let totalParts = 0;
-  let completedParts = 0;
+  let totalParts = 0
+  let completedParts = 0
 
   if (job.downloadSize.value > 0) {
-    totalParts += 1;
-    completedParts += Math.min(1.0, job.downloadedBytes.value / job.downloadSize.value);
+    totalParts += 1
+    completedParts += Math.min(1.0, job.downloadedBytes.value / job.downloadSize.value)
   }
   if (job.operationsRequired.value > 0) {
-    totalParts += 1;
-    completedParts += Math.min(1.0, job.workCompleted.value / job.operationsRequired.value);
+    totalParts += 1
+    completedParts += Math.min(1.0, job.workCompleted.value / job.operationsRequired.value)
   }
   if (job.uploadSize.value > 0) {
-    totalParts += 1;
-    completedParts += Math.min(1.0, job.uploadedBytes.value / job.uploadSize.value);
+    totalParts += 1
+    completedParts += Math.min(1.0, job.uploadedBytes.value / job.uploadSize.value)
   }
 
-  if (totalParts === 0) return 1.0;
-  return completedParts / totalParts;
+  if (totalParts === 0) return 1.0
+  return completedParts / totalParts
 }
 
 /**
@@ -300,21 +300,21 @@ export function tickJob(
     }
   }
 
-  let rate = 0;
+  let rate = 0
 
   // Phase 1: LOADING
   if (job.status === 'LOADING') {
     if (job.downloadSize.value <= 0 || job.downloadedBytes.gte(job.downloadSize)) {
-      job.downloadedBytes = job.downloadSize;
-      job.status = 'COMPUTING';
+      job.downloadedBytes = job.downloadSize
+      job.status = 'COMPUTING'
     } else {
       const storageBw = calculateTotalStorageBandwidth(serverOrServers)
-      rate = storageBw.value;
-      const bytesThisTick = storageBw.times(dt);
-      job.downloadedBytes = job.downloadedBytes.plus(bytesThisTick);
+      rate = storageBw.value
+      const bytesThisTick = storageBw.times(dt)
+      job.downloadedBytes = job.downloadedBytes.plus(bytesThisTick)
       if (job.downloadedBytes.gte(job.downloadSize)) {
-        job.downloadedBytes = job.downloadSize;
-        job.status = 'COMPUTING';
+        job.downloadedBytes = job.downloadSize
+        job.status = 'COMPUTING'
       }
     }
   }
@@ -322,16 +322,16 @@ export function tickJob(
   // Phase 2: COMPUTING
   if (job.status === 'COMPUTING') {
     if (job.operationsRequired.value <= 0 || job.workCompleted.gte(job.operationsRequired)) {
-      job.workCompleted = job.operationsRequired;
-      job.status = 'SAVING';
+      job.workCompleted = job.operationsRequired
+      job.status = 'SAVING'
     } else {
       const effectiveRate = calculateEffectiveComputeRate(serverOrServers, job)
-      rate = effectiveRate.value;
-      const opsThisTick = effectiveRate.times(dt);
-      job.workCompleted = job.workCompleted.plus(opsThisTick);
+      rate = effectiveRate.value
+      const opsThisTick = effectiveRate.times(dt)
+      job.workCompleted = job.workCompleted.plus(opsThisTick)
       if (job.workCompleted.gte(job.operationsRequired)) {
-        job.workCompleted = job.operationsRequired;
-        job.status = 'SAVING';
+        job.workCompleted = job.operationsRequired
+        job.status = 'SAVING'
       }
     }
   }
@@ -339,16 +339,16 @@ export function tickJob(
   // Phase 3: SAVING
   if (job.status === 'SAVING') {
     if (job.uploadSize.value <= 0 || job.uploadedBytes.gte(job.uploadSize)) {
-      job.uploadedBytes = job.uploadSize;
-      job.status = 'COMPLETED';
+      job.uploadedBytes = job.uploadSize
+      job.status = 'COMPLETED'
     } else {
       const storageBw = calculateTotalStorageBandwidth(serverOrServers)
-      rate = storageBw.value;
-      const bytesThisTick = storageBw.times(dt);
-      job.uploadedBytes = job.uploadedBytes.plus(bytesThisTick);
+      rate = storageBw.value
+      const bytesThisTick = storageBw.times(dt)
+      job.uploadedBytes = job.uploadedBytes.plus(bytesThisTick)
       if (job.uploadedBytes.gte(job.uploadSize)) {
-        job.uploadedBytes = job.uploadSize;
-        job.status = 'COMPLETED';
+        job.uploadedBytes = job.uploadSize
+        job.status = 'COMPLETED'
       }
     }
   }

@@ -6,7 +6,6 @@ import type {
   Storage,
   Throughput,
   Currency,
-  ETC,
 } from './units'
 
 export * from './units'

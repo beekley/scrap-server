@@ -70,6 +70,12 @@ onUnmounted(() => {
           >
             16x
           </button>
+          <button
+            :class="{ active: gameStore.gameSpeed === 64 }"
+            @click="gameStore.setGameSpeed(64)"
+          >
+            64x
+          </button>
         </div>
 
         <h2 class="clock">{{ formattedClock }}</h2>

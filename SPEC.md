@@ -45,7 +45,13 @@ The simulation engine uses realistic dimensions (Operations, MB/s, GB, Watts) pr
 
 Additionally, the job's `totalSize` is a hard requirement. If the server does not have enough total storage capacity to hold the data, it cannot run the job at all.
 
-If the job reaches full progress across all phases, it is done and the player receives the hardware reward in their inventory.
+If the job reaches full progress across all phases, it is done and the player receives the hardware reward. However, rewards are not given immediately; they accumulate as "pending rewards."
+    
+### The Transfer Panel
+At midnight each day, the game pauses and the **Transfer Panel** opens. This is a grid similar to the server room.
+*   All pending rewards from the previous day are automatically deposited into the transfer panel.
+*   The player can drag and drop parts between their main server room and the transfer panel.
+*   Clicking the **Sell Items** button will permanently sell all parts and servers currently left inside the transfer panel for 25% of their base value in $ETC, closing the panel. If the player wants to keep all rewards, they drag them to the main room and click "Sell" to close it (selling 0 items).
     
 ### Power & Economy (EarthCoin)
 

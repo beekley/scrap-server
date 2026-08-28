@@ -1,5 +1,7 @@
 export const ROOM_WIDTH = 100
 export const ROOM_HEIGHT = 250
+export const TRANSFER_ZONE_START_X = 150
+export const TRANSFER_ZONE_WIDTH = 100
 
 export interface RoomRect {
   id: string
@@ -16,8 +18,9 @@ export function isEmptySpace(
   height: number,
   ignoreId: string,
   items: RoomRect[],
+  maxWidth: number = ROOM_WIDTH,
 ): boolean {
-  if (x < 0 || x + width > ROOM_WIDTH) return false
+  if (x < 0 || x + width > maxWidth) return false
   if (y < 0 || y + height > ROOM_HEIGHT) return false
 
   for (const other of items) {
@@ -55,9 +58,10 @@ export function isValidPlacement(
   height: number,
   ignoreId: string,
   items: RoomRect[],
+  maxWidth: number = ROOM_WIDTH,
 ): boolean {
   return (
-    isEmptySpace(x, y, width, height, ignoreId, items) &&
+    isEmptySpace(x, y, width, height, ignoreId, items, maxWidth) &&
     isSupported(x, y, width, height, ignoreId, items)
   )
 }
@@ -83,13 +87,15 @@ export function findValidDropLocation(
   height: number,
   items: RoomRect[],
   ignoreId: string = '',
+  minX: number = 0,
+  maxX: number = ROOM_WIDTH,
 ): { x: number; y: number } {
-  let bestX = 0
+  let bestX = minX
   let bestY = -1
 
-  for (let x = 0; x <= ROOM_WIDTH - width; x += 5) {
+  for (let x = minX; x <= maxX - width; x += 5) {
     let y = ROOM_HEIGHT - height
-    while (y >= 0 && !isValidPlacement(x, y, width, height, ignoreId, items)) {
+    while (y >= 0 && !isValidPlacement(x, y, width, height, ignoreId, items, maxX)) {
       y--
     }
     if (y > bestY) {
@@ -100,5 +106,5 @@ export function findValidDropLocation(
   }
 
   if (bestY >= 0) return { x: bestX, y: bestY }
-  return { x: 0, y: 0 }
+  return { x: minX, y: 0 }
 }

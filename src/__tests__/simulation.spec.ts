@@ -136,11 +136,11 @@ describe('Simulation Engine & Job Execution Logic', () => {
         rarity: 'COMMON',
         rewardPartIds: [],
         status: 'NOT_STARTED',
-downloadSize: u.Measure.of(0, B),
-downloadedBytes: u.Measure.of(0, B),
-uploadSize: u.Measure.of(0, B),
-uploadedBytes: u.Measure.of(0, B),
-workCompleted: u.Measure.of(0, ops),
+        downloadSize: u.Measure.of(0, B),
+        downloadedBytes: u.Measure.of(0, B),
+        uploadSize: u.Measure.of(0, B),
+        uploadedBytes: u.Measure.of(0, B),
+        workCompleted: u.Measure.of(0, ops),
       }
 
       expect(canServerRunJob(standardServer, job)).toBe(true)
@@ -165,11 +165,11 @@ workCompleted: u.Measure.of(0, ops),
         rarity: 'COMMON',
         rewardPartIds: [],
         status: 'NOT_STARTED',
-downloadSize: u.Measure.of(0, B),
-downloadedBytes: u.Measure.of(0, B),
-uploadSize: u.Measure.of(0, B),
-uploadedBytes: u.Measure.of(0, B),
-workCompleted: u.Measure.of(0, ops),
+        downloadSize: u.Measure.of(0, B),
+        downloadedBytes: u.Measure.of(0, B),
+        uploadSize: u.Measure.of(0, B),
+        uploadedBytes: u.Measure.of(0, B),
+        workCompleted: u.Measure.of(0, ops),
       }
 
       expect(canServerRunJob(smallServer, job)).toBe(false)
@@ -180,7 +180,10 @@ workCompleted: u.Measure.of(0, ops),
         id: 'frag_node',
         name: 'Fragmented Node',
         installedParts: [
-          caseChassis, mbTrash, cpuOld, psu200,
+          caseChassis,
+          mbTrash,
+          cpuOld,
+          psu200,
           ram1gb, // 1 GB (5000 MB/s)
           {
             id: 'ram_1gb_b',
@@ -222,11 +225,11 @@ workCompleted: u.Measure.of(0, ops),
         rarity: 'COMMON',
         rewardPartIds: [],
         status: 'NOT_STARTED',
-downloadSize: u.Measure.of(0, B),
-downloadedBytes: u.Measure.of(0, B),
-uploadSize: u.Measure.of(0, B),
-uploadedBytes: u.Measure.of(0, B),
-workCompleted: u.Measure.of(0, ops),
+        downloadSize: u.Measure.of(0, B),
+        downloadedBytes: u.Measure.of(0, B),
+        uploadSize: u.Measure.of(0, B),
+        uploadedBytes: u.Measure.of(0, B),
+        workCompleted: u.Measure.of(0, ops),
       }
 
       // It CAN run because working set spills over 1GB + 1GB
@@ -258,11 +261,11 @@ workCompleted: u.Measure.of(0, ops),
         rarity: 'COMMON',
         rewardPartIds: [],
         status: 'NOT_STARTED',
-downloadSize: u.Measure.of(0, B),
-downloadedBytes: u.Measure.of(0, B),
-uploadSize: u.Measure.of(0, B),
-uploadedBytes: u.Measure.of(0, B),
-workCompleted: u.Measure.of(0, ops),
+        downloadSize: u.Measure.of(0, B),
+        downloadedBytes: u.Measure.of(0, B),
+        uploadSize: u.Measure.of(0, B),
+        uploadedBytes: u.Measure.of(0, B),
+        workCompleted: u.Measure.of(0, ops),
       }
 
       expect(canServerRunJob([nodeA, nodeB], job)).toBe(true)
@@ -307,11 +310,11 @@ workCompleted: u.Measure.of(0, ops),
         rarity: 'COMMON',
         rewardPartIds: [],
         status: 'NOT_STARTED',
-downloadSize: u.Measure.of(0, B),
-downloadedBytes: u.Measure.of(0, B),
-uploadSize: u.Measure.of(0, B),
-uploadedBytes: u.Measure.of(0, B),
-workCompleted: u.Measure.of(0, ops),
+        downloadSize: u.Measure.of(0, B),
+        downloadedBytes: u.Measure.of(0, B),
+        uploadSize: u.Measure.of(0, B),
+        uploadedBytes: u.Measure.of(0, B),
+        workCompleted: u.Measure.of(0, ops),
       }
 
       const details = calculateComputeDetails(standardServer, job)
@@ -348,11 +351,11 @@ workCompleted: u.Measure.of(0, ops),
         rarity: 'COMMON',
         rewardPartIds: [],
         status: 'NOT_STARTED',
-downloadSize: u.Measure.of(0, B),
-downloadedBytes: u.Measure.of(0, B),
-uploadSize: u.Measure.of(0, B),
-uploadedBytes: u.Measure.of(0, B),
-workCompleted: u.Measure.of(0, ops),
+        downloadSize: u.Measure.of(0, B),
+        downloadedBytes: u.Measure.of(0, B),
+        uploadSize: u.Measure.of(0, B),
+        uploadedBytes: u.Measure.of(0, B),
+        workCompleted: u.Measure.of(0, ops),
       }
 
       const details = calculateComputeDetails(standardServer, job)
@@ -378,11 +381,11 @@ workCompleted: u.Measure.of(0, ops),
         rarity: 'COMMON',
         rewardPartIds: [],
         status: 'NOT_STARTED',
-downloadSize: u.Measure.of(0, B),
-downloadedBytes: u.Measure.of(0, B),
-uploadSize: u.Measure.of(0, B),
-uploadedBytes: u.Measure.of(0, B),
-workCompleted: u.Measure.of(0, ops),
+        downloadSize: u.Measure.of(0, B),
+        downloadedBytes: u.Measure.of(0, B),
+        uploadSize: u.Measure.of(0, B),
+        uploadedBytes: u.Measure.of(0, B),
+        workCompleted: u.Measure.of(0, ops),
       }
 
       const details = calculateComputeDetails(standardServer, job)
@@ -429,11 +432,11 @@ workCompleted: u.Measure.of(0, ops),
         rarity: 'COMMON',
         rewardPartIds: [],
         status: 'NOT_STARTED',
-downloadSize: u.Measure.of(0, B),
-downloadedBytes: u.Measure.of(0, B),
-uploadSize: u.Measure.of(0, B),
-uploadedBytes: u.Measure.of(0, B),
-workCompleted: u.Measure.of(0, ops),
+        downloadSize: u.Measure.of(0, B),
+        downloadedBytes: u.Measure.of(0, B),
+        uploadSize: u.Measure.of(0, B),
+        uploadedBytes: u.Measure.of(0, B),
+        workCompleted: u.Measure.of(0, ops),
       }
 
       // 50 + 50 = 100 op/s
@@ -456,11 +459,11 @@ workCompleted: u.Measure.of(0, ops),
         rarity: 'COMMON',
         rewardPartIds: [],
         status: 'NOT_STARTED',
-downloadSize: u.Measure.of(0, B),
-downloadedBytes: u.Measure.of(0, B),
-uploadSize: u.Measure.of(0, B),
-uploadedBytes: u.Measure.of(0, B),
-workCompleted: u.Measure.of(0, ops),
+        downloadSize: u.Measure.of(0, B),
+        downloadedBytes: u.Measure.of(0, B),
+        uploadSize: u.Measure.of(0, B),
+        uploadedBytes: u.Measure.of(0, B),
+        workCompleted: u.Measure.of(0, ops),
       }
 
       // 1 tick = 5 seconds
@@ -468,7 +471,7 @@ workCompleted: u.Measure.of(0, ops),
       const result = tickJob(job, standardServer, dt5s)
 
       // 50 op/s * 5s = 250 ops completed
-      
+
       expect(job.workCompleted.value).toBe(250)
       expect(result.progress).toBe(0.5)
       expect(result.isCompleted).toBe(false)
@@ -488,18 +491,17 @@ workCompleted: u.Measure.of(0, ops),
         rarity: 'COMMON',
         rewardPartIds: [],
         status: 'COMPUTING',
-downloadSize: u.Measure.of(0, B),
-downloadedBytes: u.Measure.of(0, B),
-uploadSize: u.Measure.of(0, B),
-uploadedBytes: u.Measure.of(0, B),
-workCompleted: u.Measure.of(400, ops), // 100 ops remaining
+        downloadSize: u.Measure.of(0, B),
+        downloadedBytes: u.Measure.of(0, B),
+        uploadSize: u.Measure.of(0, B),
+        uploadedBytes: u.Measure.of(0, B),
+        workCompleted: u.Measure.of(400, ops), // 100 ops remaining
       }
 
       // 1 tick = 10 seconds -> 50 op/s * 10s = 500 ops (more than 100 remaining)
       const dt10s = u.Measure.of(10, s)
       const result = tickJob(job, standardServer, dt10s)
 
-      
       expect(job.workCompleted.value).toBe(500)
       expect(result.progress).toBe(1.0)
       expect(result.isCompleted).toBe(true)
@@ -519,17 +521,16 @@ workCompleted: u.Measure.of(400, ops), // 100 ops remaining
         rarity: 'COMMON',
         rewardPartIds: [],
         status: 'COMPLETED',
-downloadSize: u.Measure.of(0, B),
-downloadedBytes: u.Measure.of(0, B),
-uploadSize: u.Measure.of(0, B),
-uploadedBytes: u.Measure.of(0, B),
-workCompleted: u.Measure.of(500, ops),
+        downloadSize: u.Measure.of(0, B),
+        downloadedBytes: u.Measure.of(0, B),
+        uploadSize: u.Measure.of(0, B),
+        uploadedBytes: u.Measure.of(0, B),
+        workCompleted: u.Measure.of(500, ops),
       }
 
       const dt10s = u.Measure.of(10, s)
       const result = tickJob(job, standardServer, dt10s)
 
-      
       expect(result.progress).toBe(1.0)
       expect(result.isCompleted).toBe(true)
     })
@@ -553,16 +554,15 @@ workCompleted: u.Measure.of(500, ops),
         rarity: 'COMMON',
         rewardPartIds: [],
         status: 'NOT_STARTED',
-downloadSize: u.Measure.of(0, B),
-downloadedBytes: u.Measure.of(0, B),
-uploadSize: u.Measure.of(0, B),
-uploadedBytes: u.Measure.of(0, B),
-workCompleted: u.Measure.of(0, ops),
+        downloadSize: u.Measure.of(0, B),
+        downloadedBytes: u.Measure.of(0, B),
+        uploadSize: u.Measure.of(0, B),
+        uploadedBytes: u.Measure.of(0, B),
+        workCompleted: u.Measure.of(0, ops),
       }
 
       const result = tickJob(job, invalidServer, u.Measure.of(10, s))
-      
-      
+
       expect(result.isCompleted).toBe(false)
       expect(job.workCompleted.value).toBe(0)
     })

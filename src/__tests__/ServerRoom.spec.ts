@@ -52,4 +52,39 @@ describe('ServerRoom.vue', () => {
     // The clicked server should now be selected (it might be the same one, but the logic should fire)
     expect(store.selectedItemId).toBe(store.servers[0]!.id)
   })
+
+  it('renders transfer panel when showTransferPanel is true', async () => {
+    const store = useGameStore()
+    store.showTransferPanel = true
+    const wrapper = mount(ServerRoom)
+
+    expect(wrapper.text()).toContain('Transfer Panel')
+    expect(wrapper.text()).toContain('Sell Items')
+    expect(wrapper.find('.transfer-zone-bg').exists()).toBe(true)
+  })
+
+  it('calculates total sell value for items in the transfer zone', async () => {
+    const store = useGameStore()
+    store.showTransferPanel = true
+    store.inventory.push({
+      id: 'transfer_part',
+      name: 'Transfer Part',
+      kind: 'RAM',
+      width: 10,
+      height: 5,
+      x: 160, // Inside transfer zone (>= 150)
+      y: 10,
+      socketTag: 'DDR4',
+      powerDraw: u.Measure.of(1, W),
+      rarity: 'COMMON',
+      value: u.Measure.of(100, ETC),
+      memoryCapacity: u.Measure.of(4, GB),
+      ioBandwidth: u.Measure.of(100, mBPerSecond),
+    })
+
+    const wrapper = mount(ServerRoom)
+
+    // Sell value is 25% of 100 = 25
+    expect(wrapper.text()).toContain('Sell Items (25.0000 $ETC)')
+  })
 })

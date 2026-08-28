@@ -3,7 +3,13 @@ import { computed } from 'vue'
 import { useGameStore } from '../stores/game'
 import type { Part, ServerNode } from '../types'
 import { useDraggable } from '../composables/useDraggable'
-import { ROOM_WIDTH, ROOM_HEIGHT, type RoomRect } from '../utils/physics'
+import {
+  ROOM_WIDTH,
+  ROOM_HEIGHT,
+  type RoomRect,
+  TRANSFER_ZONE_START_X,
+  TRANSFER_ZONE_WIDTH,
+} from '../utils/physics'
 
 const gameStore = useGameStore()
 
@@ -13,11 +19,29 @@ interface RoomItem extends RoomRect {
   name: string
   kind: string
   isServer: boolean
-  ref: ServerNode | Part
+  ref: ServerNode | Part | null
 }
+
+const maxWidth = computed(() =>
+  gameStore.showTransferPanel ? TRANSFER_ZONE_START_X + TRANSFER_ZONE_WIDTH : ROOM_WIDTH,
+)
 
 const roomItems = computed<RoomItem[]>(() => {
   const items: RoomItem[] = []
+
+  if (gameStore.showTransferPanel) {
+    items.push({
+      id: 'divider_wall',
+      name: 'Wall',
+      kind: 'WALL',
+      isServer: false,
+      ref: null,
+      x: ROOM_WIDTH,
+      y: 0,
+      width: TRANSFER_ZONE_START_X - ROOM_WIDTH,
+      height: ROOM_HEIGHT,
+    })
+  }
 
   for (const s of gameStore.servers) {
     const casePart = s.installedParts.find((p) => p.kind === 'CASE')
@@ -55,36 +79,71 @@ const roomItems = computed<RoomItem[]>(() => {
 
 const { draggedItemId, dragX, dragY, isDragValid, handleMouseDown } = useDraggable(roomItems, {
   scale: SCALE,
+  maxWidth,
   onMoveItem: (id, x, y) => gameStore.moveItem(id, x, y),
   onSelect: (id) => {
     gameStore.selectedItemId = id
   },
 })
+
+const totalSellValue = computed(() => {
+  let total = 0
+  for (const s of gameStore.servers) {
+    if (s.x !== undefined && s.x >= TRANSFER_ZONE_START_X) {
+      for (const p of s.installedParts) total += p.value.value
+    }
+  }
+  for (const p of gameStore.inventory) {
+    if (p.x !== undefined && p.x >= TRANSFER_ZONE_START_X) {
+      total += p.value.value
+    }
+  }
+  return total * 0.25
+})
 </script>
 
 <template>
   <div class="server-room-wrapper">
-    <h3>Server Room</h3>
+    <div class="room-header">
+      <h3>Server Room</h3>
+      <div v-if="gameStore.showTransferPanel" class="transfer-controls">
+        <span class="transfer-title">Transfer Panel</span>
+        <button @click="gameStore.sellTransferPanel()" class="sell-btn">
+          Sell Items ({{ totalSellValue.toFixed(4) }} $ETC) & Close
+        </button>
+      </div>
+    </div>
+
     <div
       id="server-room-container"
       class="room-container"
-      :style="{ width: ROOM_WIDTH * SCALE + 'px', height: ROOM_HEIGHT * SCALE + 'px' }"
+      :style="{ width: maxWidth * SCALE + 'px', height: ROOM_HEIGHT * SCALE + 'px' }"
     >
+      <div
+        v-if="gameStore.showTransferPanel"
+        class="transfer-zone-bg"
+        :style="{
+          left: TRANSFER_ZONE_START_X * SCALE + 'px',
+          width: TRANSFER_ZONE_WIDTH * SCALE + 'px',
+        }"
+      ></div>
+
       <div
         v-for="item in roomItems"
         :key="item.id"
         class="room-item"
         :class="{
-          'is-selected': gameStore.selectedItemId === item.id,
+          'is-selected': gameStore.selectedItemId === item.id && item.kind !== 'WALL',
           'is-dragging': draggedItemId === item.id,
           'is-invalid': draggedItemId === item.id && !isDragValid,
+          'is-wall': item.kind === 'WALL',
         }"
         :style="{
           width: item.width * SCALE + 'px',
           height: item.height * SCALE + 'px',
           transform: `translate(${(draggedItemId === item.id ? dragX : item.x) * SCALE}px, ${(draggedItemId === item.id ? dragY : item.y) * SCALE}px)`,
         }"
-        @mousedown="handleMouseDown($event, item.id)"
+        @mousedown="item.kind !== 'WALL' ? handleMouseDown($event, item.id) : null"
       ></div>
     </div>
   </div>
@@ -94,12 +153,55 @@ const { draggedItemId, dragX, dragY, isDragValid, handleMouseDown } = useDraggab
 .server-room-wrapper {
   margin-bottom: 20px;
 }
+.room-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 10px;
+}
+.room-header h3 {
+  margin: 0;
+}
+.transfer-controls {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  background: #fff3cd;
+  padding: 5px 15px;
+  border-radius: 4px;
+  border: 1px solid #ffeeba;
+}
+.transfer-title {
+  font-weight: bold;
+  color: #856404;
+}
+.sell-btn {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+}
+.sell-btn:hover {
+  background: #218838;
+}
 .room-container {
   position: relative;
   border: 2px solid #333;
   background-color: #f0f0f0;
   overflow: hidden;
   user-select: none;
+  transition: width 0.3s ease;
+}
+.transfer-zone-bg {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  background: repeating-linear-gradient(45deg, #e9ecef, #e9ecef 10px, #dee2e6 10px, #dee2e6 20px);
+  border-left: 2px dashed #999;
+  z-index: 0;
 }
 .room-item {
   position: absolute;
@@ -117,6 +219,13 @@ const { draggedItemId, dragX, dragY, isDragValid, handleMouseDown } = useDraggab
   font-size: 6px;
   padding: 1px;
   box-sizing: border-box;
+  z-index: 10;
+}
+.room-item.is-wall {
+  background: #444;
+  border: none;
+  cursor: not-allowed;
+  z-index: 5;
 }
 .room-item.is-selected {
   background: #e3f2fd;

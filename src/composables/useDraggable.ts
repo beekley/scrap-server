@@ -10,6 +10,7 @@ import {
 
 export interface DragConfig {
   scale: number
+  maxWidth?: Ref<number>
   onMoveItem: (id: string, x: number, y: number) => void
   onSelect: (id: string) => void
 }
@@ -64,25 +65,30 @@ export function useDraggable(roomItems: Ref<RoomRect[]>, config: DragConfig) {
     const item = roomItems.value.find((i) => i.id === draggedItemId.value)
     if (!item) return true
 
-    const finalX = Math.max(0, Math.min(ROOM_WIDTH - item.width, dragX.value))
+    const maxWidth = config.maxWidth?.value ?? ROOM_WIDTH
+    const finalX = Math.max(0, Math.min(maxWidth - item.width, dragX.value))
     const finalY = Math.max(0, Math.min(ROOM_HEIGHT - item.height, dragY.value))
 
-    if (!isEmptySpace(finalX, finalY, item.width, item.height, item.id, roomItems.value))
+    if (!isEmptySpace(finalX, finalY, item.width, item.height, item.id, roomItems.value, maxWidth))
       return false
 
     let fallY = finalY
     while (
       fallY <= ROOM_HEIGHT - item.height &&
-      isEmptySpace(finalX, fallY, item.width, item.height, item.id, roomItems.value)
+      isEmptySpace(finalX, fallY, item.width, item.height, item.id, roomItems.value, maxWidth)
     ) {
       fallY++
     }
     fallY--
 
-    if (!isValidPlacement(finalX, fallY, item.width, item.height, item.id, roomItems.value)) {
+    if (
+      !isValidPlacement(finalX, fallY, item.width, item.height, item.id, roomItems.value, maxWidth)
+    ) {
       let foundValid = false
       for (let y = ROOM_HEIGHT - item.height; y >= 0; y--) {
-        if (isValidPlacement(finalX, y, item.width, item.height, item.id, roomItems.value)) {
+        if (
+          isValidPlacement(finalX, y, item.width, item.height, item.id, roomItems.value, maxWidth)
+        ) {
           foundValid = true
           break
         }
@@ -101,22 +107,27 @@ export function useDraggable(roomItems: Ref<RoomRect[]>, config: DragConfig) {
       return
     }
 
-    const finalX = Math.max(0, Math.min(ROOM_WIDTH - item.width, dragX.value))
+    const maxWidth = config.maxWidth?.value ?? ROOM_WIDTH
+    const finalX = Math.max(0, Math.min(maxWidth - item.width, dragX.value))
     let finalY = Math.max(0, Math.min(ROOM_HEIGHT - item.height, dragY.value))
 
     let fallY = finalY
     while (
       fallY <= ROOM_HEIGHT - item.height &&
-      isEmptySpace(finalX, fallY, item.width, item.height, item.id, roomItems.value)
+      isEmptySpace(finalX, fallY, item.width, item.height, item.id, roomItems.value, maxWidth)
     ) {
       fallY++
     }
     fallY--
 
-    if (!isValidPlacement(finalX, fallY, item.width, item.height, item.id, roomItems.value)) {
+    if (
+      !isValidPlacement(finalX, fallY, item.width, item.height, item.id, roomItems.value, maxWidth)
+    ) {
       let foundValid = false
       for (let y = ROOM_HEIGHT - item.height; y >= 0; y--) {
-        if (isValidPlacement(finalX, y, item.width, item.height, item.id, roomItems.value)) {
+        if (
+          isValidPlacement(finalX, y, item.width, item.height, item.id, roomItems.value, maxWidth)
+        ) {
           finalY = y
           foundValid = true
           break

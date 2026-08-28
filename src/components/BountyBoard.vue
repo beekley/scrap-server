@@ -67,8 +67,8 @@ const gameStore = useGameStore()
             <strong>Mem Access:</strong> {{ formatMB(job.memoryAccessPerOp.value) }} MB/op
           </p>
           <p style="margin: 0; font-size: 0.9em">
-            <strong>Data Transferred:</strong> 
-            {{ formatGB(job.downloadSize.value) }} GB in &rarr; 
+            <strong>Data Transferred:</strong>
+            {{ formatGB(job.downloadSize.value) }} GB in &rarr;
             {{ formatGB(job.uploadSize.value) }} GB out
           </p>
         </div>
