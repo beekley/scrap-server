@@ -19,10 +19,10 @@ import {
  * Result details from advancing a job simulation tick.
  */
 export interface JobTickResult {
-  opsCompletedThisTick: Operations
-  effectiveRate: OperationsPerSecond
-  progress: number // 0.0 to 1.0
+  progress: number // 0.0 to 1.0 overall progress across all phases
   isCompleted: boolean
+  currentPhase: Job['status']
+  rate: number // Ops/s or Bytes/s depending on phase
 }
 
 /**
@@ -72,6 +72,19 @@ export function calculateTotalStorage(serverOrServers: ServerNode | ServerNode[]
   }
 
   return total
+}
+
+export function calculateTotalStorageBandwidth(serverOrServers: ServerNode | ServerNode[]): Throughput {
+  const parts = getAllParts(serverOrServers)
+  let totalBW: Throughput = u.Measure.of(0, bytesPerSecond)
+
+  for (const part of parts) {
+    if (part.kind === 'STORAGE' || part.kind === 'STORAGE_DEVICE') {
+      totalBW = totalBW.plus(part.ioBandwidth ?? u.Measure.of(0, bytesPerSecond))
+    }
+  }
+
+  return totalBW
 }
 
 export function getStorageCapableParts(
@@ -182,7 +195,7 @@ export function calculateComputeDetails(
   }
 
   let effectiveBandwidthVal = 0
-  if (job.ioRatio.value === 0) {
+  if (job.memoryAccessPerOp.value === 0) {
     // Arbitrarily high if IO doesn't matter
     effectiveBandwidthVal = Infinity
   } else {
@@ -203,10 +216,10 @@ export function calculateComputeDetails(
   const workingSetThroughput = u.Measure.of(effectiveBandwidthVal, bytesPerSecond)
 
   let ioLimitCompute: OperationsPerSecond
-  if (job.ioRatio.value === 0) {
+  if (job.memoryAccessPerOp.value === 0) {
     ioLimitCompute = u.Measure.of(Infinity, opsPerSecond)
   } else {
-    ioLimitCompute = workingSetThroughput.over(job.ioRatio)
+    ioLimitCompute = workingSetThroughput.over(job.memoryAccessPerOp)
   }
 
   const isIoBottlenecked = ioLimitCompute.lt(totalCpuCompute)
@@ -236,57 +249,115 @@ export function calculateEffectiveComputeRate(
  * Returns current job progress fraction between 0.0 and 1.0.
  */
 export function getJobProgress(job: Job): number {
-  if (job.operationsRequired.value <= 0) {
-    return 1.0
+  let totalParts = 0;
+  let completedParts = 0;
+
+  if (job.downloadSize.value > 0) {
+    totalParts += 1;
+    completedParts += Math.min(1.0, job.downloadedBytes.value / job.downloadSize.value);
   }
-  const ratio = job.workCompleted.value / job.operationsRequired.value
-  return Math.min(1.0, Math.max(0.0, ratio))
+  if (job.operationsRequired.value > 0) {
+    totalParts += 1;
+    completedParts += Math.min(1.0, job.workCompleted.value / job.operationsRequired.value);
+  }
+  if (job.uploadSize.value > 0) {
+    totalParts += 1;
+    completedParts += Math.min(1.0, job.uploadedBytes.value / job.uploadSize.value);
+  }
+
+  if (totalParts === 0) return 1.0;
+  return completedParts / totalParts;
 }
 
 /**
  * Advances a running job by a time increment dt.
- * Mutates job.workCompleted, clamping at job.operationsRequired, and returns tick results.
+ * Mutates job state and returns tick results.
  */
 export function tickJob(
   job: Job,
   serverOrServers: ServerNode | ServerNode[],
   dt: Time,
 ): JobTickResult {
-  if (job.workCompleted.gte(job.operationsRequired)) {
+  if (job.status === 'NOT_STARTED') {
+    job.status = 'LOADING'
+  }
+
+  if (job.status === 'COMPLETED') {
     return {
-      opsCompletedThisTick: u.Measure.of(0, ops),
-      effectiveRate: u.Measure.of(0, opsPerSecond),
       progress: 1.0,
       isCompleted: true,
+      currentPhase: 'COMPLETED',
+      rate: 0,
     }
   }
 
   if (!canServerRunJob(serverOrServers, job)) {
     return {
-      opsCompletedThisTick: u.Measure.of(0, ops),
-      effectiveRate: u.Measure.of(0, opsPerSecond),
       progress: getJobProgress(job),
       isCompleted: false,
+      currentPhase: job.status,
+      rate: 0,
     }
   }
 
-  const effectiveRate = calculateEffectiveComputeRate(serverOrServers, job)
-  const opsCompletedThisTick: Operations = effectiveRate.times(dt)
+  let rate = 0;
 
-  const remainingOps = job.operationsRequired.minus(job.workCompleted)
-  const actualOpsApplied = opsCompletedThisTick.gt(remainingOps)
-    ? remainingOps
-    : opsCompletedThisTick
+  // Phase 1: LOADING
+  if (job.status === 'LOADING') {
+    if (job.downloadSize.value <= 0 || job.downloadedBytes.gte(job.downloadSize)) {
+      job.downloadedBytes = job.downloadSize;
+      job.status = 'COMPUTING';
+    } else {
+      const storageBw = calculateTotalStorageBandwidth(serverOrServers)
+      rate = storageBw.value;
+      const bytesThisTick = storageBw.times(dt);
+      job.downloadedBytes = job.downloadedBytes.plus(bytesThisTick);
+      if (job.downloadedBytes.gte(job.downloadSize)) {
+        job.downloadedBytes = job.downloadSize;
+        job.status = 'COMPUTING';
+      }
+    }
+  }
 
-  job.workCompleted = job.workCompleted.plus(actualOpsApplied)
-  const progress = getJobProgress(job)
-  const isCompleted = job.workCompleted.gte(job.operationsRequired)
+  // Phase 2: COMPUTING
+  if (job.status === 'COMPUTING') {
+    if (job.operationsRequired.value <= 0 || job.workCompleted.gte(job.operationsRequired)) {
+      job.workCompleted = job.operationsRequired;
+      job.status = 'SAVING';
+    } else {
+      const effectiveRate = calculateEffectiveComputeRate(serverOrServers, job)
+      rate = effectiveRate.value;
+      const opsThisTick = effectiveRate.times(dt);
+      job.workCompleted = job.workCompleted.plus(opsThisTick);
+      if (job.workCompleted.gte(job.operationsRequired)) {
+        job.workCompleted = job.operationsRequired;
+        job.status = 'SAVING';
+      }
+    }
+  }
+
+  // Phase 3: SAVING
+  if (job.status === 'SAVING') {
+    if (job.uploadSize.value <= 0 || job.uploadedBytes.gte(job.uploadSize)) {
+      job.uploadedBytes = job.uploadSize;
+      job.status = 'COMPLETED';
+    } else {
+      const storageBw = calculateTotalStorageBandwidth(serverOrServers)
+      rate = storageBw.value;
+      const bytesThisTick = storageBw.times(dt);
+      job.uploadedBytes = job.uploadedBytes.plus(bytesThisTick);
+      if (job.uploadedBytes.gte(job.uploadSize)) {
+        job.uploadedBytes = job.uploadSize;
+        job.status = 'COMPLETED';
+      }
+    }
+  }
 
   return {
-    opsCompletedThisTick: actualOpsApplied,
-    effectiveRate,
-    progress,
-    isCompleted,
+    progress: getJobProgress(job),
+    isCompleted: job.status === 'COMPLETED',
+    currentPhase: job.status,
+    rate,
   }
 }
 

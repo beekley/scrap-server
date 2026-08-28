@@ -84,8 +84,8 @@ const telemetry = computed(() => {
   if (!jobContext) return null
   try {
     return calculateComputeDetails(
-      selectedServer.value as unknown as ServerNode,
-      jobContext as unknown as Job,
+      selectedServer.value as ServerNode,
+      jobContext as Job,
     )
   } catch {
     return null
@@ -94,7 +94,7 @@ const telemetry = computed(() => {
 
 const totalStorage = computed(() => {
   if (!selectedServer.value) return 0
-  return calculateTotalStorage(selectedServer.value as unknown as ServerNode).value
+  return calculateTotalStorage(selectedServer.value as ServerNode).value
 })
 
 const totalRam = computed(() => {
@@ -144,12 +144,12 @@ const totalCpu = computed(() => {
 
 const progressPercent = computed(() => {
   if (!isRunningJob.value || !activeJob.value) return 0
-  return (getJobProgress(activeJob.value as unknown as Job) * 100).toFixed(1)
+  return (getJobProgress(activeJob.value as Job) * 100).toFixed(1)
 })
 
 const serverPowerDraw = computed(() => {
   if (!selectedServer.value) return 0
-  return calculateServerPowerDraw(selectedServer.value as unknown as ServerNode, isRunningJob.value)
+  return calculateServerPowerDraw(selectedServer.value as ServerNode, isRunningJob.value)
 })
 
 const cpuPercent = computed(() =>
@@ -210,6 +210,7 @@ const asPsu = computed(() => (displayedPart.value?.kind === 'PSU' ? displayedPar
         style="margin: 20px 0; border: 2px solid green; padding: 10px; background: #e0ffe0"
       >
         <h3>Running: {{ activeJob.title }}</h3>
+        <p><strong>Phase:</strong> {{ activeJob.status }}</p>
         <p><strong>Progress:</strong> {{ progressPercent }}%</p>
         <div style="width: 100%; background: #ccc; height: 20px">
           <div :style="{ width: progressPercent + '%', background: 'green', height: '100%' }"></div>
@@ -266,7 +267,7 @@ const asPsu = computed(() => (displayedPart.value?.kind === 'PSU' ? displayedPar
         </p>
         <p :style="{ color: telemetry.isIoBottlenecked ? 'orange' : 'blue', margin: '2px 0' }">
           <strong>Bottleneck:</strong>
-          {{ telemetry.isIoBottlenecked ? 'Storage I/O' : 'CPU Limit' }}
+          {{ telemetry.isIoBottlenecked ? 'Memory I/O' : 'CPU Limit' }}
         </p>
       </div>
     </div>
@@ -323,7 +324,7 @@ const asPsu = computed(() => (displayedPart.value?.kind === 'PSU' ? displayedPar
         <h4>Attached Components (Slots)</h4>
         <PartSlots
           :slots="displayedPart.slots"
-          :serverNode="parentServer as unknown as ServerNode"
+          :serverNode="parentServer as ServerNode"
           :isRunningJob="!!isRunningJob"
         />
       </div>

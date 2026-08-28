@@ -31,7 +31,7 @@ const roomItems = computed<RoomItem[]>(() => {
         x: s.x ?? 0,
         y: s.y ?? 0,
         isServer: true,
-        ref: s as unknown as ServerNode,
+        ref: s as ServerNode,
       })
     }
   }
@@ -46,7 +46,7 @@ const roomItems = computed<RoomItem[]>(() => {
       x: p.x ?? 0,
       y: p.y ?? 0,
       isServer: false,
-      ref: p as unknown as Part,
+      ref: p as Part,
     })
   }
 

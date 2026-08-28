@@ -35,7 +35,12 @@ export function getJobTemplate(id: string): Job {
     operationsRequired: j.operationsRequired,
     workingSetSize: j.workingSetSize,
     totalSize: j.totalSize,
-    ioRatio: j.ioRatio,
+    memoryAccessPerOp: j.memoryAccessPerOp,
+    downloadSize: j.downloadSize,
+    uploadSize: j.uploadSize,
+    status: j.status,
+    downloadedBytes: j.downloadedBytes,
+    uploadedBytes: j.uploadedBytes,
     workCompleted: u.Measure.of(0, ops),
     rewardPartIds: [...j.rewardPartIds],
   }

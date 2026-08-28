@@ -9,6 +9,7 @@ import {
   ops,
   GB,
   megabytesPerOp,
+  B,
 } from '../types'
 import { allParts as parts } from '../data/index'
 
@@ -190,14 +191,20 @@ export function generateProceduralJob(): Job {
     description: `A ${rarity.toLowerCase()} difficulty task.`,
     rarity: rarity,
 
+    downloadSize: u.Measure.of(getRandomInt(1, 10) * diffMultiplier, GB),
+    uploadSize: u.Measure.of(getRandomInt(1, 5) * diffMultiplier, GB),
     operationsRequired: u.Measure.of(totalOps, ops),
+    memoryAccessPerOp: u.Measure.of(Math.random() * 2 + 0.1, megabytesPerOp),
+
     workingSetSize: u.Measure.of(getRandomInt(1, 4) * diffMultiplier, GB),
-    totalSize: u.Measure.of(getRandomInt(5, 50) * diffMultiplier, GB),
-    ioRatio: u.Measure.of(Math.random() * 2 + 0.1, megabytesPerOp),
+    totalSize: u.Measure.of(getRandomInt(10, 100) * diffMultiplier, GB), // footprint
 
     rewardPartIds: reward.partIds,
     rewardDescription: reward.description,
 
+    status: 'NOT_STARTED',
+    downloadedBytes: u.Measure.of(0, B),
     workCompleted: u.Measure.of(0, ops),
+    uploadedBytes: u.Measure.of(0, B),
   }
 }

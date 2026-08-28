@@ -131,11 +131,16 @@ describe('Simulation Engine & Job Execution Logic', () => {
         operationsRequired: u.Measure.of(500, ops),
         totalSize: u.Measure.of(10, GB),
         workingSetSize: u.Measure.of(1, GB),
-        ioRatio: u.Measure.of(0.2, megabytesPerOp),
+        memoryAccessPerOp: u.Measure.of(0.2, megabytesPerOp),
         rewardDescription: 'Some reward',
         rarity: 'COMMON',
         rewardPartIds: [],
-        workCompleted: u.Measure.of(0, ops),
+        status: 'NOT_STARTED',
+downloadSize: u.Measure.of(0, B),
+downloadedBytes: u.Measure.of(0, B),
+uploadSize: u.Measure.of(0, B),
+uploadedBytes: u.Measure.of(0, B),
+workCompleted: u.Measure.of(0, ops),
       }
 
       expect(canServerRunJob(standardServer, job)).toBe(true)
@@ -155,11 +160,16 @@ describe('Simulation Engine & Job Execution Logic', () => {
         operationsRequired: u.Measure.of(500, ops),
         totalSize: u.Measure.of(10, GB), // requires 10 GB
         workingSetSize: u.Measure.of(1, GB),
-        ioRatio: u.Measure.of(0.2, megabytesPerOp),
+        memoryAccessPerOp: u.Measure.of(0.2, megabytesPerOp),
         rewardDescription: 'Some reward',
         rarity: 'COMMON',
         rewardPartIds: [],
-        workCompleted: u.Measure.of(0, ops),
+        status: 'NOT_STARTED',
+downloadSize: u.Measure.of(0, B),
+downloadedBytes: u.Measure.of(0, B),
+uploadSize: u.Measure.of(0, B),
+uploadedBytes: u.Measure.of(0, B),
+workCompleted: u.Measure.of(0, ops),
       }
 
       expect(canServerRunJob(smallServer, job)).toBe(false)
@@ -207,11 +217,16 @@ describe('Simulation Engine & Job Execution Logic', () => {
         operationsRequired: u.Measure.of(500, ops),
         totalSize: u.Measure.of(3, GB),
         workingSetSize: u.Measure.of(2, GB),
-        ioRatio: u.Measure.of(0.2, megabytesPerOp),
+        memoryAccessPerOp: u.Measure.of(0.2, megabytesPerOp),
         rewardDescription: 'Some reward',
         rarity: 'COMMON',
         rewardPartIds: [],
-        workCompleted: u.Measure.of(0, ops),
+        status: 'NOT_STARTED',
+downloadSize: u.Measure.of(0, B),
+downloadedBytes: u.Measure.of(0, B),
+uploadSize: u.Measure.of(0, B),
+uploadedBytes: u.Measure.of(0, B),
+workCompleted: u.Measure.of(0, ops),
       }
 
       // It CAN run because working set spills over 1GB + 1GB
@@ -238,11 +253,16 @@ describe('Simulation Engine & Job Execution Logic', () => {
         operationsRequired: u.Measure.of(1000, ops),
         totalSize: u.Measure.of(100, GB),
         workingSetSize: u.Measure.of(1, GB),
-        ioRatio: u.Measure.of(0.2, megabytesPerOp),
+        memoryAccessPerOp: u.Measure.of(0.2, megabytesPerOp),
         rewardDescription: 'Some reward',
         rarity: 'COMMON',
         rewardPartIds: [],
-        workCompleted: u.Measure.of(0, ops),
+        status: 'NOT_STARTED',
+downloadSize: u.Measure.of(0, B),
+downloadedBytes: u.Measure.of(0, B),
+uploadSize: u.Measure.of(0, B),
+uploadedBytes: u.Measure.of(0, B),
+workCompleted: u.Measure.of(0, ops),
       }
 
       expect(canServerRunJob([nodeA, nodeB], job)).toBe(true)
@@ -282,11 +302,16 @@ describe('Simulation Engine & Job Execution Logic', () => {
         operationsRequired: u.Measure.of(500, ops),
         totalSize: u.Measure.of(10, GB),
         workingSetSize: u.Measure.of(2, GB),
-        ioRatio: u.Measure.of(1, megabytesPerOp), // 1 MB per op for easy math
+        memoryAccessPerOp: u.Measure.of(1, megabytesPerOp), // 1 MB per op for easy math
         rewardDescription: 'Some reward',
         rarity: 'COMMON',
         rewardPartIds: [],
-        workCompleted: u.Measure.of(0, ops),
+        status: 'NOT_STARTED',
+downloadSize: u.Measure.of(0, B),
+downloadedBytes: u.Measure.of(0, B),
+uploadSize: u.Measure.of(0, B),
+uploadedBytes: u.Measure.of(0, B),
+workCompleted: u.Measure.of(0, ops),
       }
 
       const details = calculateComputeDetails(standardServer, job)
@@ -318,11 +343,16 @@ describe('Simulation Engine & Job Execution Logic', () => {
         operationsRequired: u.Measure.of(1500, ops),
         totalSize: u.Measure.of(2, GB),
         workingSetSize: u.Measure.of(1, GB),
-        ioRatio: u.Measure.of(0.01, megabytesPerOp),
+        memoryAccessPerOp: u.Measure.of(0.01, megabytesPerOp),
         rewardDescription: 'Some reward',
         rarity: 'COMMON',
         rewardPartIds: [],
-        workCompleted: u.Measure.of(0, ops),
+        status: 'NOT_STARTED',
+downloadSize: u.Measure.of(0, B),
+downloadedBytes: u.Measure.of(0, B),
+uploadSize: u.Measure.of(0, B),
+uploadedBytes: u.Measure.of(0, B),
+workCompleted: u.Measure.of(0, ops),
       }
 
       const details = calculateComputeDetails(standardServer, job)
@@ -343,11 +373,16 @@ describe('Simulation Engine & Job Execution Logic', () => {
         operationsRequired: u.Measure.of(2000, ops),
         totalSize: u.Measure.of(50, GB),
         workingSetSize: u.Measure.of(2, GB),
-        ioRatio: u.Measure.of(2.5, megabytesPerOp),
+        memoryAccessPerOp: u.Measure.of(2.5, megabytesPerOp),
         rewardDescription: 'Some reward',
         rarity: 'COMMON',
         rewardPartIds: [],
-        workCompleted: u.Measure.of(0, ops),
+        status: 'NOT_STARTED',
+downloadSize: u.Measure.of(0, B),
+downloadedBytes: u.Measure.of(0, B),
+uploadSize: u.Measure.of(0, B),
+uploadedBytes: u.Measure.of(0, B),
+workCompleted: u.Measure.of(0, ops),
       }
 
       const details = calculateComputeDetails(standardServer, job)
@@ -389,11 +424,16 @@ describe('Simulation Engine & Job Execution Logic', () => {
         operationsRequired: u.Measure.of(1000, ops),
         totalSize: u.Measure.of(1, GB),
         workingSetSize: u.Measure.of(1, GB),
-        ioRatio: u.Measure.of(0.01, megabytesPerOp), // IO limit = 500,000 op/s
+        memoryAccessPerOp: u.Measure.of(0.01, megabytesPerOp), // IO limit = 500,000 op/s
         rewardDescription: 'Some reward',
         rarity: 'COMMON',
         rewardPartIds: [],
-        workCompleted: u.Measure.of(0, ops),
+        status: 'NOT_STARTED',
+downloadSize: u.Measure.of(0, B),
+downloadedBytes: u.Measure.of(0, B),
+uploadSize: u.Measure.of(0, B),
+uploadedBytes: u.Measure.of(0, B),
+workCompleted: u.Measure.of(0, ops),
       }
 
       // 50 + 50 = 100 op/s
@@ -411,11 +451,16 @@ describe('Simulation Engine & Job Execution Logic', () => {
         operationsRequired: u.Measure.of(500, ops),
         totalSize: u.Measure.of(10, GB),
         workingSetSize: u.Measure.of(1, GB),
-        ioRatio: u.Measure.of(0.2, megabytesPerOp), // 5000 / 0.2 = 25,000 op/s limit -> runs at 50 op/s
+        memoryAccessPerOp: u.Measure.of(0.2, megabytesPerOp), // 5000 / 0.2 = 25,000 op/s limit -> runs at 50 op/s
         rewardDescription: 'Some reward',
         rarity: 'COMMON',
         rewardPartIds: [],
-        workCompleted: u.Measure.of(0, ops),
+        status: 'NOT_STARTED',
+downloadSize: u.Measure.of(0, B),
+downloadedBytes: u.Measure.of(0, B),
+uploadSize: u.Measure.of(0, B),
+uploadedBytes: u.Measure.of(0, B),
+workCompleted: u.Measure.of(0, ops),
       }
 
       // 1 tick = 5 seconds
@@ -423,7 +468,7 @@ describe('Simulation Engine & Job Execution Logic', () => {
       const result = tickJob(job, standardServer, dt5s)
 
       // 50 op/s * 5s = 250 ops completed
-      expect(result.opsCompletedThisTick.value).toBe(250)
+      
       expect(job.workCompleted.value).toBe(250)
       expect(result.progress).toBe(0.5)
       expect(result.isCompleted).toBe(false)
@@ -438,18 +483,23 @@ describe('Simulation Engine & Job Execution Logic', () => {
         operationsRequired: u.Measure.of(500, ops),
         totalSize: u.Measure.of(10, GB),
         workingSetSize: u.Measure.of(1, GB),
-        ioRatio: u.Measure.of(0.2, megabytesPerOp),
+        memoryAccessPerOp: u.Measure.of(0.2, megabytesPerOp),
         rewardDescription: 'Some reward',
         rarity: 'COMMON',
         rewardPartIds: [],
-        workCompleted: u.Measure.of(400, ops), // 100 ops remaining
+        status: 'COMPUTING',
+downloadSize: u.Measure.of(0, B),
+downloadedBytes: u.Measure.of(0, B),
+uploadSize: u.Measure.of(0, B),
+uploadedBytes: u.Measure.of(0, B),
+workCompleted: u.Measure.of(400, ops), // 100 ops remaining
       }
 
       // 1 tick = 10 seconds -> 50 op/s * 10s = 500 ops (more than 100 remaining)
       const dt10s = u.Measure.of(10, s)
       const result = tickJob(job, standardServer, dt10s)
 
-      expect(result.opsCompletedThisTick.value).toBe(100)
+      
       expect(job.workCompleted.value).toBe(500)
       expect(result.progress).toBe(1.0)
       expect(result.isCompleted).toBe(true)
@@ -464,17 +514,22 @@ describe('Simulation Engine & Job Execution Logic', () => {
         operationsRequired: u.Measure.of(500, ops),
         totalSize: u.Measure.of(10, GB),
         workingSetSize: u.Measure.of(1, GB),
-        ioRatio: u.Measure.of(0.2, megabytesPerOp),
+        memoryAccessPerOp: u.Measure.of(0.2, megabytesPerOp),
         rewardDescription: 'Some reward',
         rarity: 'COMMON',
         rewardPartIds: [],
-        workCompleted: u.Measure.of(500, ops),
+        status: 'COMPLETED',
+downloadSize: u.Measure.of(0, B),
+downloadedBytes: u.Measure.of(0, B),
+uploadSize: u.Measure.of(0, B),
+uploadedBytes: u.Measure.of(0, B),
+workCompleted: u.Measure.of(500, ops),
       }
 
       const dt10s = u.Measure.of(10, s)
       const result = tickJob(job, standardServer, dt10s)
 
-      expect(result.opsCompletedThisTick.value).toBe(0)
+      
       expect(result.progress).toBe(1.0)
       expect(result.isCompleted).toBe(true)
     })
@@ -493,16 +548,21 @@ describe('Simulation Engine & Job Execution Logic', () => {
         operationsRequired: u.Measure.of(500, ops),
         totalSize: u.Measure.of(10, GB),
         workingSetSize: u.Measure.of(1, GB),
-        ioRatio: u.Measure.of(0.2, megabytesPerOp),
+        memoryAccessPerOp: u.Measure.of(0.2, megabytesPerOp),
         rewardDescription: 'Some reward',
         rarity: 'COMMON',
         rewardPartIds: [],
-        workCompleted: u.Measure.of(0, ops),
+        status: 'NOT_STARTED',
+downloadSize: u.Measure.of(0, B),
+downloadedBytes: u.Measure.of(0, B),
+uploadSize: u.Measure.of(0, B),
+uploadedBytes: u.Measure.of(0, B),
+workCompleted: u.Measure.of(0, ops),
       }
 
       const result = tickJob(job, invalidServer, u.Measure.of(10, s))
-      expect(result.opsCompletedThisTick.value).toBe(0)
-      expect(result.effectiveRate.value).toBe(0)
+      
+      
       expect(result.isCompleted).toBe(false)
       expect(job.workCompleted.value).toBe(0)
     })

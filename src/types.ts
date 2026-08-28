@@ -165,6 +165,8 @@ export interface ServerNode {
 // JOB
 // ==========================================
 
+export type JobStatus = 'NOT_STARTED' | 'LOADING' | 'COMPUTING' | 'SAVING' | 'COMPLETED'
+
 export interface Job {
   id: string
   title: string
@@ -172,17 +174,23 @@ export interface Job {
   rarity: Rarity
 
   // Requirements & Bottlenecks
+  downloadSize: Storage // Data read during LOAD phase
   operationsRequired: Operations // Total operations needed
+  memoryAccessPerOp: DataPerOperation // Memory bus access required per compute op
+  uploadSize: Storage // Data written during SAVE phase
+
   totalSize: Storage // Total storage footprint
-  workingSetSize: Storage // Minimum working set storage needed
-  ioRatio: DataPerOperation // IO demand: storage transfer needed per operation (Storage / Operations)
+  workingSetSize: Storage // Target working set (must fit in RAM, or suffer swap penalty)
 
   // Rewards
   rewardPartIds: string[] // Hardware drops upon completion
   rewardDescription: string // Generic description of the reward (e.g. "Lot of 4 RAM sticks")
 
   // Runtime Progress
+  status: JobStatus
+  downloadedBytes: Storage // 0 to downloadSize
   workCompleted: Operations // 0 to operationsRequired
+  uploadedBytes: Storage // 0 to uploadSize
   serverNodeIds?: string[] // IDs of assigned server nodes (supports multi-node)
   servers?: ServerNode[] // Assigned server node objects (supports multi-node)
 }

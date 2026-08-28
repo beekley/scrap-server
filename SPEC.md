@@ -34,24 +34,18 @@ Because the CPU must fetch data from these various sources, the overall I/O bott
 $$\text{Effective Throughput} = \frac{1}{\sum \frac{V_i}{\text{Bandwidth}_i}}$$
 *(Where $V_i$ is the fraction of the working set stored on component $i$)*
 
-### Job Progression
+## Execution & Simulation (ETL Phases)
 
-Jobs have a total compute-time requirement that must be reached to complete the job (measured in operations, `op`). Processors in the servers make progress towards this goal, but can be bottlenecked by the I/O throughput (`MB/s`) from wherever the job's working set is stored.
+The simulation engine uses realistic dimensions (Operations, MB/s, GB, Watts) provided by the `safe-units` library to calculate game ticks. Jobs execute in a 3-phase ETL (Extract, Transform, Load) pipeline:
 
-1. For each processor in the selected server, calculate the maximum compute rate:
+1.  **LOAD Phase**: `downloadSize` is transferred from external storage into the server's working memory. The speed is dictated entirely by the `ioBandwidth` of the local storage drives.
+2.  **COMPUTE Phase**: The CPU processes the `operationsRequired`.
+    *   **The Swap Penalty**: If the server has less RAM than the `workingSetSize`, it must "page" to disk. A harmonic mean of the RAM speed and Storage speed is used to calculate the `effectiveBandwidth`. The CPU's operations are bottlenecked by the time it takes the memory bus to feed it data based on the `memoryAccessPerOp` rate. Missing RAM on an HDD will grind the CPU to a halt, while an NVMe drive will perform significantly better.
+3.  **SAVE Phase**: The `uploadSize` is written from memory back to persistent storage. Speed is dictated by `ioBandwidth`.
 
-    a. Determine the throughput (`MB/s`) of the storage hosting the working set.
-    b. Calculate operations per second rate for the CPU, as bottlenecked by the throughput:
-    
-        effectiveOpsRate = min(processor.opsRate, workingSetThroughput / job.dataPerOp)
+Additionally, the job's `totalSize` is a hard requirement. If the server does not have enough total storage capacity to hold the data, it cannot run the job at all.
 
-2. Update the job's progress:
-
-$$\text{Job.workCompleted} += \text{effectiveOpsRate} \times dt$$
-
-3. If the job reaches full progress, then it is done and the player receives the reward in their inventory.
-
-$$\text{Progress} = \min\left(1.0, \frac{\text{Job.workCompleted}}{\text{Job.operationsRequired}}\right)$$
+If the job reaches full progress across all phases, it is done and the player receives the hardware reward in their inventory.
     
 ### Power & Economy (EarthCoin)
 

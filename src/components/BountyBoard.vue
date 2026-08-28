@@ -64,7 +64,12 @@ const gameStore = useGameStore()
             <strong>Total Size:</strong> {{ formatGB(job.totalSize.value) }} GB
           </p>
           <p style="margin: 4px 0">
-            <strong>IO Ratio:</strong> {{ formatMB(job.ioRatio.value) }} MB/op
+            <strong>Mem Access:</strong> {{ formatMB(job.memoryAccessPerOp.value) }} MB/op
+          </p>
+          <p style="margin: 0; font-size: 0.9em">
+            <strong>Data Transferred:</strong> 
+            {{ formatGB(job.downloadSize.value) }} GB in &rarr; 
+            {{ formatGB(job.uploadSize.value) }} GB out
           </p>
         </div>
         <div style="margin-top: 15px; padding-top: 10px; border-top: 1px dashed #ccc">

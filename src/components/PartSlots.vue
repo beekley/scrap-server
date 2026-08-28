@@ -12,7 +12,7 @@ const props = defineProps<{
 const gameStore = useGameStore()
 
 function getCompatibleInventoryParts(slot: SlotDefinition): Part[] {
-  return (gameStore.inventory as unknown as Part[]).filter((p) => isPartCompatibleWithSlot(p, slot))
+  return (gameStore.inventory as Part[]).filter((p) => isPartCompatibleWithSlot(p, slot))
 }
 
 function handleSlotChange(slotId: string, event: Event) {
