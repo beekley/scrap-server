@@ -12,6 +12,7 @@ export const cases: CasePart[] = [
     value: u.Measure.of(0.01, ETC),
     width: 20,
     height: 45,
+    baseImage: 'assets/cases/techmaker_1_20x45.png',
     powerDraw: u.Measure.of(0, W),
     slots: [
       { id: 'mb_0', label: 'Motherboard Tray', acceptsKind: 'MOTHERBOARD', socketTag: 'ATX' },
@@ -27,6 +28,7 @@ export const cases: CasePart[] = [
     value: u.Measure.of(0.06, ETC),
     width: 20,
     height: 45,
+    baseImage: 'assets/cases/xblaze_1_20x45.png',
     powerDraw: u.Measure.of(15, W), // RGB uses power!
     slots: [
       { id: 'mb_0', label: 'Motherboard Tray', acceptsKind: 'MOTHERBOARD', socketTag: 'ATX' },

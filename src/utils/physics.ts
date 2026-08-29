@@ -1,6 +1,8 @@
-export const ROOM_WIDTH = 100
+const isDebug = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('debug') === 'true'
+
+export const ROOM_WIDTH = isDebug ? 400 : 100
 export const ROOM_HEIGHT = 250
-export const TRANSFER_ZONE_START_X = 150
+export const TRANSFER_ZONE_START_X = isDebug ? 450 : 150
 export const TRANSFER_ZONE_WIDTH = 100
 
 export interface RoomRect {

@@ -13,7 +13,7 @@ import {
   W,
   type Power,
 } from '../types'
-import { getPartTemplate } from '../data'
+import { getPartTemplate, allParts } from '../data'
 import { generateProceduralJob } from '../generators'
 import { tickJob, canServerRunJob, calculateServerPowerDraw } from '../simulation'
 import {
@@ -21,6 +21,7 @@ import {
   type RoomRect,
   TRANSFER_ZONE_START_X,
   TRANSFER_ZONE_WIDTH,
+  ROOM_WIDTH,
 } from '../utils/physics'
 import { autoAssembleRewards } from '../utils/assembly'
 
@@ -49,8 +50,36 @@ export const useGameStore = defineStore('game', () => {
     }
   }
 
-  const inventory = ref<Part[]>([])
-  const servers = ref<ServerNode[]>([createStarterServer()])
+  const isDebug = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('debug') === 'true'
+
+  const starterServer = createStarterServer()
+  const servers = ref<ServerNode[]>([starterServer])
+
+  const initialInventory: Part[] = []
+  if (isDebug) {
+    const roomItems: RoomRect[] = []
+    const casePart = starterServer.installedParts.find(p => p.kind === 'CASE')
+    if (casePart) {
+      roomItems.push({
+        id: starterServer.id,
+        x: starterServer.x ?? 0,
+        y: starterServer.y ?? 0,
+        width: casePart.width,
+        height: casePart.height
+      })
+    }
+    
+    allParts.forEach((part) => {
+      const p = getPartTemplate(part.id)
+      const loc = findValidDropLocation(p.width, p.height, roomItems, p.id, 0, ROOM_WIDTH)
+      p.x = loc.x
+      p.y = loc.y
+      roomItems.push({ id: p.id, x: p.x, y: p.y, width: p.width, height: p.height })
+      initialInventory.push(p)
+    })
+  }
+
+  const inventory = ref<Part[]>(initialInventory)
 
   const availableJobs = ref<Job[]>([
     generateProceduralJob(),

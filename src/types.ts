@@ -78,6 +78,7 @@ export interface BasePart<K extends PartKind = PartKind> {
   height: number
   x?: number // Position in the room (when loose)
   y?: number // Position in the room (when loose)
+  baseImage?: string
 }
 
 export interface CasePart extends BasePart<'CASE'> {

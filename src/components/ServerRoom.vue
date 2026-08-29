@@ -20,6 +20,7 @@ interface RoomItem extends RoomRect {
   kind: string
   isServer: boolean
   ref: ServerNode | Part | null
+  baseImage?: string
 }
 
 const maxWidth = computed(() =>
@@ -56,6 +57,7 @@ const roomItems = computed<RoomItem[]>(() => {
         y: s.y ?? 0,
         isServer: true,
         ref: s as ServerNode,
+        baseImage: casePart.baseImage,
       })
     }
   }
@@ -71,6 +73,7 @@ const roomItems = computed<RoomItem[]>(() => {
       y: p.y ?? 0,
       isServer: false,
       ref: p as Part,
+      baseImage: p.baseImage,
     })
   }
 
@@ -144,7 +147,14 @@ const totalSellValue = computed(() => {
           transform: `translate(${(draggedItemId === item.id ? dragX : item.x) * SCALE}px, ${(draggedItemId === item.id ? dragY : item.y) * SCALE}px)`,
         }"
         @mousedown="item.kind !== 'WALL' ? handleMouseDown($event, item.id) : null"
-      ></div>
+      >
+        <img
+          v-if="item.baseImage"
+          :src="item.baseImage"
+          class="item-image"
+          draggable="false"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -208,7 +218,7 @@ const totalSellValue = computed(() => {
   top: 0;
   left: 0;
   background: #fff;
-  border: 2px solid #666;
+  border: none;
   border-radius: 0;
   box-shadow: none;
   cursor: grab;
@@ -217,7 +227,7 @@ const totalSellValue = computed(() => {
   justify-content: center;
   text-align: center;
   font-size: 6px;
-  padding: 1px;
+  padding: 0;
   box-sizing: border-box;
   z-index: 10;
 }
@@ -229,16 +239,25 @@ const totalSellValue = computed(() => {
 }
 .room-item.is-selected {
   background: #e3f2fd;
-  border-color: #1976d2;
+  outline: 2px solid #1976d2;
+  outline-offset: -2px;
 }
 .room-item.is-invalid {
   background: #ffcccc !important;
-  border-color: #d32f2f !important;
+  outline: 2px solid #d32f2f !important;
+  outline-offset: -2px;
 }
 .room-item.is-dragging {
   cursor: grabbing;
   z-index: 100;
   opacity: 0.9;
+}
+.item-image {
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  image-rendering: pixelated;
+  pointer-events: none;
 }
 .item-label {
   overflow: hidden;

@@ -28,6 +28,7 @@ function generateCpu(
     height: 4,
     computeRate: u.Measure.of(v.computeRate, opsPerSecond),
     powerDraw: u.Measure.of(v.power, W),
+    baseImage: 'assets/cpus/cpu_1_4x4.png',
   }))
 }
 
