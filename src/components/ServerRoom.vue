@@ -12,6 +12,7 @@ import {
 } from '../utils/physics'
 
 const gameStore = useGameStore()
+const baseUrl = import.meta.env.BASE_URL
 
 const SCALE = 3 // 1 unit = 3px
 
@@ -152,7 +153,7 @@ const totalSellValue = computed(() => {
         }"
         @mousedown="item.kind !== 'WALL' ? handleMouseDown($event, item.id) : null"
       >
-        <img v-if="item.baseImage" :src="item.baseImage" class="item-image" draggable="false" />
+        <img v-if="item.baseImage" :src="`${baseUrl}${item.baseImage}`" class="item-image" draggable="false" />
       </div>
     </div>
   </div>
