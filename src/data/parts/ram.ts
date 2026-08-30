@@ -32,6 +32,7 @@ function generateRam(
       memoryCapacity: u.Measure.of(v.capacity, GB),
       ioBandwidth: u.Measure.of(v.bandwidth, mBPerSecond),
       powerDraw: u.Measure.of(v.power, W),
+      baseImage: 'assets/ram/ram_1_13x3.png',
     }
   })
 }

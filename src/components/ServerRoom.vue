@@ -120,7 +120,11 @@ const totalSellValue = computed(() => {
     <div
       id="server-room-container"
       class="room-container"
-      :style="{ width: maxWidth * SCALE + 'px', height: ROOM_HEIGHT * SCALE + 'px' }"
+      :style="{
+        width: maxWidth * SCALE + 'px',
+        height: ROOM_HEIGHT * SCALE + 'px',
+        '--scale-px': SCALE + 'px',
+      }"
     >
       <div
         v-if="gameStore.showTransferPanel"
@@ -148,12 +152,7 @@ const totalSellValue = computed(() => {
         }"
         @mousedown="item.kind !== 'WALL' ? handleMouseDown($event, item.id) : null"
       >
-        <img
-          v-if="item.baseImage"
-          :src="item.baseImage"
-          class="item-image"
-          draggable="false"
-        />
+        <img v-if="item.baseImage" :src="item.baseImage" class="item-image" draggable="false" />
       </div>
     </div>
   </div>
@@ -230,6 +229,16 @@ const totalSellValue = computed(() => {
   padding: 0;
   box-sizing: border-box;
   z-index: 10;
+}
+.room-item::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  box-shadow: inset 0 0 0 var(--scale-px) rgba(12, 13, 23, 0.1);
+  pointer-events: none;
 }
 .room-item.is-wall {
   background: #444;

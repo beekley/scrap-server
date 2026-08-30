@@ -17,9 +17,12 @@ export const motherboards: MotherboardPart[] = [
       { id: 'cpu_0', label: 'AM2 Socket', acceptsKind: 'CPU', socketTag: 'AM2' },
       { id: 'ram_0', label: 'DDR2 Slot 1', acceptsKind: 'RAM', socketTag: 'DDR2' },
       { id: 'ram_1', label: 'DDR2 Slot 2', acceptsKind: 'RAM', socketTag: 'DDR2' },
+      { id: 'ram_2', label: 'DDR2 Slot 3', acceptsKind: 'RAM', socketTag: 'DDR2' },
+      { id: 'ram_3', label: 'DDR2 Slot 4', acceptsKind: 'RAM', socketTag: 'DDR2' },
       { id: 'sata_0', label: 'SATA2 Port 1', acceptsKind: 'STORAGE', socketTag: 'SATA3' },
       { id: 'psu_0', label: 'ATX Power', acceptsKind: 'PSU', socketTag: 'STANDARD_ATX' },
     ],
+    baseImage: 'assets/motherboards/motherboard_am2_24x30.png',
   },
   {
     id: 'mb_haodyn_h61',
@@ -40,6 +43,7 @@ export const motherboards: MotherboardPart[] = [
       { id: 'sata_1', label: 'SATA3 Port 2', acceptsKind: 'STORAGE', socketTag: 'SATA3' },
       { id: 'psu_0', label: 'ATX Power', acceptsKind: 'PSU', socketTag: 'STANDARD_ATX' },
     ],
+    baseImage: 'assets/motherboards/motherboard_lga1155_24x30.png',
   },
   {
     id: 'mb_xblaze_b450',
@@ -60,5 +64,6 @@ export const motherboards: MotherboardPart[] = [
       { id: 'm2_0', label: 'M.2 NVMe Slot', acceptsKind: 'STORAGE', socketTag: 'NVME' },
       { id: 'psu_0', label: 'ATX Power', acceptsKind: 'PSU', socketTag: 'STANDARD_ATX' },
     ],
+    baseImage: 'assets/motherboards/motherboard_am4_24x30.png',
   },
 ]

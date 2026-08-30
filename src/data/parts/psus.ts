@@ -14,6 +14,7 @@ export const psus: PsuPart[] = [
     height: 8,
     powerCapacity: u.Measure.of(300, W),
     powerDraw: u.Measure.of(0, W),
+    baseImage: 'assets/psus/psu_1_15x8.png',
   },
   {
     id: 'psu_xblaze_650w',
@@ -27,5 +28,6 @@ export const psus: PsuPart[] = [
     height: 8,
     powerCapacity: u.Measure.of(650, W),
     powerDraw: u.Measure.of(0, W),
+    baseImage: 'assets/psus/psu_1_15x8.png',
   },
 ]
