@@ -27,7 +27,7 @@ const { x, y, handleMouseDown } = useWindowDrag(10, 10) // default left side
         >
           <div style="display: flex; justify-content: space-between; align-items: start; gap: 8px;">
             <span style="margin: 0; word-break: break-word;"><strong>{{ job.title }}</strong></span>
-            <span style="flex-shrink: 0;" :style="{ color: job.rarity === 'MYTHIC' ? '#800080' : job.rarity === 'RARE' ? '#000080' : job.rarity === 'UNCOMMON' ? '#008000' : 'inherit' }">
+            <span style="flex-shrink: 0;" :style="{ color: job.rarity === 'MYTHIC' ? 'var(--accent-4)' : job.rarity === 'RARE' ? '#64b5f6' : job.rarity === 'UNCOMMON' ? '#81c784' : 'inherit' }">
               [{{ job.rarity }}]
             </span>
           </div>
@@ -44,7 +44,7 @@ const { x, y, handleMouseDown } = useWindowDrag(10, 10) // default left side
               {{ formatGB(job.downloadSize.value) }} GB in / {{ formatGB(job.uploadSize.value) }} GB out
             </p>
           </div>
-          <div class="job-reward" style="margin-top: 8px; border-top: 1px solid #888; padding-top: 4px; word-break: break-word;">
+          <div class="job-reward" style="margin-top: 8px; border-top: 1px solid var(--surf-highlight); padding-top: 4px; word-break: break-word;">
             <p style="margin: 0;"><strong>Reward:</strong></p>
             <p style="margin: 0;">{{ job.rewardDescription }}</p>
           </div>
@@ -82,32 +82,20 @@ const { x, y, handleMouseDown } = useWindowDrag(10, 10) // default left side
   gap: 8px;
   padding: 4px;
 }
-/* Scrollbar styling */
-.jobs-list::-webkit-scrollbar {
-  width: 16px;
-}
-.jobs-list::-webkit-scrollbar-track {
-  background: #dfdfdf;
-  border-left: 1px solid #fff;
-}
-.jobs-list::-webkit-scrollbar-thumb {
-  background: #c0c0c0;
-  border: 1px outset #fff;
-}
 .job-card {
-  border: 2px outset #fff;
-  background: #c0c0c0;
+  box-shadow: inset -1px -1px var(--surf-dark), inset 1px 1px var(--surf-highlight), inset -2px -2px var(--surf-shadow), inset 2px 2px var(--surf-light);
+  background: var(--surf-base);
   padding: 8px;
   cursor: pointer;
-  color: black;
+  color: var(--text-main);
 }
 .job-card:active {
-  border-style: inset;
+  box-shadow: inset -1px -1px var(--surf-highlight), inset 1px 1px var(--surf-dark), inset -2px -2px var(--surf-light), inset 2px 2px var(--surf-shadow);
 }
 .job-card.is-selected {
-  background: #000080;
-  color: white;
-  border-style: inset;
+  background: var(--accent-1);
+  color: var(--text-inverted);
+  box-shadow: inset -1px -1px var(--surf-highlight), inset 1px 1px var(--surf-dark), inset -2px -2px var(--surf-light), inset 2px 2px var(--surf-shadow);
 }
 .job-stats {
 }

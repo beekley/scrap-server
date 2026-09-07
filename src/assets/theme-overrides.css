@@ -1,0 +1,186 @@
+:root {
+  /* Surface palette */
+  --surf-highlight: #4a3e59; /* replaces #fff for structural highlights */
+  --surf-light: #332b3f; /* replaces #dfdfdf */
+  --surf-base: #211e2b; /* replaces #c0c0c0 - Main panel color */
+  --surf-shadow: #110e17; /* replaces #808080 */
+  --surf-dark: #000000; /* replaces #0a0a0a */
+
+  /* Desktop */
+  --bg-desktop: #110e15;
+  --bg-sunken: #18151f;
+
+  /* Accents */
+  --accent-1: #5a3a52; /* title bar active */
+  --accent-2: #9e5667;
+  --accent-3: #d97d67;
+  --accent-4: #fbb561;
+
+  /* Typography */
+  --text-main: #e0e0e0;
+  --text-inverted: #ffffff;
+  --text-disabled: #6c5d80;
+
+  /* Title bar */
+  --title-bg-active: var(--accent-1);
+  --title-bg-inactive: var(--surf-shadow);
+}
+
+/* Global resets for the new theme */
+html, body {
+  color: var(--text-main);
+  background-color: var(--bg-desktop);
+  margin: 0;
+  padding: 0;
+}
+
+/* OVERRIDES FOR 98.css */
+
+.window,
+button,
+.window-body,
+fieldset,
+.sunken-panel {
+  color: var(--text-main);
+}
+
+/* Window */
+.window {
+  background: var(--surf-base);
+  box-shadow: inset -1px -1px var(--surf-dark), inset 1px 1px var(--surf-light), inset -2px -2px var(--surf-shadow), inset 2px 2px var(--surf-highlight);
+}
+
+/* Title Bar */
+.title-bar {
+  background: var(--title-bg-active);
+  color: var(--text-inverted);
+}
+.title-bar.inactive {
+  background: var(--title-bg-inactive);
+}
+
+/* Buttons */
+button {
+  background: var(--surf-base);
+  color: var(--text-main);
+  box-shadow: inset -1px -1px var(--surf-dark), inset 1px 1px var(--surf-highlight), inset -2px -2px var(--surf-shadow), inset 2px 2px var(--surf-light);
+}
+button:active {
+  box-shadow: inset -1px -1px var(--surf-highlight), inset 1px 1px var(--surf-dark), inset -2px -2px var(--surf-light), inset 2px 2px var(--surf-shadow);
+  padding: 2px 11px 0 13px; /* standard 98.css active push */
+}
+button:disabled {
+  color: var(--text-disabled);
+  text-shadow: 1px 1px 0 var(--surf-highlight);
+}
+
+/* Fieldset & Legend */
+fieldset {
+  border-image: none !important;
+  border-color: var(--surf-shadow) var(--surf-highlight) var(--surf-highlight) var(--surf-shadow);
+  border-style: solid;
+  border-width: 1px;
+  box-shadow: inset 1px 1px 0 var(--surf-highlight), inset -1px -1px 0 var(--surf-shadow);
+}
+legend {
+  background: var(--surf-base);
+}
+
+/* Sunken Panels */
+.sunken-panel {
+  background: var(--bg-sunken) !important;
+  border-image: none !important;
+  border-style: solid;
+  border-width: 1px;
+  border-color: var(--surf-shadow) var(--surf-highlight) var(--surf-highlight) var(--surf-shadow);
+  box-shadow: inset 1px 1px 0 var(--surf-dark), inset -1px -1px 0 var(--surf-light);
+}
+
+/* Scrollbars */
+::-webkit-scrollbar {
+  width: 16px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-sunken);
+  border-left: 1px solid var(--surf-light);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--surf-base);
+  box-shadow: inset -1px -1px var(--surf-dark), inset 1px 1px var(--surf-highlight), inset -2px -2px var(--surf-shadow), inset 2px 2px var(--surf-light);
+}
+::-webkit-scrollbar-button:single-button {
+  background-color: var(--surf-base);
+  box-shadow: inset -1px -1px var(--surf-dark), inset 1px 1px var(--surf-highlight), inset -2px -2px var(--surf-shadow), inset 2px 2px var(--surf-light);
+  display: block;
+  height: 16px;
+  width: 16px;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+::-webkit-scrollbar-button:single-button:active {
+  box-shadow: inset -1px -1px var(--surf-highlight), inset 1px 1px var(--surf-dark), inset -2px -2px var(--surf-light), inset 2px 2px var(--surf-shadow);
+}
+/* Hide the extra stacked buttons */
+::-webkit-scrollbar-button:vertical:start:increment,
+::-webkit-scrollbar-button:vertical:end:decrement,
+::-webkit-scrollbar-button:horizontal:start:increment,
+::-webkit-scrollbar-button:horizontal:end:decrement {
+  display: none !important;
+}
+/* Recreate arrows in light color matching text */
+::-webkit-scrollbar-button:single-button:vertical:decrement {
+  background-image: url('data:image/svg+xml;utf8,<svg width="8" height="4" xmlns="http://www.w3.org/2000/svg"><polygon points="4,0 8,4 0,4" fill="%23e0e0e0"/></svg>');
+}
+::-webkit-scrollbar-button:single-button:vertical:increment {
+  background-image: url('data:image/svg+xml;utf8,<svg width="8" height="4" xmlns="http://www.w3.org/2000/svg"><polygon points="0,0 8,0 4,4" fill="%23e0e0e0"/></svg>');
+}
+::-webkit-scrollbar-button:single-button:horizontal:decrement {
+  background-image: url('data:image/svg+xml;utf8,<svg width="4" height="8" xmlns="http://www.w3.org/2000/svg"><polygon points="4,0 4,8 0,4" fill="%23e0e0e0"/></svg>');
+}
+::-webkit-scrollbar-button:single-button:horizontal:increment {
+  background-image: url('data:image/svg+xml;utf8,<svg width="4" height="8" xmlns="http://www.w3.org/2000/svg"><polygon points="0,0 4,4 0,8" fill="%23e0e0e0"/></svg>');
+}
+
+/* Inputs / Progress Bars */
+.progress-indicator {
+  background: var(--bg-sunken);
+  box-shadow: inset -1px -1px var(--surf-highlight), inset 1px 1px var(--surf-shadow), inset -2px -2px var(--surf-light), inset 2px 2px var(--surf-dark);
+}
+.progress-indicator-bar {
+  background: var(--accent-1);
+}
+
+/* Status Bar */
+.status-bar {
+  background: var(--surf-base) !important;
+  box-shadow: inset -1px -1px var(--surf-shadow), inset 1px 1px var(--surf-highlight) !important;
+}
+.status-bar-field {
+  box-shadow: inset -1px -1px var(--surf-highlight), inset 1px 1px var(--surf-shadow), inset -2px -2px var(--surf-light), inset 2px 2px var(--surf-dark) !important;
+}
+
+/* Dropdowns / Select */
+select {
+  color: var(--text-main) !important;
+  border-image: none !important;
+  border: 1px solid var(--surf-dark);
+  box-shadow: inset -1px -1px var(--surf-highlight), inset 1px 1px var(--surf-shadow), inset -2px -2px var(--surf-light), inset 2px 2px var(--surf-dark) !important;
+  background: var(--bg-sunken) url("data:image/svg+xml;charset=utf-8,%3Csvg width='16' height='17' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M15 0H0v16h1v1h14v-1h1V0h-1zm-2 15H2V2h11v13z' fill='%23332b3f'/%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M2 1H1v14h1V1zM15 1h-1v14h1V1z' fill='%234a3e59'/%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M2 2h12v1H2V2z' fill='%23000000'/%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M3 3h10v1H3V3zM3 14h10v1H3v-1z' fill='%23332b3f'/%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M2 15h12v1H2v-1z' fill='%23110e17'/%3E%3Crect x='2' y='2' width='12' height='13' fill='%23211e2b' /%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M4 6h7v1H4V6zm1 1h5v1H5V7zm1 1h3v1H6V8zm1 1h1v1H7V9z' fill='%23e0e0e0'/%3E%3C/svg%3E") no-repeat right 2px center !important;
+}
+option {
+  background-color: var(--bg-sunken);
+  color: var(--text-main);
+}
+
+/* Tree view */
+ul.tree-view {
+  background: var(--bg-sunken);
+  box-shadow: inset -1px -1px var(--surf-highlight), inset 1px 1px var(--surf-shadow), inset -2px -2px var(--surf-light), inset 2px 2px var(--surf-dark);
+  color: var(--text-main);
+}
+ul.tree-view a {
+  color: var(--text-main);
+}
+ul.tree-view a:focus {
+  background-color: var(--accent-1);
+}

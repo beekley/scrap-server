@@ -45,7 +45,7 @@ const ctx = useSelectionContext()
 
       <!-- PART INFO PANEL -->
       <div v-if="ctx.displayedPart.value" style="display: flex; flex-direction: column; gap: 10px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px groove #dfdfdf; padding-bottom: 4px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--surf-highlight); padding-bottom: 4px;">
           <button
             v-if="ctx.parentPart.value"
             @click="gameStore.selectedItemId = ctx.parentPart.value.id"
@@ -87,17 +87,5 @@ const ctx = useSelectionContext()
   overflow-y: auto;
   overflow-x: hidden;
   padding: 10px;
-}
-/* Scrollbar styling */
-.panel-content::-webkit-scrollbar {
-  width: 16px;
-}
-.panel-content::-webkit-scrollbar-track {
-  background: #dfdfdf;
-  border-left: 1px solid #fff;
-}
-.panel-content::-webkit-scrollbar-thumb {
-  background: #c0c0c0;
-  border: 1px outset #fff;
 }
 </style>

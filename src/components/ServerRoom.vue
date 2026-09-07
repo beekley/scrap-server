@@ -204,7 +204,7 @@ function onMouseLeave() {
   top: 0;
   left: 0;
   overflow: hidden;
-  background-color: #008080;
+  background-color: var(--bg-desktop);
 }
 .room-container {
   width: 100%;
@@ -221,26 +221,26 @@ function onMouseLeave() {
   position: absolute;
   top: 0;
   left: 0;
-  background-color: #c0c0c0;
+  background-color: var(--bg-sunken);
   will-change: transform;
 }
 .hover-tooltip {
   position: fixed;
   z-index: 9999;
-  background: #ffffe1;
-  color: black;
-  border: 1px solid black;
+  background: var(--surf-highlight);
+  color: var(--text-inverted);
+  border: 1px solid var(--surf-dark);
   padding: 2px 4px;
   pointer-events: none;
-  box-shadow: 1px 1px 0px rgba(0,0,0,0.5);
+  box-shadow: 1px 1px 0px var(--surf-shadow);
   white-space: nowrap;
 }
 .transfer-zone-bg {
   position: absolute;
   top: 0;
   height: 100%;
-  background: repeating-linear-gradient(45deg, #e9ecef, #e9ecef 10px, #dee2e6 10px, #dee2e6 20px);
-  border-left: 2px dashed #999;
+  background: repeating-linear-gradient(45deg, var(--surf-base), var(--surf-base) 10px, var(--bg-sunken) 10px, var(--bg-sunken) 20px);
+  border-left: 2px dashed var(--accent-3);
   z-index: 0;
 }
 </style>

@@ -38,8 +38,8 @@ const props = defineProps<{
   <div style="display: flex; flex-direction: column; gap: 10px;">
     <div style="display: flex; justify-content: space-between;">
       <span v-if="selectedJob">
-        <span v-if="canRunJob" style="color: darkgreen;">✓ Valid for Job</span>
-        <span v-else style="color: darkred;">✗ Invalid for Job</span>
+        <span v-if="canRunJob" style="color: #66bb6a;">✓ Valid for Job</span>
+        <span v-else style="color: #ef5350;">✗ Invalid for Job</span>
       </span>
     </div>
 
@@ -66,10 +66,10 @@ const props = defineProps<{
       >
         Start Job
       </button>
-      <p v-if="!isServerComplete" style="color: darkred; margin-top: 5px">
+      <p v-if="!isServerComplete" style="color: #ef5350; margin-top: 5px">
         Server is missing essential parts.
       </p>
-      <p v-else-if="!canRunJob" style="color: darkred; margin-top: 5px">
+      <p v-else-if="!canRunJob" style="color: #ef5350; margin-top: 5px">
         Server lacks requirements.
       </p>
     </div>
@@ -103,7 +103,7 @@ const props = defineProps<{
         <strong>Working Set I/O:</strong>
         {{ formatMB(telemetry.workingSetThroughput.value) }} MB/s
       </p>
-      <p :style="{ color: telemetry.isIoBottlenecked ? 'orange' : 'blue', margin: '2px 0' }">
+      <p :style="{ color: telemetry.isIoBottlenecked ? '#ffb74d' : '#64b5f6', margin: '2px 0' }">
         <strong>Bottleneck:</strong>
         {{ telemetry.isIoBottlenecked ? 'Memory I/O' : 'CPU Limit' }}
       </p>

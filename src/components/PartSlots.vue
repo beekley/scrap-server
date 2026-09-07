@@ -35,7 +35,7 @@ function getInstalledPart(partId: string): Part | undefined {
 
 <template>
   <ul
-    style="padding-left: 12px; list-style-type: none; margin: 4px 0; border-left: 1px dotted #888;"
+    style="padding-left: 12px; list-style-type: none; margin: 4px 0; border-left: 1px dotted var(--surf-highlight);"
   >
     <li v-for="slot in slots" :key="slot.id" style="margin-bottom: 4px; position: relative">
       <div style="display: flex; flex-direction: column; gap: 2px">
@@ -47,7 +47,7 @@ function getInstalledPart(partId: string): Part | undefined {
               left: -12px;
               top: 50%;
               width: 10px;
-              border-top: 1px dotted #888;
+              border-top: 1px dotted var(--surf-highlight);
             "
           ></div>
 

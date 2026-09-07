@@ -55,7 +55,7 @@ const emit = defineEmits<{
   position: absolute;
   top: 0;
   left: 0;
-  background: #fff;
+  background: var(--surf-base);
   border: none;
   border-radius: 0;
   box-shadow: none;
@@ -75,23 +75,23 @@ const emit = defineEmits<{
   left: 0;
   right: 0;
   bottom: 0;
-  box-shadow: inset 0 0 0 var(--scale-px) rgba(12, 13, 23, 0.1);
+  box-shadow: inset 0 0 0 var(--scale-px) rgba(255, 255, 255, 0.1);
   pointer-events: none;
 }
 .room-item.is-wall {
-  background: #444;
+  background: var(--surf-dark);
   border: none;
   cursor: not-allowed;
   z-index: 5;
 }
 .room-item.is-selected {
-  background: #e3f2fd;
-  outline: 2px solid #1976d2;
+  background: var(--accent-1);
+  outline: 2px solid var(--surf-highlight);
   outline-offset: -2px;
 }
 .room-item.is-invalid {
-  background: #ffcccc !important;
-  outline: 2px solid #d32f2f !important;
+  background: var(--accent-2) !important;
+  outline: 2px solid var(--accent-3) !important;
   outline-offset: -2px;
 }
 .room-item.is-dragging {

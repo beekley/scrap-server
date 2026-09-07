@@ -65,7 +65,7 @@ const svgPoints = computed(() => {
   return data.map(d => {
     let x = ((d.t - tMin) / props.scale) * 100
     x = Math.max(0, Math.min(100, x))
-    const y = 60 - ((d.v - vMin) / vRange) * 60
+    const y = 57 - ((d.v - vMin) / vRange) * 55
     return `${x},${y}`
   }).join(' ')
 })
@@ -94,7 +94,6 @@ const svgPoints = computed(() => {
 }
 
 .chart-box {
-  background: white;
   width: 100%;
   height: 60px;
   overflow: hidden;

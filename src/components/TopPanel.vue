@@ -26,11 +26,11 @@ const formattedClock = computed(() => {
         <p class="status-bar-field power">Power: {{ gameStore.currentPowerDraw.value.toFixed(0) }} W</p>
         
         <div class="speed-controls" style="display: flex; gap: 4px; align-items: center; padding: 0 4px;">
-          <button :style="gameStore.gameSpeed === 0 ? 'color: blue; box-shadow: inset -1px -1px #fff, inset 1px 1px #0a0a0a, inset -2px -2px #dfdfdf, inset 2px 2px #808080;' : ''" @click="gameStore.setGameSpeed(0)">⏸️</button>
-          <button :style="gameStore.gameSpeed === 1 ? 'color: blue; box-shadow: inset -1px -1px #fff, inset 1px 1px #0a0a0a, inset -2px -2px #dfdfdf, inset 2px 2px #808080;' : ''" @click="gameStore.setGameSpeed(1)">1x</button>
-          <button :style="gameStore.gameSpeed === 4 ? 'color: blue; box-shadow: inset -1px -1px #fff, inset 1px 1px #0a0a0a, inset -2px -2px #dfdfdf, inset 2px 2px #808080;' : ''" @click="gameStore.setGameSpeed(4)">4x</button>
-          <button :style="gameStore.gameSpeed === 16 ? 'color: blue; box-shadow: inset -1px -1px #fff, inset 1px 1px #0a0a0a, inset -2px -2px #dfdfdf, inset 2px 2px #808080;' : ''" @click="gameStore.setGameSpeed(16)">16x</button>
-          <button :style="gameStore.gameSpeed === 64 ? 'color: blue; box-shadow: inset -1px -1px #fff, inset 1px 1px #0a0a0a, inset -2px -2px #dfdfdf, inset 2px 2px #808080;' : ''" @click="gameStore.setGameSpeed(64)">64x</button>
+          <button :style="gameStore.gameSpeed === 0 ? 'color: var(--accent-4); box-shadow: inset -1px -1px var(--surf-highlight), inset 1px 1px var(--surf-dark), inset -2px -2px var(--surf-light), inset 2px 2px var(--surf-shadow);' : ''" @click="gameStore.setGameSpeed(0)">⏸️</button>
+          <button :style="gameStore.gameSpeed === 1 ? 'color: var(--accent-4); box-shadow: inset -1px -1px var(--surf-highlight), inset 1px 1px var(--surf-dark), inset -2px -2px var(--surf-light), inset 2px 2px var(--surf-shadow);' : ''" @click="gameStore.setGameSpeed(1)">1x</button>
+          <button :style="gameStore.gameSpeed === 4 ? 'color: var(--accent-4); box-shadow: inset -1px -1px var(--surf-highlight), inset 1px 1px var(--surf-dark), inset -2px -2px var(--surf-light), inset 2px 2px var(--surf-shadow);' : ''" @click="gameStore.setGameSpeed(4)">4x</button>
+          <button :style="gameStore.gameSpeed === 16 ? 'color: var(--accent-4); box-shadow: inset -1px -1px var(--surf-highlight), inset 1px 1px var(--surf-dark), inset -2px -2px var(--surf-light), inset 2px 2px var(--surf-shadow);' : ''" @click="gameStore.setGameSpeed(16)">16x</button>
+          <button :style="gameStore.gameSpeed === 64 ? 'color: var(--accent-4); box-shadow: inset -1px -1px var(--surf-highlight), inset 1px 1px var(--surf-dark), inset -2px -2px var(--surf-light), inset 2px 2px var(--surf-shadow);' : ''" @click="gameStore.setGameSpeed(64)">64x</button>
         </div>
 
         <p class="status-bar-field clock">{{ formattedClock }}</p>
@@ -49,13 +49,13 @@ const formattedClock = computed(() => {
   max-width: 95vw;
 }
 .cash {
-  color: #006600;
+  color: #81c784;
 }
 .power {
-  color: #994400;
+  color: #ffb74d;
 }
 .clock {
-  color: #000066;
+  color: #64b5f6;
   text-align: right;
   min-width: 100px;
 }
