@@ -110,6 +110,30 @@ const roomItems = computed<RoomItem[]>(() => {
     })
   }
 
+  for (const d of gameStore.decorations) {
+    const isOutside = isItemOutside(d.x, d.width)
+    
+    if (gameStore.isViewingOutside) {
+      // When viewing outside (door closed), hide items that are inside, UNLESS they are attached to the door
+      if (!isOutside && !d.attachedToDoor) continue
+    } else {
+      // When viewing inside (door open), hide items attached to the door (they roll up with it)
+      if (d.attachedToDoor) continue
+    }
+
+    items.push({
+      id: d.id,
+      name: d.name,
+      kind: d.type,
+      width: d.width,
+      height: d.height,
+      x: d.x,
+      y: d.y,
+      isServer: false,
+      ref: null,
+    })
+  }
+
   return items
 })
 
@@ -121,6 +145,7 @@ const { draggedItemId, dragX, dragY, isDragValid, handleMouseDown } = useDraggab
     gameStore.selectItem(id)
   },
   checkOverlapDrop: (id, x, y) => gameStore.canSlotItem(id, x, y),
+  isViewingOutside: computed(() => gameStore.isViewingOutside),
 })
 
 function onMouseHover(item: any) {
@@ -201,23 +226,7 @@ function onNoteLeave() {
             left: STORAGE_UNIT_START_X * SCALE + 'px',
             width: STORAGE_UNIT_WIDTH * SCALE + 'px',
           }"
-        >
-          <!-- Decorations attached to door -->
-          <div
-            v-for="dec in gameStore.decorations.filter(d => d.parentObjectId === 'exterior_door')"
-            :key="dec.id"
-            class="decoration-note"
-            :style="{
-              left: dec.relativeX * SCALE + 'px',
-              top: dec.relativeY * SCALE + 'px',
-            }"
-            @click="gameStore.selectItem(dec.id)"
-            @mouseenter="onNoteHover(dec)"
-            @mouseleave="onNoteLeave"
-          >
-            &#128221;
-          </div>
-        </div>
+        ></div>
 
         <RoomItemView
           v-for="item in roomItems"
@@ -260,23 +269,17 @@ function onNoteLeave() {
 
     <!-- Hover Tooltip -->
     <div
-      v-if="hoveredItem && !isPanning && !draggedItemId && !gameStore.showHeatMap && !hoveredNote"
+      v-if="hoveredItem && !isPanning && !draggedItemId && !gameStore.showHeatMap"
       class="hover-tooltip"
       :style="{ left: mouseX + 15 + 'px', top: mouseY + 15 + 'px' }"
     >
-      <div>{{ hoveredItem.name }}</div>
+      <div style="font-weight: bold; margin-bottom: 2px;">{{ hoveredItem.name }}</div>
       <div style="color: #555;">{{ hoveredItem.kind }}</div>
+      <div v-if="hoveredItem.kind === 'NOTE'" style="margin-top: 5px; padding-top: 5px; border-top: 1px solid rgba(0,0,0,0.1); font-size: 11px; white-space: pre-wrap; word-break: break-word; color: #111;">
+        {{ gameStore.decorations.find(d => d.id === hoveredItem!.id)?.content }}
+      </div>
     </div>
 
-    <!-- Note Hover Tooltip -->
-    <div
-      v-if="hoveredNote && !isPanning && !draggedItemId"
-      class="hover-tooltip note-tooltip"
-      :style="{ left: mouseX + 15 + 'px', top: mouseY + 15 + 'px' }"
-    >
-      <div class="note-tooltip-header">📝 Note</div>
-      <div class="note-tooltip-content">{{ hoveredNote.content }}</div>
-    </div>
 
     <div
       v-if="gameStore.showHeatMap && hoveredCellTemp !== null && !isPanning"
@@ -352,51 +355,7 @@ function onNoteLeave() {
   z-index: 10;
   pointer-events: auto;
 }
-.decoration-note {
-  position: absolute;
-  width: 28px;
-  height: 28px;
-  background-color: #ffea70;
-  box-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  border: 1px solid #d4b106;
-  border-radius: 2px;
-  z-index: 20;
-  transition: transform 0.1s ease;
-}
-.decoration-note:hover {
-  transform: scale(1.15);
-  background-color: #fff176;
-}
-.note-tooltip {
-  max-width: 320px;
-  white-space: normal !important;
-  background: #ffea70;
-  color: #111;
-  border: 1px solid #c9a600;
-  box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.4);
-  padding: 8px 10px;
-  font-family: inherit;
-  pointer-events: none;
-}
-.note-tooltip-header {
-  font-weight: bold;
-  font-size: 11px;
-  color: #5d4037;
-  margin-bottom: 4px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.15);
-  padding-bottom: 2px;
-}
-.note-tooltip-content {
-  font-size: 11px;
-  line-height: 1.4;
-  white-space: pre-wrap;
-  word-break: break-word;
-}
+
 
 
 </style>

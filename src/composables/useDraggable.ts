@@ -4,6 +4,7 @@ import {
   ROOM_HEIGHT,
   isEmptySpace,
   isValidPlacement,
+  isSupported,
   isSupportingAnotherObject,
   type RoomRect,
 } from '../utils/physics'
@@ -14,6 +15,7 @@ export interface DragConfig {
   onMoveItem: (id: string, x: number, y: number) => void
   onSelect: (id: string) => void
   checkOverlapDrop?: (id: string, x: number, y: number) => boolean
+  isViewingOutside?: Ref<boolean>
 }
 
 export function useDraggable(roomItems: Ref<RoomRect[]>, config: DragConfig) {
@@ -74,25 +76,27 @@ export function useDraggable(roomItems: Ref<RoomRect[]>, config: DragConfig) {
       return true
     }
 
-    if (!isEmptySpace(finalX, finalY, item.width, item.height, item.id, roomItems.value, maxWidth))
+    if (!isEmptySpace(finalX, finalY, item.width, item.height, item.id, roomItems.value, maxWidth, config.isViewingOutside?.value))
       return false
 
     let fallY = finalY
-    while (
-      fallY <= ROOM_HEIGHT - item.height &&
-      isEmptySpace(finalX, fallY, item.width, item.height, item.id, roomItems.value, maxWidth)
-    ) {
-      fallY++
+    if (isEmptySpace(finalX, fallY, item.width, item.height, item.id, roomItems.value, maxWidth, config.isViewingOutside?.value)) {
+      while (
+        fallY < ROOM_HEIGHT - item.height &&
+        !isSupported(finalX, fallY, item.width, item.height, item.id, roomItems.value, config.isViewingOutside?.value) &&
+        isEmptySpace(finalX, fallY + 1, item.width, item.height, item.id, roomItems.value, maxWidth, config.isViewingOutside?.value)
+      ) {
+        fallY++
+      }
     }
-    fallY--
 
     if (
-      !isValidPlacement(finalX, fallY, item.width, item.height, item.id, roomItems.value, maxWidth)
+      !isValidPlacement(finalX, fallY, item.width, item.height, item.id, roomItems.value, maxWidth, config.isViewingOutside?.value)
     ) {
       let foundValid = false
       for (let y = ROOM_HEIGHT - item.height; y >= 0; y--) {
         if (
-          isValidPlacement(finalX, y, item.width, item.height, item.id, roomItems.value, maxWidth)
+          isValidPlacement(finalX, y, item.width, item.height, item.id, roomItems.value, maxWidth, config.isViewingOutside?.value)
         ) {
           foundValid = true
           break
@@ -123,21 +127,23 @@ export function useDraggable(roomItems: Ref<RoomRect[]>, config: DragConfig) {
     }
 
     let fallY = finalY
-    while (
-      fallY <= ROOM_HEIGHT - item.height &&
-      isEmptySpace(finalX, fallY, item.width, item.height, item.id, roomItems.value, maxWidth)
-    ) {
-      fallY++
+    if (isEmptySpace(finalX, fallY, item.width, item.height, item.id, roomItems.value, maxWidth, config.isViewingOutside?.value)) {
+      while (
+        fallY < ROOM_HEIGHT - item.height &&
+        !isSupported(finalX, fallY, item.width, item.height, item.id, roomItems.value, config.isViewingOutside?.value) &&
+        isEmptySpace(finalX, fallY + 1, item.width, item.height, item.id, roomItems.value, maxWidth, config.isViewingOutside?.value)
+      ) {
+        fallY++
+      }
     }
-    fallY--
 
     if (
-      !isValidPlacement(finalX, fallY, item.width, item.height, item.id, roomItems.value, maxWidth)
+      !isValidPlacement(finalX, fallY, item.width, item.height, item.id, roomItems.value, maxWidth, config.isViewingOutside?.value)
     ) {
       let foundValid = false
       for (let y = ROOM_HEIGHT - item.height; y >= 0; y--) {
         if (
-          isValidPlacement(finalX, y, item.width, item.height, item.id, roomItems.value, maxWidth)
+          isValidPlacement(finalX, y, item.width, item.height, item.id, roomItems.value, maxWidth, config.isViewingOutside?.value)
         ) {
           finalY = y
           foundValid = true

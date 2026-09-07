@@ -16,15 +16,23 @@ import {
 } from '../types'
 import { getPartTemplate, allParts } from '../data'
 import { generateProceduralJob } from '../generators'
-import { tickJob, canServerRunJob, calculateServerPowerDraw, calculateComputeDetails } from '../simulation'
+import {
+  tickJob,
+  canServerRunJob,
+  calculateServerPowerDraw,
+  calculateComputeDetails,
+} from '../simulation'
 import { tickThermal, createInitialGrid, getServerOperatingLimits } from '../thermal'
 import {
   findValidDropLocation,
   type RoomRect,
   ROOM_WIDTH,
+  ROOM_HEIGHT,
   OUTSIDE_LEFT_WIDTH,
   isItemOutside,
   STORAGE_UNIT_START_X,
+  STORAGE_UNIT_WIDTH,
+  STORAGE_UNIT_END_X,
 } from '../utils/physics'
 import { autoAssembleRewards } from '../utils/assembly'
 
@@ -51,11 +59,13 @@ export const useGameStore = defineStore('game', () => {
       name: 'Scrap Node 1',
       installedParts: [c, mb, cpu, ram, hdd, psu, fan],
       x: STORAGE_UNIT_START_X + 20,
-      y: 250 - c.height, // Placed directly on the floor
+      y: ROOM_HEIGHT - c.height, // Placed directly on the floor
     }
   }
 
-  const isDebug = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('debug') === 'true'
+  const isDebug =
+    typeof window !== 'undefined' &&
+    new URLSearchParams(window.location.search).get('debug') === 'true'
 
   const starterServer = createStarterServer()
   const servers = ref<ServerNode[]>([starterServer])
@@ -63,17 +73,17 @@ export const useGameStore = defineStore('game', () => {
   const initialInventory: Part[] = []
   if (isDebug) {
     const roomItems: RoomRect[] = []
-    const casePart = starterServer.installedParts.find(p => p.kind === 'CASE')
+    const casePart = starterServer.installedParts.find((p) => p.kind === 'CASE')
     if (casePart) {
       roomItems.push({
         id: starterServer.id,
         x: starterServer.x ?? 0,
         y: starterServer.y ?? 0,
         width: casePart.width,
-        height: casePart.height
+        height: casePart.height,
       })
     }
-    
+
     allParts.forEach((part) => {
       const p = getPartTemplate(part.id)
       const loc = findValidDropLocation(p.width, p.height, roomItems, p.id, 0, ROOM_WIDTH)
@@ -110,12 +120,16 @@ export const useGameStore = defineStore('game', () => {
   const decorations = ref<Decoration[]>([
     {
       id: 'tut_note_1',
+      name: 'Welcome!',
       type: 'NOTE',
-      content: "Hey kid, heard you're looking to run some compute. Here's a junker case and some old DDR3 to get you started. Hook it up and check the local intranet for jobs. - Uncle Dave\n\nP.S. I leave items outside the unit to be sold by the scrapper at 6 AM. Deliveries arrive at 8 AM.",
-      parentObjectId: 'exterior_door', // special ID for the garage door
-      relativeX: 40,
-      relativeY: 40,
-    }
+      content:
+        "Hey kid, heard you're looking to run some compute. Here's a junker case and some old DDR3 to get you started. Hook it up and check the local intranet for jobs. - Uncle Dave\n\nP.S. I leave items outside the unit to be sold by the scrapper at 6 AM. Deliveries arrive at 8 AM.",
+      x: STORAGE_UNIT_START_X + 40,
+      y: 40,
+      width: 21,
+      height: 30,
+      attachedToDoor: true,
+    },
   ])
 
   interface TimeseriesData {
@@ -243,7 +257,7 @@ export const useGameStore = defineStore('game', () => {
     if (!part) return false
 
     for (const server of servers.value) {
-      const casePart = server.installedParts.find(p => p.kind === 'CASE')
+      const casePart = server.installedParts.find((p) => p.kind === 'CASE')
       if (casePart) {
         const sx = server.x ?? 0
         const sy = server.y ?? 0
@@ -269,11 +283,22 @@ export const useGameStore = defineStore('game', () => {
   }
 
   function moveItem(id: string, x: number, y: number) {
+    const decoration = decorations.value.find((d) => d.id === id)
+    if (decoration) {
+      decoration.x = x
+      decoration.y = y
+
+      const onDoor = x + decoration.width > STORAGE_UNIT_START_X && x < STORAGE_UNIT_END_X
+      decoration.attachedToDoor = isViewingOutside.value && onDoor
+
+      return
+    }
+
     const part = inventory.value.find((p) => p.id === id)
     if (part) {
       // Check for overlap with any server to auto-slot the part
       for (const server of servers.value) {
-        const casePart = server.installedParts.find(p => p.kind === 'CASE')
+        const casePart = server.installedParts.find((p) => p.kind === 'CASE')
         if (casePart) {
           const sx = server.x ?? 0
           const sy = server.y ?? 0
@@ -362,7 +387,7 @@ export const useGameStore = defineStore('game', () => {
   const pendingSaleValue = computed(() => {
     let totalValue = 0
     for (const server of servers.value) {
-      const casePart = server.installedParts.find(p => p.kind === 'CASE')
+      const casePart = server.installedParts.find((p) => p.kind === 'CASE')
       if (server.x !== undefined && casePart && isItemOutside(server.x, casePart.width)) {
         for (const part of server.installedParts) {
           totalValue += part.value.value
@@ -384,7 +409,7 @@ export const useGameStore = defineStore('game', () => {
     for (let i = servers.value.length - 1; i >= 0; i--) {
       const server = servers.value[i]
       if (!server) continue
-      const casePart = server.installedParts.find(p => p.kind === 'CASE')
+      const casePart = server.installedParts.find((p) => p.kind === 'CASE')
       if (server.x !== undefined && casePart && isItemOutside(server.x, casePart.width)) {
         for (const part of server.installedParts) {
           totalValue += part.value.value
@@ -457,7 +482,13 @@ export const useGameStore = defineStore('game', () => {
       serverWattsMap[server.id] = serverPower
     }
 
-    tickThermal(serverTemps.value, roomGrid.value, servers.value as ServerNode[], serverWattsMap, dtSeconds)
+    tickThermal(
+      serverTemps.value,
+      roomGrid.value,
+      servers.value as ServerNode[],
+      serverWattsMap,
+      dtSeconds,
+    )
 
     for (const server of servers.value) {
       const runningJob = activeJobs.value.find((j) => j.serverNodeIds?.includes(server.id))
@@ -478,12 +509,16 @@ export const useGameStore = defineStore('game', () => {
       }
 
       if (runningJob && (serverTemps.value[server.id] ?? 25) < criticalTemp) {
-        const details = calculateComputeDetails(server as ServerNode, runningJob as Job, serverTemps.value)
-        
+        const details = calculateComputeDetails(
+          server as ServerNode,
+          runningJob as Job,
+          serverTemps.value,
+        )
+
         let totalRam = 0
         let ramTotalThroughput = 0
         let storageTotalThroughput = 0
-        
+
         for (const part of server.installedParts) {
           if (part.kind === 'RAM') {
             totalRam += (part as any).memoryCapacity?.value || 0
@@ -504,7 +539,7 @@ export const useGameStore = defineStore('game', () => {
             }
           }
         }
-        
+
         if (totalRam > 0) ramPercent = (usedRam / totalRam) * 100
 
         if (runningJob.status === 'LOADING' || runningJob.status === 'SAVING') {
@@ -513,13 +548,14 @@ export const useGameStore = defineStore('game', () => {
           const totalCpu = details.totalCpuCompute.value
           const usedCpu = details.effectiveComputeRate.value
           if (totalCpu > 0) cpuPercent = (usedCpu / totalCpu) * 100
-          
+
           let ramUsedThroughput = 0
           let storageUsedThroughput = 0
 
           if (details.workingSetAllocation) {
-            const actualThroughputBytes = details.effectiveComputeRate.value * runningJob.memoryAccessPerOp.value
-            
+            const actualThroughputBytes =
+              details.effectiveComputeRate.value * runningJob.memoryAccessPerOp.value
+
             for (const alloc of details.workingSetAllocation) {
               const usedBw = actualThroughputBytes * alloc.fraction
               if (alloc.part.kind === 'RAM') {
@@ -530,13 +566,24 @@ export const useGameStore = defineStore('game', () => {
             }
           }
 
-          if (ramTotalThroughput > 0) ramThroughputPercent = (ramUsedThroughput / ramTotalThroughput) * 100
-          if (storageTotalThroughput > 0) storageThroughputPercent = (storageUsedThroughput / storageTotalThroughput) * 100
+          if (ramTotalThroughput > 0)
+            ramThroughputPercent = (ramUsedThroughput / ramTotalThroughput) * 100
+          if (storageTotalThroughput > 0)
+            storageThroughputPercent = (storageUsedThroughput / storageTotalThroughput) * 100
         }
       }
 
       if (!telemetryHistory.value[server.id]) {
-        telemetryHistory.value[server.id] = { time: [], power: [], cpu: [], ram: [], swap: [], ramThroughput: [], storageThroughput: [], temp: [] }
+        telemetryHistory.value[server.id] = {
+          time: [],
+          power: [],
+          cpu: [],
+          ram: [],
+          swap: [],
+          ramThroughput: [],
+          storageThroughput: [],
+          temp: [],
+        }
       }
       const history = telemetryHistory.value[server.id]!
       history.time.push(gameTimeSeconds.value)
@@ -546,7 +593,7 @@ export const useGameStore = defineStore('game', () => {
       history.swap.push(swapGb)
       history.ramThroughput.push(ramThroughputPercent)
       history.storageThroughput.push(storageThroughputPercent)
-      history.temp.push((serverTemps.value[server.id] ?? 25))
+      history.temp.push(serverTemps.value[server.id] ?? 25)
     }
 
     currentPowerDraw.value = u.Measure.of(totalWatts, W)

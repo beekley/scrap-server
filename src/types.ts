@@ -86,6 +86,7 @@ export interface BasePart<K extends PartKind = PartKind> {
   x?: number // Position in the room (when loose)
   y?: number // Position in the room (when loose)
   baseImage?: string
+  isDecoratable?: boolean
 }
 
 export interface CasePart extends BasePart<'CASE'> {
@@ -226,9 +227,12 @@ export type DecorationType = 'NOTE' | 'STICKER'
 
 export interface Decoration {
   id: string
+  name: string
   type: DecorationType
   content: string // Text content for notes, or image URL for stickers
-  parentObjectId: string | null // null means attached to background/room
-  relativeX: number
-  relativeY: number
+  x: number // Room coordinates
+  y: number // Room coordinates
+  width: number
+  height: number
+  attachedToDoor?: boolean
 }

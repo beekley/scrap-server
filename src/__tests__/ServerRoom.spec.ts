@@ -56,31 +56,12 @@ describe('ServerRoom.vue', () => {
     expect(store.selectedItemId).toBe(store.servers[0]!.id)
   })
 
-  it('renders garage door and tutorial note when storage unit is closed', () => {
+
+  it('renders garage door when storage unit is closed', () => {
     const store = useGameStore()
     store.isViewingOutside = true
     const wrapper = mount(ServerRoom)
 
     expect(wrapper.find('.garage-door').exists()).toBe(true)
-    const notes = wrapper.findAll('.decoration-note')
-    expect(notes.length).toBeGreaterThan(0)
-  })
-
-  it('displays note tooltip on hover', async () => {
-    const store = useGameStore()
-    store.isViewingOutside = true
-    const wrapper = mount(ServerRoom)
-
-    const note = wrapper.find('.decoration-note')
-    expect(note.exists()).toBe(true)
-
-    // Hover over note
-    await note.trigger('mouseenter')
-    expect(wrapper.find('.note-tooltip').exists()).toBe(true)
-    expect(wrapper.find('.note-tooltip-content').text()).toContain("Hey kid")
-
-    // Mouse leave
-    await note.trigger('mouseleave')
-    expect(wrapper.find('.note-tooltip').exists()).toBe(false)
   })
 })
