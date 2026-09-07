@@ -5,7 +5,7 @@ import PartSlots from './PartSlots.vue'
 
 const props = defineProps<{
   slots: SlotDefinition[]
-  serverNode: ServerNode
+  serverNode?: ServerNode
   isRunningJob: boolean
 }>()
 
@@ -16,7 +16,7 @@ function getCompatibleInventoryParts(slot: SlotDefinition): Part[] {
 }
 
 function handleSlotChange(slotId: string, event: Event) {
-  if (props.isRunningJob) return
+  if (props.isRunningJob || !props.serverNode) return
   const select = event.target as HTMLSelectElement
   const selectedPartId = select.value
 
@@ -28,6 +28,7 @@ function handleSlotChange(slotId: string, event: Event) {
 }
 
 function getInstalledPart(partId: string): Part | undefined {
+  if (!props.serverNode) return undefined
   return props.serverNode.installedParts.find((p) => p.id === partId)
 }
 </script>
@@ -54,7 +55,7 @@ function getInstalledPart(partId: string): Part | undefined {
             slot.label
           }}</span>
           <div style="display: inline-flex; align-items: center; gap: 5px">
-            <select @change="handleSlotChange(slot.id, $event)" :disabled="isRunningJob">
+            <select @change="handleSlotChange(slot.id, $event)" :disabled="isRunningJob || !serverNode">
               <option value="" :selected="!slot.installedPartId">Empty</option>
               <option v-if="slot.installedPartId" :value="slot.installedPartId" selected>
                 {{ getInstalledPart(slot.installedPartId)?.name || slot.installedPartId }}

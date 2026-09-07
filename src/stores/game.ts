@@ -15,7 +15,7 @@ import {
 } from '../types'
 import { getPartTemplate, allParts } from '../data'
 import { generateProceduralJob } from '../generators'
-import { tickJob, canServerRunJob, calculateServerPowerDraw } from '../simulation'
+import { tickJob, canServerRunJob, calculateServerPowerDraw, calculateComputeDetails } from '../simulation'
 import {
   findValidDropLocation,
   type RoomRect,
@@ -98,6 +98,17 @@ export const useGameStore = defineStore('game', () => {
   // Game clock: starts at 0, unit is game-seconds
   const gameTimeSeconds = ref<number>(0)
   const gameSpeed = ref<number>(1) // 0 (paused), 1 (1x), 4 (4x), 16 (16x), 64 (64x)
+
+  interface TimeseriesData {
+    time: number[]
+    power: number[]
+    cpu: number[]
+    ram: number[]
+    swap: number[]
+    ramThroughput: number[]
+    storageThroughput: number[]
+  }
+  const telemetryHistory = ref<Record<string, TimeseriesData>>({})
 
   function setGameSpeed(speed: number) {
     gameSpeed.value = speed
@@ -203,9 +214,71 @@ export const useGameStore = defineStore('game', () => {
     }
   }
 
+  function canSlotItem(id: string, x: number, y: number): boolean {
+    const part = inventory.value.find((p) => p.id === id)
+    if (!part) return false
+
+    for (const server of servers.value) {
+      const casePart = server.installedParts.find(p => p.kind === 'CASE')
+      if (casePart) {
+        const sx = server.x ?? 0
+        const sy = server.y ?? 0
+        const sw = casePart.width
+        const sh = casePart.height
+        const pw = part.width
+        const ph = part.height
+
+        if (x < sx + sw && x + pw > sx && y < sy + sh && y + ph > sy) {
+          for (const sp of server.installedParts) {
+            if (sp.slots) {
+              for (const slot of sp.slots) {
+                if (!slot.installedPartId && isPartCompatibleWithSlot(part as Part, slot)) {
+                  return true
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    return false
+  }
+
   function moveItem(id: string, x: number, y: number) {
     const part = inventory.value.find((p) => p.id === id)
     if (part) {
+      // Check for overlap with any server to auto-slot the part
+      for (const server of servers.value) {
+        const casePart = server.installedParts.find(p => p.kind === 'CASE')
+        if (casePart) {
+          const sx = server.x ?? 0
+          const sy = server.y ?? 0
+          const sw = casePart.width
+          const sh = casePart.height
+          const pw = part.width
+          const ph = part.height
+
+          // Check intersection
+          if (x < sx + sw && x + pw > sx && y < sy + sh && y + ph > sy) {
+            // Find a valid open slot
+            let installed = false
+            for (const sp of server.installedParts) {
+              if (sp.slots) {
+                for (const slot of sp.slots) {
+                  if (!slot.installedPartId && isPartCompatibleWithSlot(part as Part, slot)) {
+                    installPart(server.id, slot.id, part.id)
+                    installed = true
+                    break
+                  }
+                }
+              }
+              if (installed) break
+            }
+            if (installed) return
+          }
+        }
+      }
+
       part.x = x
       part.y = y
       return
@@ -304,11 +377,88 @@ export const useGameStore = defineStore('game', () => {
       pendingRewardPartIds.value = []
     }
 
-    // Power calculation
+    // Power and Telemetry calculation
     let totalWatts = 0
     for (const server of servers.value) {
-      const isRunningJob = activeJobs.value.some((j) => j.serverNodeIds?.includes(server.id))
-      totalWatts += calculateServerPowerDraw(server as ServerNode, isRunningJob)
+      const runningJob = activeJobs.value.find((j) => j.serverNodeIds?.includes(server.id))
+      const serverPower = calculateServerPowerDraw(server as ServerNode, !!runningJob)
+      totalWatts += serverPower
+
+      let cpuPercent = 0
+      let ramPercent = 0
+      let swapGb = 0
+      let ramThroughputPercent = 0
+      let storageThroughputPercent = 0
+
+      if (runningJob) {
+        const details = calculateComputeDetails(server as ServerNode, runningJob as Job)
+        
+        let totalRam = 0
+        let ramTotalThroughput = 0
+        let storageTotalThroughput = 0
+        
+        for (const part of server.installedParts) {
+          if (part.kind === 'RAM') {
+            totalRam += (part as any).memoryCapacity?.value || 0
+            ramTotalThroughput += (part as any).ioBandwidth?.value || 0
+          } else if (part.kind === 'STORAGE' || part.kind === 'STORAGE_DEVICE') {
+            storageTotalThroughput += (part as any).ioBandwidth?.value || 0
+          }
+        }
+
+        let usedRam = 0
+
+        if (details.workingSetAllocation) {
+          for (const alloc of details.workingSetAllocation) {
+            if (alloc.part.kind === 'RAM') {
+              usedRam += alloc.allocatedStorage.value
+            } else {
+              swapGb += alloc.allocatedStorage.value / 1e9
+            }
+          }
+        }
+        
+        if (totalRam > 0) ramPercent = (usedRam / totalRam) * 100
+
+        if (runningJob.status === 'LOADING' || runningJob.status === 'SAVING') {
+          storageThroughputPercent = 100
+        } else if (runningJob.status === 'COMPUTING') {
+          const totalCpu = details.totalCpuCompute.value
+          const usedCpu = details.effectiveComputeRate.value
+          if (totalCpu > 0) cpuPercent = (usedCpu / totalCpu) * 100
+          
+          let ramUsedThroughput = 0
+          let storageUsedThroughput = 0
+
+          if (details.workingSetAllocation) {
+            const actualThroughputBytes = details.effectiveComputeRate.value * runningJob.memoryAccessPerOp.value
+            
+            for (const alloc of details.workingSetAllocation) {
+              const usedBw = actualThroughputBytes * alloc.fraction
+              if (alloc.part.kind === 'RAM') {
+                ramUsedThroughput += usedBw
+              } else {
+                storageUsedThroughput += usedBw
+              }
+            }
+          }
+
+          if (ramTotalThroughput > 0) ramThroughputPercent = (ramUsedThroughput / ramTotalThroughput) * 100
+          if (storageTotalThroughput > 0) storageThroughputPercent = (storageUsedThroughput / storageTotalThroughput) * 100
+        }
+      }
+
+      if (!telemetryHistory.value[server.id]) {
+        telemetryHistory.value[server.id] = { time: [], power: [], cpu: [], ram: [], swap: [], ramThroughput: [], storageThroughput: [] }
+      }
+      const history = telemetryHistory.value[server.id]!
+      history.time.push(gameTimeSeconds.value)
+      history.power.push(serverPower)
+      history.cpu.push(cpuPercent)
+      history.ram.push(ramPercent)
+      history.swap.push(swapGb)
+      history.ramThroughput.push(ramThroughputPercent)
+      history.storageThroughput.push(storageThroughputPercent)
     }
 
     currentPowerDraw.value = u.Measure.of(totalWatts, W)
@@ -365,11 +515,13 @@ export const useGameStore = defineStore('game', () => {
     gameTimeSeconds,
     gameSpeed,
     showTransferPanel,
+    telemetryHistory,
     getPartFromInventory,
     installRootPart,
     installPart,
     removePart,
     moveItem,
+    canSlotItem,
     selectJob,
     startJob,
     abortJob,

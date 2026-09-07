@@ -1,22 +1,26 @@
 <script setup lang="ts">
 import ServerRoom from './ServerRoom.vue'
 import ContextPanel from './ContextPanel.vue'
+import BountyBoard from './BountyBoard.vue'
 </script>
 
 <template>
-  <div>
-    <div style="display: flex; justify-content: space-between; align-items: baseline">
-      <h2>Server Room (Assembly)</h2>
-    </div>
+  <div class="rack-assembly-container">
+    <!-- 2D Server Room (Background Layer) -->
+    <ServerRoom />
 
-    <div style="display: flex; gap: 20px">
-      <!-- 2D Server Room -->
-      <div style="flex: 2; min-width: 600px">
-        <ServerRoom />
-      </div>
+    <!-- Left Panel: Bounty Board -->
+    <BountyBoard />
 
-      <!-- Side Panel -->
-      <ContextPanel />
-    </div>
+    <!-- Right Panel: Context Panel -->
+    <ContextPanel />
   </div>
 </template>
+
+<style scoped>
+.rack-assembly-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+</style>

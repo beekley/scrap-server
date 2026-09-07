@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useGameStore } from '../stores/game'
 import {
   getJobProgress,
@@ -12,8 +12,14 @@ import { type Job, type ServerNode } from '../types'
 import { formatGB, formatMB, formatOps } from '../utils/formatting'
 
 import PartSlots from './PartSlots.vue'
+import SimpleChart from './SimpleChart.vue'
 
 const gameStore = useGameStore()
+
+const serverTelemetry = computed(() => {
+  if (!selectedServer.value) return null
+  return gameStore.telemetryHistory[selectedServer.value.id] || null
+})
 
 const selectedServer = computed(() => {
   return gameStore.servers.find((s) => s.id === gameStore.selectedItemId) || null
@@ -180,11 +186,22 @@ const asStorage = computed(() =>
     : null,
 )
 const asPsu = computed(() => (displayedPart.value?.kind === 'PSU' ? displayedPart.value : null))
+
+const isExpanded = ref(true)
+const togglePanel = () => {
+  isExpanded.value = !isExpanded.value
+}
+
+const chartScale = ref(3600) // Default 1h (3600s)
 </script>
 
 <template>
-  <div style="flex: 1; min-width: 350px; display: flex; flex-direction: column; gap: 20px">
-    <!-- SERVER NODE PANEL -->
+  <div class="context-panel" :class="{ 'is-collapsed': !isExpanded }">
+    <button class="toggle-btn" @click="togglePanel">
+      {{ isExpanded ? '▶' : '◀' }}
+    </button>
+    <div class="panel-content">
+      <!-- SERVER NODE PANEL -->
     <div
       v-if="selectedServer"
       style="border: 2px solid black; padding: 15px; background: white; border-radius: 0"
@@ -251,6 +268,72 @@ const asPsu = computed(() => (displayedPart.value?.kind === 'PSU' ? displayedPar
           <strong>Storage:</strong> {{ formatGB(usedStorage) }} GB / {{ formatGB(totalStorage) }} GB
           ({{ storagePercent }}%)
         </p>
+
+        <!-- Charts -->
+        <div v-if="serverTelemetry" style="margin-top: 15px">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px">
+            <h4 style="margin: 0">Telemetry</h4>
+            <div class="chart-controls">
+              <button :class="{ active: chartScale === 3600 }" @click="chartScale = 3600">1h</button>
+              <button :class="{ active: chartScale === 86400 }" @click="chartScale = 86400">24h</button>
+              <button :class="{ active: chartScale === 604800 }" @click="chartScale = 604800">7d</button>
+            </div>
+          </div>
+          <SimpleChart
+            :times="serverTelemetry.time"
+            :values="serverTelemetry.power"
+            :current-time="gameStore.gameTimeSeconds"
+            :scale="chartScale"
+            label="Power Draw"
+            unit="W"
+            color="orange"
+          />
+          <SimpleChart
+            :times="serverTelemetry.time"
+            :values="serverTelemetry.cpu"
+            :current-time="gameStore.gameTimeSeconds"
+            :scale="chartScale"
+            label="CPU Utilization"
+            unit="%"
+            color="blue"
+          />
+          <SimpleChart
+            :times="serverTelemetry.time"
+            :values="serverTelemetry.ram"
+            :current-time="gameStore.gameTimeSeconds"
+            :scale="chartScale"
+            label="RAM Utilization"
+            unit="%"
+            color="purple"
+          />
+          <SimpleChart
+            :times="serverTelemetry.time"
+            :values="serverTelemetry.swap"
+            :current-time="gameStore.gameTimeSeconds"
+            :scale="chartScale"
+            label="Swap Size"
+            unit=" GB"
+            color="red"
+          />
+          <SimpleChart
+            :times="serverTelemetry.time"
+            :values="serverTelemetry.ramThroughput"
+            :current-time="gameStore.gameTimeSeconds"
+            :scale="chartScale"
+            label="RAM Throughput Util"
+            unit="%"
+            color="teal"
+          />
+          <SimpleChart
+            :times="serverTelemetry.time"
+            :values="serverTelemetry.storageThroughput"
+            :current-time="gameStore.gameTimeSeconds"
+            :scale="chartScale"
+            label="Storage Throughput Util"
+            unit="%"
+            color="brown"
+          />
+        </div>
       </div>
 
       <!-- Compute Rates -->
@@ -312,13 +395,13 @@ const asPsu = computed(() => (displayedPart.value?.kind === 'PSU' ? displayedPar
 
       <!-- SLOTS -->
       <div
-        v-if="displayedPart.slots && displayedPart.slots.length > 0 && parentServer"
+        v-if="displayedPart.slots && displayedPart.slots.length > 0"
         style="margin-top: 15px; border-top: 2px solid #ccc; padding-top: 10px"
       >
         <h4>Attached Components (Slots)</h4>
         <PartSlots
           :slots="displayedPart.slots"
-          :serverNode="parentServer as ServerNode"
+          :serverNode="parentServer as ServerNode | undefined"
           :isRunningJob="!!isRunningJob"
         />
       </div>
@@ -327,5 +410,82 @@ const asPsu = computed(() => (displayedPart.value?.kind === 'PSU' ? displayedPar
     <div v-if="!selectedServer && !displayedPart" style="padding: 15px; color: #666">
       <p>Select a server or part to view details.</p>
     </div>
+    </div>
   </div>
 </template>
+
+<style scoped>
+.context-panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 350px;
+  background: rgba(240, 240, 240, 0.95);
+  border-left: 2px solid #333;
+  display: flex;
+  transition: transform 0.3s ease;
+  z-index: 500;
+  box-shadow: -2px 0 8px rgba(0,0,0,0.5);
+}
+.context-panel.is-collapsed {
+  transform: translateX(100%);
+}
+.panel-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  overflow-y: auto;
+  padding: 20px;
+}
+/* Scrollbar styling */
+.panel-content::-webkit-scrollbar {
+  width: 6px;
+}
+.panel-content::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+}
+.panel-content::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 3px;
+}
+.toggle-btn {
+  position: absolute;
+  top: 50%;
+  left: -24px;
+  width: 24px;
+  height: 48px;
+  transform: translateY(-50%);
+  background: rgba(240, 240, 240, 0.95);
+  border: 2px solid #333;
+  border-right: none;
+  border-radius: 6px 0 0 6px;
+  color: black;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  font-size: 0.8em;
+  box-shadow: -2px 0 4px rgba(0,0,0,0.3);
+}
+.toggle-btn:hover {
+  background: #fff;
+}
+.chart-controls button {
+  background: none;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  font-size: 0.7em;
+  padding: 2px 5px;
+  margin-left: 2px;
+  cursor: pointer;
+  color: #555;
+}
+.chart-controls button.active {
+  background: #333;
+  color: white;
+  border-color: #333;
+}
+</style>

@@ -9,10 +9,11 @@ import {
 } from '../utils/physics'
 
 export interface DragConfig {
-  scale: number
+  scale: Ref<number>
   maxWidth?: Ref<number>
   onMoveItem: (id: string, x: number, y: number) => void
   onSelect: (id: string) => void
+  checkOverlapDrop?: (id: string, x: number, y: number) => boolean
 }
 
 export function useDraggable(roomItems: Ref<RoomRect[]>, config: DragConfig) {
@@ -49,15 +50,15 @@ export function useDraggable(roomItems: Ref<RoomRect[]>, config: DragConfig) {
 
   function handleMouseMove(e: MouseEvent) {
     if (!draggedItemId.value) return
-    const container = document.getElementById('server-room-container')
+    const container = document.getElementById('server-room-canvas') || document.getElementById('server-room-container')
     if (!container) return
 
     const rect = container.getBoundingClientRect()
     const rawX = e.clientX - rect.left - dragOffsetX.value
     const rawY = e.clientY - rect.top - dragOffsetY.value
 
-    dragX.value = Math.round(rawX / config.scale)
-    dragY.value = Math.round(rawY / config.scale)
+    dragX.value = Math.round(rawX / config.scale.value)
+    dragY.value = Math.round(rawY / config.scale.value)
   }
 
   const isDragValid = computed(() => {
@@ -68,6 +69,10 @@ export function useDraggable(roomItems: Ref<RoomRect[]>, config: DragConfig) {
     const maxWidth = config.maxWidth?.value ?? ROOM_WIDTH
     const finalX = Math.max(0, Math.min(maxWidth - item.width, dragX.value))
     const finalY = Math.max(0, Math.min(ROOM_HEIGHT - item.height, dragY.value))
+
+    if (config.checkOverlapDrop && config.checkOverlapDrop(item.id, finalX, finalY)) {
+      return true
+    }
 
     if (!isEmptySpace(finalX, finalY, item.width, item.height, item.id, roomItems.value, maxWidth))
       return false
@@ -110,6 +115,12 @@ export function useDraggable(roomItems: Ref<RoomRect[]>, config: DragConfig) {
     const maxWidth = config.maxWidth?.value ?? ROOM_WIDTH
     const finalX = Math.max(0, Math.min(maxWidth - item.width, dragX.value))
     let finalY = Math.max(0, Math.min(ROOM_HEIGHT - item.height, dragY.value))
+
+    if (config.checkOverlapDrop && config.checkOverlapDrop(item.id, finalX, finalY)) {
+      config.onMoveItem(item.id, finalX, finalY)
+      cleanupDrag()
+      return
+    }
 
     let fallY = finalY
     while (
