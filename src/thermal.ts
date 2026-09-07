@@ -21,7 +21,7 @@ export function createInitialGrid(): number[][] {
 }
 
 // Heat capacity constant (Joules per °C per cm^2)
-const THERMAL_MASS_PER_AREA = 2 // Adjusted for better gameplay response
+const THERMAL_MASS_PER_AREA = 8 // Adjusted for ~1-2 hours to overheat without fan
 
 export function calculateServerThermalMass(server: ServerNode): number {
   const casePart = server.installedParts.find(p => p.kind === 'CASE')
@@ -113,8 +113,8 @@ export function tickThermal(
               const serverTemp = serverTemps[server.id]
               const tempDiff = serverTemp - cellTemp
               
-              // Case passive conductivity: ~5 W/°C total
-              let heatJoules = (tempDiff * 5.0 * dtSeconds) / overlappingCells
+              // Case passive conductivity: ~1.0 W/°C total (low enough to overheat without fan)
+              let heatJoules = (tempDiff * 1.0 * dtSeconds) / overlappingCells
               
               const maxHeat = Math.abs(tempDiff) * Math.min(thermalMass, CELL_THERMAL_MASS) * 0.5
               if (Math.abs(heatJoules) > maxHeat) {

@@ -11,6 +11,7 @@ import {
   TRANSFER_ZONE_START_X,
   TRANSFER_ZONE_WIDTH,
 } from '../utils/physics'
+import { GRID_CELL_SIZE } from '../thermal'
 
 import TransferPanel from './TransferPanel.vue'
 import RoomItemView from './RoomItemView.vue'
@@ -135,6 +136,23 @@ function onMouseHover(item: any) {
 function onMouseLeave() {
   hoveredItem.value = null
 }
+
+const hoveredCellTemp = ref<number | null>(null)
+function onHeatCellHover(temp: number | null) {
+  hoveredCellTemp.value = temp
+}
+
+function getCellColor(temp: number): string {
+  if (temp <= 60) {
+    const ratio = Math.max(0, Math.min(1, (temp - 25) / 35))
+    const rg = Math.floor(255 * ratio)
+    return `rgba(${rg}, ${rg}, 255, 0.4)`
+  } else {
+    const ratio = Math.min(1, (temp - 60) / 40)
+    const gb = Math.floor(255 * (1 - ratio))
+    return `rgba(255, ${gb}, ${gb}, 0.4)`
+  }
+}
 </script>
 
 <template>
@@ -181,17 +199,47 @@ function onMouseLeave() {
           @mouseenter="onMouseHover"
           @mouseleave="onMouseLeave"
         />
+
+        <div v-if="gameStore.showHeatMap" class="heatmap-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 50;">
+          <template v-for="(row, r) in gameStore.roomGrid" :key="'r' + r">
+            <template v-for="(temp, c) in row" :key="'c' + c">
+              <div
+                v-if="c * GRID_CELL_SIZE < ROOM_WIDTH"
+                style="position: absolute; pointer-events: auto;"
+                :style="{
+                  left: (c * GRID_CELL_SIZE * SCALE) + 'px',
+                  top: (r * GRID_CELL_SIZE * SCALE) + 'px',
+                  width: (GRID_CELL_SIZE * SCALE) + 'px',
+                  height: (GRID_CELL_SIZE * SCALE) + 'px',
+                  backgroundColor: getCellColor(temp)
+                }"
+                @mouseenter="onHeatCellHover(temp)"
+                @mouseleave="onHeatCellHover(null)"
+                @mousemove="onHeatCellHover(temp)"
+              ></div>
+            </template>
+          </template>
+        </div>
       </div>
     </div>
 
     <!-- Hover Tooltip -->
     <div
-      v-if="hoveredItem && !isPanning && !draggedItemId"
+      v-if="hoveredItem && !isPanning && !draggedItemId && !gameStore.showHeatMap"
       class="hover-tooltip"
       :style="{ left: mouseX + 15 + 'px', top: mouseY + 15 + 'px' }"
     >
       <div>{{ hoveredItem.name }}</div>
       <div style="color: #555;">{{ hoveredItem.kind }}</div>
+    </div>
+
+    <div
+      v-if="gameStore.showHeatMap && hoveredCellTemp !== null && !isPanning"
+      class="hover-tooltip"
+      :style="{ left: mouseX + 15 + 'px', top: mouseY + 15 + 'px' }"
+    >
+      <div>Air Temp</div>
+      <div style="color: #ff8c00;">{{ hoveredCellTemp.toFixed(1) }} °C</div>
     </div>
   </div>
 </template>

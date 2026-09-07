@@ -34,9 +34,11 @@ export const useGameStore = defineStore('game', () => {
     const ram = getPartTemplate('ram_techmaker_512mb')
     const hdd = getPartTemplate('hdd_techmaker_250gb')
     const psu = getPartTemplate('psu_techmaker_300w')
+    const fan = getPartTemplate('fan_basic_120mm')
 
     // Wire up slots
     c.slots![0]!.installedPartId = mb.id
+    c.slots![1]!.installedPartId = fan.id
     mb.slots!.find((s) => s.id === 'cpu_0')!.installedPartId = cpu.id
     mb.slots!.find((s) => s.id === 'ram_0')!.installedPartId = ram.id
     mb.slots!.find((s) => s.id === 'sata_0')!.installedPartId = hdd.id
@@ -45,7 +47,7 @@ export const useGameStore = defineStore('game', () => {
     return {
       id: 'server_01',
       name: 'Scrap Node 1',
-      installedParts: [c, mb, cpu, ram, hdd, psu],
+      installedParts: [c, mb, cpu, ram, hdd, psu, fan],
       x: 10,
       y: 250 - c.height, // Placed directly on the floor
     }
@@ -114,6 +116,7 @@ export const useGameStore = defineStore('game', () => {
 
   const serverTemps = ref<Record<string, number>>({})
   const roomGrid = ref<number[][]>(createInitialGrid())
+  const showHeatMap = ref<boolean>(false)
 
   function setGameSpeed(speed: number) {
     gameSpeed.value = speed
@@ -539,6 +542,7 @@ export const useGameStore = defineStore('game', () => {
     gameTimeSeconds,
     gameSpeed,
     showTransferPanel,
+    showHeatMap,
     telemetryHistory,
     serverTemps,
     roomGrid,

@@ -13,6 +13,18 @@ const formattedClock = computed(() => {
   const mins = totalMinutes % 60
   return `Day ${days + 1}, ${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`
 })
+
+const avgRoomTemp = computed(() => {
+  let total = 0
+  let count = 0
+  for (const row of gameStore.roomGrid) {
+    for (const temp of row) {
+      total += temp
+      count++
+    }
+  }
+  return count > 0 ? total / count : 25
+})
 </script>
 
 <template>
@@ -24,6 +36,21 @@ const formattedClock = computed(() => {
       <div class="status-bar" style="margin: 0; flex-wrap: wrap;">
         <p class="status-bar-field cash">ETC: {{ gameStore.etc.value.toFixed(4) }}</p>
         <p class="status-bar-field power">Power: {{ gameStore.currentPowerDraw.value.toFixed(0) }} W</p>
+        <button 
+          class="status-bar-field temp" 
+          @click="gameStore.showHeatMap = !gameStore.showHeatMap"
+          :style="{ 
+            color: '#ff8c00', 
+            cursor: 'pointer', 
+            background: gameStore.showHeatMap ? 'var(--surf-highlight)' : 'inherit',
+            border: 'none',
+            padding: '2px 4px',
+            boxShadow: gameStore.showHeatMap ? 'inset -1px -1px var(--surf-highlight), inset 1px 1px var(--surf-dark), inset -2px -2px var(--surf-light), inset 2px 2px var(--surf-shadow)' : 'inset -1px -1px var(--surf-highlight), inset 1px 1px var(--surf-shadow), inset -2px -2px var(--surf-light), inset 2px 2px var(--surf-dark)'
+          }"
+          style="margin: 0;"
+        >
+          Temp: {{ avgRoomTemp.toFixed(1) }} °C
+        </button>
         
         <div class="speed-controls" style="display: flex; gap: 4px; align-items: center; padding: 0 4px;">
           <button :style="gameStore.gameSpeed === 0 ? 'color: var(--accent-4); box-shadow: inset -1px -1px var(--surf-highlight), inset 1px 1px var(--surf-dark), inset -2px -2px var(--surf-light), inset 2px 2px var(--surf-shadow);' : ''" @click="gameStore.setGameSpeed(0)">⏸️</button>
