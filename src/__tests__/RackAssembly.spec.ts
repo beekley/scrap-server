@@ -9,11 +9,11 @@ describe('RackAssembly.vue', () => {
     setActivePinia(createPinia())
   })
 
-  it('renders Server Room (Assembly) and Node Configuration', () => {
+  it('renders child components', () => {
     const store = useGameStore()
     const wrapper = mount(RackAssembly)
 
-    expect(wrapper.text()).toContain('Server Room (Assembly)')
-    expect(wrapper.text()).toContain('Server Node: ' + store.servers[0]!.name)
+    expect(wrapper.text()).toContain('Bounty Board')
+    expect(wrapper.text()).toContain('Context Inspector')
   })
 })

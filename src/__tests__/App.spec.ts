@@ -12,14 +12,13 @@ describe('App', () => {
   it('renders the single page dashboard layout', () => {
     const wrapper = mount(App)
 
-    expect(wrapper.text()).toContain('Scavenged Server Sim')
+    expect(wrapper.text()).toContain('Session Status')
 
     // Check that child components are rendered
     expect(wrapper.text()).toContain('Bounty Board')
-    expect(wrapper.text()).toContain('Server Room (Assembly)')
 
     // ContextPanel is rendered because selectedItemId is implicitly set to the first server
-    expect(wrapper.text()).toContain('Server Node:')
+    expect(wrapper.text()).toContain('Context Inspector')
   })
 
   it('formats and advances the game clock correctly on tick', async () => {

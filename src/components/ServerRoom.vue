@@ -3,6 +3,7 @@ import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useGameStore } from '../stores/game'
 import type { Part, ServerNode } from '../types'
 import { useDraggable } from '../composables/useDraggable'
+import { usePanZoom } from '../composables/usePanZoom'
 import {
   ROOM_WIDTH,
   ROOM_HEIGHT,
@@ -11,68 +12,50 @@ import {
   TRANSFER_ZONE_WIDTH,
 } from '../utils/physics'
 
+import TransferPanel from './TransferPanel.vue'
+import RoomItemView from './RoomItemView.vue'
+
 const gameStore = useGameStore()
 const baseUrl = import.meta.env.BASE_URL
 
 const SCALE = 3 // 1 unit = 3px
-const zoom = ref(1.0)
-const panX = ref(0)
-const panY = ref(0)
-const effectiveScale = computed(() => SCALE * zoom.value)
+
+const maxWidth = computed(() =>
+  gameStore.showTransferPanel ? TRANSFER_ZONE_START_X + TRANSFER_ZONE_WIDTH : ROOM_WIDTH,
+)
+
+const {
+  zoom,
+  panX,
+  panY,
+  effectiveScale,
+  isPanning,
+  handleBackgroundMouseDown,
+  handleWheel
+} = usePanZoom({
+  scale: SCALE,
+  onInitPan: (z) => ({
+    x: (window.innerWidth - maxWidth.value * SCALE * z) / 2,
+    y: (window.innerHeight - ROOM_HEIGHT * SCALE * z) / 2
+  })
+})
 
 // Tooltip state
 const hoveredItem = ref<RoomItem | null>(null)
 const mouseX = ref(0)
 const mouseY = ref(0)
 
-// Panning state
-const isPanning = ref(false)
-const lastPanMouseX = ref(0)
-const lastPanMouseY = ref(0)
-
-function handleBackgroundMouseDown(e: MouseEvent) {
-  if (e.button !== 0) return
-  isPanning.value = true
-  lastPanMouseX.value = e.clientX
-  lastPanMouseY.value = e.clientY
-}
-
-function handleGlobalMouseMove(e: MouseEvent) {
+const mouseMoveHandler = (e: MouseEvent) => {
   mouseX.value = e.clientX
   mouseY.value = e.clientY
-
-  if (isPanning.value) {
-    panX.value += e.clientX - lastPanMouseX.value
-    panY.value += e.clientY - lastPanMouseY.value
-    lastPanMouseX.value = e.clientX
-    lastPanMouseY.value = e.clientY
-  }
-}
-
-function handleGlobalMouseUp() {
-  isPanning.value = false
-}
-
-function handleWheel(e: WheelEvent) {
-  e.preventDefault()
-  const zoomSpeed = 0.1
-  const direction = e.deltaY < 0 ? 1 : -1
-  const newZoom = zoom.value + direction * zoomSpeed
-  zoom.value = Math.max(0.5, Math.min(newZoom, 3.0)) // Constrain zoom between 0.5x and 3x
 }
 
 onMounted(() => {
-  window.addEventListener('mousemove', handleGlobalMouseMove)
-  window.addEventListener('mouseup', handleGlobalMouseUp)
-
-  // Center the room initially
-  panX.value = (window.innerWidth - maxWidth.value * SCALE * zoom.value) / 2
-  panY.value = (window.innerHeight - ROOM_HEIGHT * SCALE * zoom.value) / 2
+  window.addEventListener('mousemove', mouseMoveHandler)
 })
 
 onUnmounted(() => {
-  window.removeEventListener('mousemove', handleGlobalMouseMove)
-  window.removeEventListener('mouseup', handleGlobalMouseUp)
+  window.removeEventListener('mousemove', mouseMoveHandler)
 })
 
 interface RoomItem extends RoomRect {
@@ -82,10 +65,6 @@ interface RoomItem extends RoomRect {
   ref: ServerNode | Part | null
   baseImage?: string
 }
-
-const maxWidth = computed(() =>
-  gameStore.showTransferPanel ? TRANSFER_ZONE_START_X + TRANSFER_ZONE_WIDTH : ROOM_WIDTH,
-)
 
 const roomItems = computed<RoomItem[]>(() => {
   const items: RoomItem[] = []
@@ -150,38 +129,17 @@ const { draggedItemId, dragX, dragY, isDragValid, handleMouseDown } = useDraggab
   checkOverlapDrop: (id, x, y) => gameStore.canSlotItem(id, x, y),
 })
 
-const totalSellValue = computed(() => {
-  let total = 0
-  for (const s of gameStore.servers) {
-    if (s.x !== undefined && s.x >= TRANSFER_ZONE_START_X) {
-      for (const p of s.installedParts) total += p.value.value
-    }
-  }
-  for (const p of gameStore.inventory) {
-    if (p.x !== undefined && p.x >= TRANSFER_ZONE_START_X) {
-      total += p.value.value
-    }
-  }
-  return total * 0.25
-})
+function onMouseHover(item: any) {
+  hoveredItem.value = item
+}
+function onMouseLeave() {
+  hoveredItem.value = null
+}
 </script>
 
 <template>
   <div class="server-room-wrapper">
-    <div
-      v-if="gameStore.showTransferPanel"
-      class="window transfer-controls"
-      style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 1000;"
-    >
-      <div class="title-bar">
-        <div class="title-bar-text">Transfer Panel</div>
-      </div>
-      <div class="window-body" style="display: flex; align-items: center; justify-content: center; padding: 10px;">
-        <button @click="gameStore.sellTransferPanel()" class="sell-btn">
-          Sell Items ({{ totalSellValue.toFixed(4) }} $ETC) & Close
-        </button>
-      </div>
-    </div>
+    <TransferPanel />
 
     <div
       class="room-container"
@@ -208,27 +166,21 @@ const totalSellValue = computed(() => {
           }"
         ></div>
 
-        <div
+        <RoomItemView
           v-for="item in roomItems"
           :key="item.id"
-          class="room-item"
-          :class="{
-            'is-selected': gameStore.selectedItemId === item.id && item.kind !== 'WALL',
-            'is-dragging': draggedItemId === item.id,
-            'is-invalid': draggedItemId === item.id && !isDragValid,
-            'is-wall': item.kind === 'WALL',
-          }"
-          :style="{
-            width: item.width * SCALE + 'px',
-            height: item.height * SCALE + 'px',
-            transform: `translate(${(draggedItemId === item.id ? dragX : item.x) * SCALE}px, ${(draggedItemId === item.id ? dragY : item.y) * SCALE}px)`,
-          }"
-          @mousedown.stop="item.kind !== 'WALL' ? handleMouseDown($event, item.id) : null"
-          @mouseenter="item.kind !== 'WALL' ? (hoveredItem = item) : null"
-          @mouseleave="hoveredItem === item ? (hoveredItem = null) : null"
-        >
-          <img v-if="item.baseImage" :src="`${baseUrl}${item.baseImage}`" class="item-image" draggable="false" />
-        </div>
+          :item="item"
+          :isSelected="gameStore.selectedItemId === item.id && item.kind !== 'WALL'"
+          :isDragging="draggedItemId === item.id"
+          :isInvalid="draggedItemId === item.id && !isDragValid"
+          :dragX="dragX"
+          :dragY="dragY"
+          :scale="SCALE"
+          :baseUrl="baseUrl"
+          @mousedown="handleMouseDown"
+          @mouseenter="onMouseHover"
+          @mouseleave="onMouseLeave"
+        />
       </div>
     </div>
 
@@ -290,69 +242,5 @@ const totalSellValue = computed(() => {
   background: repeating-linear-gradient(45deg, #e9ecef, #e9ecef 10px, #dee2e6 10px, #dee2e6 20px);
   border-left: 2px dashed #999;
   z-index: 0;
-}
-.room-item {
-  position: absolute;
-  top: 0;
-  left: 0;
-  background: #fff;
-  border: none;
-  border-radius: 0;
-  box-shadow: none;
-  cursor: grab;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 0;
-  box-sizing: border-box;
-  z-index: 10;
-}
-.room-item::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  box-shadow: inset 0 0 0 var(--scale-px) rgba(12, 13, 23, 0.1);
-  pointer-events: none;
-}
-.room-item.is-wall {
-  background: #444;
-  border: none;
-  cursor: not-allowed;
-  z-index: 5;
-}
-.room-item.is-selected {
-  background: #e3f2fd;
-  outline: 2px solid #1976d2;
-  outline-offset: -2px;
-}
-.room-item.is-invalid {
-  background: #ffcccc !important;
-  outline: 2px solid #d32f2f !important;
-  outline-offset: -2px;
-}
-.room-item.is-dragging {
-  cursor: grabbing;
-  z-index: 100;
-  opacity: 0.9;
-}
-.item-image {
-  width: 100%;
-  height: 100%;
-  object-fit: fill;
-  image-rendering: pixelated;
-  pointer-events: none;
-}
-.item-label {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  word-break: break-word;
-  pointer-events: none;
 }
 </style>
