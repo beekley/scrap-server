@@ -410,13 +410,13 @@ export const useGameStore = defineStore('game', () => {
 
       // Check for crashes
       const { criticalTemp } = getServerOperatingLimits(server as ServerNode)
-      if (serverTemps.value[server.id] >= criticalTemp) {
+      if ((serverTemps.value[server.id] ?? 25) >= criticalTemp) {
         if (runningJob) {
           abortJob(runningJob.id)
         }
       }
 
-      if (runningJob && serverTemps.value[server.id] < criticalTemp) {
+      if (runningJob && (serverTemps.value[server.id] ?? 25) < criticalTemp) {
         const details = calculateComputeDetails(server as ServerNode, runningJob as Job, serverTemps.value)
         
         let totalRam = 0
@@ -479,13 +479,13 @@ export const useGameStore = defineStore('game', () => {
       }
       const history = telemetryHistory.value[server.id]!
       history.time.push(gameTimeSeconds.value)
-      history.power.push(serverPower)
+      history.power.push(serverPower ?? 0)
       history.cpu.push(cpuPercent)
       history.ram.push(ramPercent)
       history.swap.push(swapGb)
       history.ramThroughput.push(ramThroughputPercent)
       history.storageThroughput.push(storageThroughputPercent)
-      history.temp.push(serverTemps.value[server.id])
+      history.temp.push((serverTemps.value[server.id] ?? 25))
     }
 
     currentPowerDraw.value = u.Measure.of(totalWatts, W)

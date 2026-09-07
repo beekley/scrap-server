@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { tickThermal, createInitialGrid, calculateServerThermalMass, AMBIENT_TEMP } from '../thermal'
-import type { ServerNode, CasePart, FanPart } from '../types'
+import * as u from 'safe-units'
+import { W, ETC, type ServerNode, type CasePart, type FanPart } from '../types'
 
 describe('Thermal System', () => {
   it('transfers heat correctly with forced convection', () => {
@@ -13,10 +14,10 @@ describe('Thermal System', () => {
       kind: 'CASE',
       socketTag: 'ATX_MID_TOWER',
       rarity: 'COMMON',
-      value: { value: 0, unit: 'ETC' },
+      value: u.Measure.of(0, ETC),
       width: 20,
       height: 40,
-      powerDraw: { value: 0, unit: 'W' },
+      powerDraw: u.Measure.of(0, W),
       slots: [
         { id: 'fan_rear', acceptsKind: 'FAN', socketTag: '120MM', position: 'REAR' },
         { id: 'fan_front', acceptsKind: 'FAN', socketTag: '120MM', position: 'LEFT' }
@@ -29,10 +30,10 @@ describe('Thermal System', () => {
       kind: 'FAN',
       socketTag: '120MM',
       rarity: 'COMMON',
-      value: { value: 0, unit: 'ETC' },
+      value: u.Measure.of(0, ETC),
       width: 12,
       height: 12,
-      powerDraw: { value: 2, unit: 'W' },
+      powerDraw: u.Measure.of(2, W),
       flowRate: 50,
       direction: 'EXHAUST'
     }
@@ -43,17 +44,17 @@ describe('Thermal System', () => {
       kind: 'FAN',
       socketTag: '120MM',
       rarity: 'COMMON',
-      value: { value: 0, unit: 'ETC' },
+      value: u.Measure.of(0, ETC),
       width: 12,
       height: 12,
-      powerDraw: { value: 2, unit: 'W' },
+      powerDraw: u.Measure.of(2, W),
       flowRate: 50,
       direction: 'INTAKE'
     }
     
     // Setup slot links
-    casePart.slots![0].installedPartId = exhaustFan.id
-    casePart.slots![1].installedPartId = intakeFan.id
+    casePart.slots![0]!.installedPartId = exhaustFan.id
+    casePart.slots![1]!.installedPartId = intakeFan.id
 
     const server: ServerNode = {
       id: 'server_1',
@@ -84,7 +85,7 @@ describe('Thermal System', () => {
         totalRoomTemp += temp;
       }
     }
-    const avgTemp = totalRoomTemp / (roomGrid.length * roomGrid[0].length);
+    const avgTemp = totalRoomTemp / (roomGrid.length * roomGrid[0]!.length);
     expect(avgTemp).toBeGreaterThan(AMBIENT_TEMP)
   })
 })
