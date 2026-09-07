@@ -76,6 +76,15 @@ const chartScale = ref(3600) // Default 1h (3600s)
         unit="%"
         color="#808000"
       />
+      <SimpleChart
+        :times="serverTelemetry.time"
+        :values="serverTelemetry.temp"
+        :current-time="gameStore.gameTimeSeconds"
+        :scale="chartScale"
+        label="Temperature"
+        unit="°C"
+        color="#ff8c00"
+      />
     </div>
   </fieldset>
 </template>

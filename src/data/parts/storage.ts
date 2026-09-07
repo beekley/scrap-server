@@ -15,6 +15,7 @@ interface StorageVariantDef {
   value: number
   bandwidth: number
   power: number
+  idlePower?: number
 }
 
 function generateStorage(
@@ -39,6 +40,7 @@ function generateStorage(
     storageCapacity: u.Measure.of(v.capacity, GB),
     ioBandwidth: u.Measure.of(v.bandwidth, mBPerSecond),
     powerDraw: u.Measure.of(v.power, W),
+    idlePowerDraw: v.idlePower !== undefined ? u.Measure.of(v.idlePower, W) : undefined,
     baseImage,
   }))
 }
@@ -52,10 +54,10 @@ export const storage: (StoragePart | StorageDevicePart)[] = [
     'mfg_techmaker',
     'assets/storage/hdd_1_10x15.png',
     [
-      { capacity: 250, rarity: 'COMMON', value: 10, bandwidth: 80, power: 8 },
-      { capacity: 500, rarity: 'UNCOMMON', value: 20, bandwidth: 100, power: 10 },
-      { capacity: 1000, rarity: 'RARE', value: 35, bandwidth: 120, power: 12 },
-      { capacity: 2000, rarity: 'MYTHIC', value: 65, bandwidth: 140, power: 14 },
+      { capacity: 250, rarity: 'COMMON', value: 10, bandwidth: 80, power: 8, idlePower: 5 },
+      { capacity: 500, rarity: 'UNCOMMON', value: 20, bandwidth: 100, power: 10, idlePower: 5 },
+      { capacity: 1000, rarity: 'RARE', value: 35, bandwidth: 120, power: 12, idlePower: 5 },
+      { capacity: 2000, rarity: 'MYTHIC', value: 65, bandwidth: 140, power: 14, idlePower: 5 },
     ],
   ),
   ...generateStorage(

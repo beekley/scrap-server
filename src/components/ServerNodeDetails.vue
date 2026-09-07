@@ -30,6 +30,8 @@ const props = defineProps<{
   storagePercent: string | number
   serverTelemetry: any
   telemetry: any
+  serverTemp: number
+  operatingLimits: { maxOperatingTemp: number; criticalTemp: number }
 }>()
 
 </script>
@@ -76,8 +78,16 @@ const props = defineProps<{
 
     <!-- Utilization Metrics -->
     <fieldset>
-      <legend>Utilization</legend>
+      <legend>Utilization & Thermals</legend>
       <p style="margin: 2px 0"><strong>Power:</strong> {{ serverPowerDraw.toFixed(1) }} W</p>
+      <p style="margin: 2px 0">
+        <strong>Temp:</strong> 
+        <span :style="{ color: serverTemp >= operatingLimits.criticalTemp ? 'red' : serverTemp >= operatingLimits.maxOperatingTemp ? 'orange' : 'inherit' }">
+          {{ serverTemp.toFixed(1) }} °C
+        </span>
+        <span v-if="serverTemp >= operatingLimits.criticalTemp" style="color: red; font-weight: bold; margin-left: 5px;">(CRITICAL)</span>
+        <span v-else-if="serverTemp >= operatingLimits.maxOperatingTemp" style="color: orange; font-weight: bold; margin-left: 5px;">(THROTTLING)</span>
+      </p>
       <p style="margin: 2px 0; word-break: break-word;">
         <strong>CPU:</strong> {{ formatOps(usedCpu) }} op/s / {{ formatOps(totalCpu) }} op/s ({{
           cpuPercent

@@ -12,6 +12,7 @@ import {
   type Time,
   isServerValid,
 } from './types'
+import { getServerOperatingLimits } from './thermal'
 
 /**
  * Result details from advancing a job simulation tick.
@@ -171,6 +172,7 @@ export function canServerRunJob(serverOrServers: ServerNode | ServerNode[], job:
 export function calculateComputeDetails(
   serverOrServers: ServerNode | ServerNode[],
   job: Job,
+  serverTemps?: Record<string, number>,
 ): NodeComputeDetails {
   const parts = getAllParts(serverOrServers)
   let totalCpuCompute: OperationsPerSecond = u.Measure.of(0, opsPerSecond)
@@ -223,7 +225,31 @@ export function calculateComputeDetails(
   }
 
   const isIoBottlenecked = ioLimitCompute.lt(totalCpuCompute)
-  const effectiveComputeRate = isIoBottlenecked ? ioLimitCompute : totalCpuCompute
+  let effectiveComputeRate = isIoBottlenecked ? ioLimitCompute : totalCpuCompute
+
+  if (serverTemps) {
+    const servers = normalizeServers(serverOrServers)
+    let minThrottleMultiplier = 1.0
+    for (const server of servers) {
+      const temp = serverTemps[server.id] || 25
+      const { maxOperatingTemp, criticalTemp } = getServerOperatingLimits(server)
+      
+      if (temp >= criticalTemp) {
+        minThrottleMultiplier = 0
+      } else if (temp > maxOperatingTemp) {
+        const range = criticalTemp - maxOperatingTemp
+        const excess = temp - maxOperatingTemp
+        const throttle = Math.max(0.1, 1.0 - (excess / range) * 0.9)
+        if (throttle < minThrottleMultiplier) {
+          minThrottleMultiplier = throttle
+        }
+      }
+    }
+    
+    if (minThrottleMultiplier < 1.0) {
+      effectiveComputeRate = u.Measure.of(effectiveComputeRate.value * minThrottleMultiplier, opsPerSecond)
+    }
+  }
 
   return {
     totalCpuCompute,
@@ -241,8 +267,9 @@ export function calculateComputeDetails(
 export function calculateEffectiveComputeRate(
   serverOrServers: ServerNode | ServerNode[],
   job: Job,
+  serverTemps?: Record<string, number>,
 ): OperationsPerSecond {
-  return calculateComputeDetails(serverOrServers, job).effectiveComputeRate
+  return calculateComputeDetails(serverOrServers, job, serverTemps).effectiveComputeRate
 }
 
 /**
@@ -277,6 +304,7 @@ export function tickJob(
   job: Job,
   serverOrServers: ServerNode | ServerNode[],
   dt: Time,
+  serverTemps?: Record<string, number>,
 ): JobTickResult {
   if (job.status === 'NOT_STARTED') {
     job.status = 'LOADING'
@@ -325,7 +353,7 @@ export function tickJob(
       job.workCompleted = job.operationsRequired
       job.status = 'SAVING'
     } else {
-      const effectiveRate = calculateEffectiveComputeRate(serverOrServers, job)
+      const effectiveRate = calculateEffectiveComputeRate(serverOrServers, job, serverTemps)
       rate = effectiveRate.value
       const opsThisTick = effectiveRate.times(dt)
       job.workCompleted = job.workCompleted.plus(opsThisTick)
@@ -368,8 +396,12 @@ export function calculateServerPowerDraw(server: ServerNode, isRunningJob: boole
   let serverWatts = 0
   for (const part of server.installedParts) {
     if (part.kind !== 'PSU') {
-      serverWatts += part.powerDraw.value
+      if (isRunningJob) {
+        serverWatts += part.powerDraw.value
+      } else {
+        serverWatts += part.idlePowerDraw ? part.idlePowerDraw.value : part.powerDraw.value * 0.01
+      }
     }
   }
-  return isRunningJob ? serverWatts : serverWatts * 0.01
+  return serverWatts
 }

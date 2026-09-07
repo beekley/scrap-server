@@ -1,0 +1,50 @@
+import * as u from 'safe-units'
+import { W, ETC, type FanPart } from '../../types'
+
+export const fans: FanPart[] = [
+  {
+    id: 'fan_basic_80mm',
+    name: 'Generic 80mm Fan',
+    kind: 'FAN',
+    socketTag: '80MM',
+    manufacturerId: 'mfg_techmaker',
+    rarity: 'COMMON',
+    value: u.Measure.of(0.001, ETC),
+    width: 8,
+    height: 8,
+    baseImage: 'assets/fans/fan_80mm.png',
+    powerDraw: u.Measure.of(1.5, W),
+    flowRate: 30,
+    direction: 'EXHAUST',
+  },
+  {
+    id: 'fan_basic_120mm',
+    name: 'Generic 120mm Fan',
+    kind: 'FAN',
+    socketTag: '120MM',
+    manufacturerId: 'mfg_techmaker',
+    rarity: 'COMMON',
+    value: u.Measure.of(0.002, ETC),
+    width: 12,
+    height: 12,
+    baseImage: 'assets/fans/fan_120mm.png',
+    powerDraw: u.Measure.of(2.5, W),
+    flowRate: 50,
+    direction: 'EXHAUST',
+  },
+  {
+    id: 'fan_pro_140mm',
+    name: 'JetStream 140mm Pro',
+    kind: 'FAN',
+    socketTag: '140MM',
+    manufacturerId: 'mfg_acc',
+    rarity: 'UNCOMMON',
+    value: u.Measure.of(0.005, ETC),
+    width: 14,
+    height: 14,
+    baseImage: 'assets/fans/fan_140mm.png',
+    powerDraw: u.Measure.of(4.0, W),
+    flowRate: 95,
+    direction: 'EXHAUST',
+  }
+]

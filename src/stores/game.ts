@@ -16,6 +16,7 @@ import {
 import { getPartTemplate, allParts } from '../data'
 import { generateProceduralJob } from '../generators'
 import { tickJob, canServerRunJob, calculateServerPowerDraw, calculateComputeDetails } from '../simulation'
+import { tickThermal, createInitialGrid, getServerOperatingLimits } from '../thermal'
 import {
   findValidDropLocation,
   type RoomRect,
@@ -107,8 +108,12 @@ export const useGameStore = defineStore('game', () => {
     swap: number[]
     ramThroughput: number[]
     storageThroughput: number[]
+    temp: number[] // Added temperature to history
   }
   const telemetryHistory = ref<Record<string, TimeseriesData>>({})
+
+  const serverTemps = ref<Record<string, number>>({})
+  const roomGrid = ref<number[][]>(createInitialGrid())
 
   function setGameSpeed(speed: number) {
     gameSpeed.value = speed
@@ -379,10 +384,20 @@ export const useGameStore = defineStore('game', () => {
 
     // Power and Telemetry calculation
     let totalWatts = 0
+    const serverWattsMap: Record<string, number> = {}
+
     for (const server of servers.value) {
       const runningJob = activeJobs.value.find((j) => j.serverNodeIds?.includes(server.id))
       const serverPower = calculateServerPowerDraw(server as ServerNode, !!runningJob)
       totalWatts += serverPower
+      serverWattsMap[server.id] = serverPower
+    }
+
+    tickThermal(serverTemps.value, roomGrid.value, servers.value as ServerNode[], serverWattsMap, dtSeconds)
+
+    for (const server of servers.value) {
+      const runningJob = activeJobs.value.find((j) => j.serverNodeIds?.includes(server.id))
+      const serverPower = serverWattsMap[server.id]
 
       let cpuPercent = 0
       let ramPercent = 0
@@ -390,8 +405,16 @@ export const useGameStore = defineStore('game', () => {
       let ramThroughputPercent = 0
       let storageThroughputPercent = 0
 
-      if (runningJob) {
-        const details = calculateComputeDetails(server as ServerNode, runningJob as Job)
+      // Check for crashes
+      const { criticalTemp } = getServerOperatingLimits(server as ServerNode)
+      if (serverTemps.value[server.id] >= criticalTemp) {
+        if (runningJob) {
+          abortJob(runningJob.id)
+        }
+      }
+
+      if (runningJob && serverTemps.value[server.id] < criticalTemp) {
+        const details = calculateComputeDetails(server as ServerNode, runningJob as Job, serverTemps.value)
         
         let totalRam = 0
         let ramTotalThroughput = 0
@@ -449,7 +472,7 @@ export const useGameStore = defineStore('game', () => {
       }
 
       if (!telemetryHistory.value[server.id]) {
-        telemetryHistory.value[server.id] = { time: [], power: [], cpu: [], ram: [], swap: [], ramThroughput: [], storageThroughput: [] }
+        telemetryHistory.value[server.id] = { time: [], power: [], cpu: [], ram: [], swap: [], ramThroughput: [], storageThroughput: [], temp: [] }
       }
       const history = telemetryHistory.value[server.id]!
       history.time.push(gameTimeSeconds.value)
@@ -459,6 +482,7 @@ export const useGameStore = defineStore('game', () => {
       history.swap.push(swapGb)
       history.ramThroughput.push(ramThroughputPercent)
       history.storageThroughput.push(storageThroughputPercent)
+      history.temp.push(serverTemps.value[server.id])
     }
 
     currentPowerDraw.value = u.Measure.of(totalWatts, W)
@@ -482,7 +506,7 @@ export const useGameStore = defineStore('game', () => {
           const server = servers.value.find((s) => s.id === serverId)
           if (server) {
             const dt = u.Measure.of(dtSeconds, s)
-            const result = tickJob(job as Job, server as ServerNode, dt)
+            const result = tickJob(job as Job, server as ServerNode, dt, serverTemps.value)
 
             if (result.isCompleted) {
               // Payout - queue up rewards
@@ -516,6 +540,8 @@ export const useGameStore = defineStore('game', () => {
     gameSpeed,
     showTransferPanel,
     telemetryHistory,
+    serverTemps,
+    roomGrid,
     getPartFromInventory,
     installRootPart,
     installPart,

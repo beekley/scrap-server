@@ -3,6 +3,7 @@ import { useGameStore } from '../stores/game'
 import { calculateComputeDetails, calculateTotalStorage, calculateServerPowerDraw, getJobProgress, canServerRunJob } from '../simulation'
 import type { Job, ServerNode, Part } from '../types'
 import { isServerValid } from '../types'
+import { getServerOperatingLimits } from '../thermal'
 
 export function useSelectionContext() {
   const gameStore = useGameStore()
@@ -75,10 +76,23 @@ export function useSelectionContext() {
     const jobContext = isRunningJob.value ? activeJob.value : selectedJob.value
     if (!jobContext) return null
     try {
-      return calculateComputeDetails(selectedServer.value as ServerNode, jobContext as Job)
+      // @ts-ignore
+      return calculateComputeDetails(selectedServer.value as ServerNode, jobContext as Job, gameStore.serverTemps)
     } catch {
       return null
     }
+  })
+
+  const serverTemp = computed(() => {
+    if (!selectedServer.value) return 25
+    // @ts-ignore
+    return gameStore.serverTemps[selectedServer.value.id] || 25
+  })
+
+  const operatingLimits = computed(() => {
+    if (!selectedServer.value) return { maxOperatingTemp: 85, criticalTemp: 105 }
+    // @ts-ignore
+    return getServerOperatingLimits(selectedServer.value as ServerNode)
   })
 
   const serverTelemetry = computed(() => {
@@ -189,6 +203,8 @@ export function useSelectionContext() {
     ramPercent,
     storagePercent,
     isServerComplete,
-    canRunJob
+    canRunJob,
+    serverTemp,
+    operatingLimits
   }
 }

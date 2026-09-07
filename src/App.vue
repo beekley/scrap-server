@@ -8,10 +8,13 @@ const gameStore = useGameStore()
 let ticker: ReturnType<typeof setInterval>
 
 onMounted(() => {
-  // Game loop ticks every 100ms real-life time = 6 game-seconds * speed multiplier
+  // Game loop ticks every 100ms real-life time. To maintain stable physics, 
+  // we tick multiple times at constant dt instead of multiplying dt.
   ticker = setInterval(() => {
     if (gameStore.gameSpeed > 0) {
-      gameStore.tick(6 * gameStore.gameSpeed)
+      for (let i = 0; i < gameStore.gameSpeed; i++) {
+        gameStore.tick(6)
+      }
     }
   }, 100)
 })

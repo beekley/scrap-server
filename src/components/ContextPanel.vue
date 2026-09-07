@@ -2,6 +2,7 @@
 import { useGameStore } from '../stores/game'
 import { useWindowDrag } from '../composables/useWindowDrag'
 import { useSelectionContext } from '../composables/useSelectionContext'
+import type { ServerNode, Job, Part } from '../types'
 
 import ServerNodeDetails from './ServerNodeDetails.vue'
 import PartDetails from './PartDetails.vue'
@@ -21,9 +22,9 @@ const ctx = useSelectionContext()
       <!-- SERVER NODE PANEL -->
       <div v-if="ctx.selectedServer.value" style="display: flex; flex-direction: column; gap: 10px;">
         <ServerNodeDetails
-          :selectedServer="ctx.selectedServer.value as import('../types').ServerNode"
-          :selectedJob="ctx.selectedJob.value as import('../types').Job | null"
-          :activeJob="ctx.activeJob.value as import('../types').Job | null"
+          :selectedServer="ctx.selectedServer.value as ServerNode"
+          :selectedJob="ctx.selectedJob.value as Job | null"
+          :activeJob="ctx.activeJob.value as Job | null"
           :canRunJob="ctx.canRunJob?.value ?? false"
           :isServerComplete="ctx.isServerComplete.value"
           :isRunningJob="ctx.isRunningJob.value"
@@ -40,6 +41,8 @@ const ctx = useSelectionContext()
           :storagePercent="ctx.storagePercent.value"
           :serverTelemetry="ctx.serverTelemetry.value"
           :telemetry="ctx.telemetry.value"
+          :serverTemp="ctx.serverTemp.value"
+          :operatingLimits="ctx.operatingLimits.value"
         />
       </div>
 
@@ -55,8 +58,8 @@ const ctx = useSelectionContext()
         </div>
         
         <PartDetails
-          :displayedPart="ctx.displayedPart.value as import('../types').Part"
-          :parentServer="ctx.parentServer.value as import('../types').ServerNode | null"
+          :displayedPart="ctx.displayedPart.value as Part"
+          :parentServer="ctx.parentServer.value as ServerNode | null"
           :isRunningJob="ctx.isRunningJob.value"
         />
       </div>

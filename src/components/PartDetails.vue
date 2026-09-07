@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { formatGB, formatMB, formatOps } from '../utils/formatting'
 import PartSlots from './PartSlots.vue'
-import type { Part, ServerNode } from '../types'
+import type { Part, ServerNode, FanPart } from '../types'
 
 const props = defineProps<{
   displayedPart: Part
@@ -18,6 +18,7 @@ const asStorage = computed(() =>
     : null,
 )
 const asPsu = computed(() => (props.displayedPart?.kind === 'PSU' ? props.displayedPart : null))
+const asFan = computed(() => (props.displayedPart?.kind === 'FAN' ? props.displayedPart as FanPart : null))
 
 </script>
 
@@ -46,6 +47,19 @@ const asPsu = computed(() => (props.displayedPart?.kind === 'PSU' ? props.displa
     <ul v-if="asPsu" style="list-style-type: none; padding: 0; margin: 0;">
       <li><strong>Power Capacity:</strong> {{ asPsu.powerCapacity?.value || 0 }} W</li>
     </ul>
+    
+    <div v-if="asFan" style="display: flex; flex-direction: column; gap: 5px;">
+      <ul style="list-style-type: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 2px;">
+        <li><strong>Flow Rate:</strong> {{ asFan.flowRate }} CFM</li>
+        <li><strong>Current Direction:</strong> {{ asFan.direction }}</li>
+      </ul>
+      <button 
+        @click="asFan.direction = asFan.direction === 'INTAKE' ? 'EXHAUST' : 'INTAKE'"
+        :disabled="isRunningJob"
+      >
+        Switch to {{ asFan.direction === 'INTAKE' ? 'EXHAUST' : 'INTAKE' }}
+      </button>
+    </div>
 
     <!-- SLOTS -->
     <fieldset v-if="displayedPart.slots && displayedPart.slots.length > 0">

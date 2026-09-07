@@ -22,6 +22,8 @@ export type MotherboardSocketTag = 'CHASSIS_MOUNT' | 'STANDOFF' | (string & {})
 export type CaseSocketTag =
   'RACKMOUNT_1U' | 'RACKMOUNT_2U' | 'RACKMOUNT_4U' | 'ATX_MID_TOWER' | (string & {})
 
+export type FanSocketTag = '80MM' | '120MM' | '140MM' | (string & {})
+
 export interface SocketTagMap {
   CASE: CaseSocketTag
   CPU: CpuSocketTag
@@ -30,6 +32,7 @@ export interface SocketTagMap {
   PSU: PowerSocketTag
   MOTHERBOARD: MotherboardSocketTag
   STORAGE_DEVICE: StorageSocketTag
+  FAN: FanSocketTag
 }
 
 export type PartKind = keyof SocketTagMap
@@ -42,8 +45,9 @@ export interface SlotDefinition<K extends PartKind = PartKind> {
   id: string
   label?: string
   acceptsKind: K
-  socketTag: SocketTagMap[K]
+  socketTag: SocketTagMap[K] | SocketTagMap[K][]
   installedPartId?: string | null
+  position?: 'TOP' | 'LEFT' | 'RIGHT' | 'REAR'
 }
 
 export interface Manufacturer {
@@ -68,6 +72,9 @@ export interface BasePart<K extends PartKind = PartKind> {
   kind: K
   socketTag: SocketTagMap[K]
   powerDraw: Power // Active power consumed in Watts
+  idlePowerDraw?: Power // Idle power consumed in Watts
+  maxOperatingTemp?: number // Temp above which thermal throttling occurs
+  criticalTemp?: number // Temp above which server crashes
   manufacturerId?: string // Optional manufacturer reference
   slots?: SlotDefinition[] // Sockets/slots this part provides (e.g. on a motherboard or chassis)
   rarity: Rarity
@@ -112,8 +119,20 @@ export interface StorageDevicePart extends BasePart<'STORAGE_DEVICE'> {
   ioBandwidth?: Throughput
 }
 
+export interface FanPart extends BasePart<'FAN'> {
+  flowRate: number // Volumetric flow rate in CFM
+  direction: 'INTAKE' | 'EXHAUST' // Current direction
+}
+
 export type Part =
-  CasePart | CpuPart | RamPart | StoragePart | PsuPart | MotherboardPart | StorageDevicePart
+  | CasePart
+  | CpuPart
+  | RamPart
+  | StoragePart
+  | PsuPart
+  | MotherboardPart
+  | StorageDevicePart
+  | FanPart
 
 export type PartOfKind<K extends PartKind> = Extract<Part, { kind: K }>
 
@@ -125,7 +144,11 @@ export function isPartCompatibleWithSlot<K extends PartKind>(
   part: Part,
   slot: SlotDefinition<K>,
 ): part is PartOfKind<K> {
-  return part.kind === slot.acceptsKind && part.socketTag === slot.socketTag
+  if (part.kind !== slot.acceptsKind) return false
+  if (Array.isArray(slot.socketTag)) {
+    return slot.socketTag.includes(part.socketTag as any)
+  }
+  return part.socketTag === slot.socketTag
 }
 
 /**

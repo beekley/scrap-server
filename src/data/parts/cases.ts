@@ -16,6 +16,7 @@ export const cases: CasePart[] = [
     powerDraw: u.Measure.of(0, W),
     slots: [
       { id: 'mb_0', label: 'Motherboard Tray', acceptsKind: 'MOTHERBOARD', socketTag: 'ATX' },
+      { id: 'fan_rear', label: 'Rear Exhaust Fan', acceptsKind: 'FAN', socketTag: ['80MM', '120MM'], position: 'REAR' },
     ],
   },
   {
@@ -32,6 +33,9 @@ export const cases: CasePart[] = [
     powerDraw: u.Measure.of(15, W), // RGB uses power!
     slots: [
       { id: 'mb_0', label: 'Motherboard Tray', acceptsKind: 'MOTHERBOARD', socketTag: 'ATX' },
+      { id: 'fan_rear', label: 'Rear Exhaust', acceptsKind: 'FAN', socketTag: ['120MM', '140MM'], position: 'REAR' },
+      { id: 'fan_top', label: 'Top Intake', acceptsKind: 'FAN', socketTag: ['120MM', '140MM'], position: 'TOP' },
+      { id: 'fan_front', label: 'Front Panel', acceptsKind: 'FAN', socketTag: ['120MM', '140MM'], position: 'LEFT' },
     ],
   },
 ]

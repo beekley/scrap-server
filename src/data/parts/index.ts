@@ -5,5 +5,6 @@ import { cpus } from './cpus'
 import { ram } from './ram'
 import { storage } from './storage'
 import { psus } from './psus'
+import { fans } from './fans'
 
-export const allParts: Part[] = [...cases, ...motherboards, ...cpus, ...ram, ...storage, ...psus]
+export const allParts: Part[] = [...cases, ...motherboards, ...cpus, ...ram, ...storage, ...psus, ...fans]
