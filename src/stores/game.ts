@@ -91,6 +91,8 @@ export const useGameStore = defineStore('game', () => {
   ])
 
   const activeJobs = ref<Job[]>([])
+  const completedJobs = ref<Job[]>([])
+  const pastJobs = ref<Job[]>([])
   const selectedJobId = ref<string | null>(null)
   const selectedItemId = ref<string | null>(servers.value[0]?.id ?? null)
 
@@ -299,7 +301,19 @@ export const useGameStore = defineStore('game', () => {
   }
 
   function selectJob(jobId: string) {
-    selectedJobId.value = jobId
+    if (selectedJobId.value === jobId) {
+      selectedJobId.value = null
+    } else {
+      selectedJobId.value = jobId
+    }
+  }
+
+  function selectItem(itemId: string) {
+    if (selectedItemId.value === itemId) {
+      selectedItemId.value = null
+    } else {
+      selectedItemId.value = itemId
+    }
   }
 
   function startJob(serverId: string, jobId: string) {
@@ -383,6 +397,9 @@ export const useGameStore = defineStore('game', () => {
       servers.value.push(...newServers)
       inventory.value.push(...leftoverParts)
       pendingRewardPartIds.value = []
+
+      pastJobs.value.push(...completedJobs.value)
+      completedJobs.value = []
     }
 
     // Power and Telemetry calculation
@@ -521,6 +538,7 @@ export const useGameStore = defineStore('game', () => {
                 availableJobs.value.splice(oldJobIndex, 1, generateProceduralJob())
               }
 
+              completedJobs.value.push(job)
               activeJobs.value.splice(i, 1)
             }
           }
@@ -534,6 +552,8 @@ export const useGameStore = defineStore('game', () => {
     servers,
     availableJobs,
     activeJobs,
+    completedJobs,
+    pastJobs,
     selectedJobId,
     selectedItemId,
     etc,
@@ -553,6 +573,7 @@ export const useGameStore = defineStore('game', () => {
     moveItem,
     canSlotItem,
     selectJob,
+    selectItem,
     startJob,
     abortJob,
     tick,

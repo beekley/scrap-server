@@ -49,8 +49,8 @@ describe('ServerRoom.vue', () => {
     // Click on the first item
     await items[0]!.trigger('mousedown', { button: 0 })
 
-    // The clicked server should now be selected (it might be the same one, but the logic should fire)
-    expect(store.selectedItemId).toBe(store.servers[0]!.id)
+    // The clicked server should now be deselected because it was already selected
+    expect(store.selectedItemId).toBeNull()
   })
 
   it('renders transfer panel when showTransferPanel is true', async () => {

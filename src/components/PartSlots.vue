@@ -70,7 +70,7 @@ function getInstalledPart(partId: string): Part | undefined {
             </select>
             <button
               v-if="slot.installedPartId"
-              @click="gameStore.selectedItemId = slot.installedPartId"
+              @click="gameStore.selectItem(slot.installedPartId)"
             >
               Inspect
             </button>

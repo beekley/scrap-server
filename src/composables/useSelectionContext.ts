@@ -65,9 +65,15 @@ export function useSelectionContext() {
     return activeJobs.value.find((j) => j.serverNodeIds?.includes(parentServer.value!.id)) || null
   })
   
-  const selectedJob = computed(() =>
-    gameStore.availableJobs.find((j) => j.id === gameStore.selectedJobId) || null
-  )
+  const selectedJob = computed(() => {
+    const id = gameStore.selectedJobId
+    return (
+      gameStore.availableJobs.find((j) => j.id === id) ||
+      gameStore.completedJobs.find((j) => j.id === id) ||
+      gameStore.pastJobs.find((j) => j.id === id) ||
+      null
+    )
+  })
 
   const isRunningJob = computed(() => !!activeJob.value)
 

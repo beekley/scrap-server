@@ -51,7 +51,7 @@ const ctx = useSelectionContext()
         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--surf-highlight); padding-bottom: 4px;">
           <button
             v-if="ctx.parentPart.value"
-            @click="gameStore.selectedItemId = ctx.parentPart.value.id"
+            @click="gameStore.selectItem(ctx.parentPart.value.id)"
           >
             ↑ Up
           </button>

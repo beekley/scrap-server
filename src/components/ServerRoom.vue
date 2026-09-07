@@ -125,7 +125,7 @@ const { draggedItemId, dragX, dragY, isDragValid, handleMouseDown } = useDraggab
   maxWidth,
   onMoveItem: (id, x, y) => gameStore.moveItem(id, x, y),
   onSelect: (id) => {
-    gameStore.selectedItemId = id
+    gameStore.selectItem(id)
   },
   checkOverlapDrop: (id, x, y) => gameStore.canSlotItem(id, x, y),
 })
