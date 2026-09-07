@@ -25,6 +25,22 @@ const avgRoomTemp = computed(() => {
   }
   return count > 0 ? total / count : 25
 })
+const timeUntilSell = computed(() => {
+  const totalMinutes = Math.floor(gameStore.gameTimeSeconds / 60)
+  const currentHour = Math.floor((totalMinutes % (24 * 60)) / 60)
+  const currentMin = totalMinutes % 60
+  
+  let hoursUntil = 6 - currentHour
+  let minsUntil = 0 - currentMin
+  if (minsUntil < 0) {
+    minsUntil += 60
+    hoursUntil -= 1
+  }
+  if (hoursUntil < 0) {
+    hoursUntil += 24
+  }
+  return `${hoursUntil}h ${minsUntil}m`
+})
 </script>
 
 <template>
@@ -35,7 +51,19 @@ const avgRoomTemp = computed(() => {
     <div class="window-body" style="margin: 4px;">
       <div class="status-bar" style="margin: 0; flex-wrap: wrap;">
         <p class="status-bar-field cash">ETC: {{ gameStore.etc.value.toFixed(4) }}</p>
+        <p v-if="gameStore.pendingSaleValue > 0" class="status-bar-field pending-sale" style="color: #4dd0e1;">
+          +{{ gameStore.pendingSaleValue.toFixed(4) }} ETC in {{ timeUntilSell }}
+        </p>
         <p class="status-bar-field power">Power: {{ gameStore.currentPowerDraw.value.toFixed(0) }} W</p>
+        
+        <button
+          @click="gameStore.toggleOutsideView()"
+          class="status-bar-field"
+          style="cursor: pointer;"
+        >
+          {{ gameStore.isViewingOutside ? 'Open Storage Unit' : 'Close Storage Unit' }}
+        </button>
+
         <button 
           class="status-bar-field temp" 
           @click="gameStore.showHeatMap = !gameStore.showHeatMap"
@@ -72,7 +100,7 @@ const avgRoomTemp = computed(() => {
   z-index: 1000;
   box-shadow: 2px 2px 8px rgba(0,0,0,0.5);
   pointer-events: auto;
-  min-width: 450px;
+  min-width: 650px;
   max-width: 95vw;
 }
 .cash {

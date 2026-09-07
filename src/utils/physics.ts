@@ -1,9 +1,15 @@
-const isDebug = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('debug') === 'true'
-
-export const ROOM_WIDTH = isDebug ? 400 : 100
+export const OUTSIDE_LEFT_WIDTH = 100
+export const STORAGE_UNIT_WIDTH = 200
+export const OUTSIDE_RIGHT_WIDTH = 100
+export const ROOM_WIDTH = OUTSIDE_LEFT_WIDTH + STORAGE_UNIT_WIDTH + OUTSIDE_RIGHT_WIDTH
 export const ROOM_HEIGHT = 250
-export const TRANSFER_ZONE_START_X = isDebug ? 450 : 150
-export const TRANSFER_ZONE_WIDTH = 100
+
+export const STORAGE_UNIT_START_X = OUTSIDE_LEFT_WIDTH
+export const STORAGE_UNIT_END_X = OUTSIDE_LEFT_WIDTH + STORAGE_UNIT_WIDTH
+
+export function isItemOutside(x: number, width: number): boolean {
+  return x + width <= STORAGE_UNIT_START_X || x >= STORAGE_UNIT_END_X
+}
 
 export interface RoomRect {
   id: string

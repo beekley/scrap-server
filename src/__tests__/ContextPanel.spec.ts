@@ -18,8 +18,8 @@ describe('ContextPanel.vue', () => {
   })
 
   it('renders server details for selected server', () => {
-    useGameStore()
-    // Default has server selected
+    const store = useGameStore()
+    store.selectedItemId = store.servers[0]!.id
     const wrapper = mount(ContextPanel)
 
     expect(wrapper.text()).toContain('Context Inspector - Scrap Node 1')

@@ -12,6 +12,10 @@ export function useSelectionContext() {
     return gameStore.servers.find((s) => s.id === gameStore.selectedItemId) || null
   })
 
+  const selectedNote = computed(() => {
+    return gameStore.decorations.find((d) => d.id === gameStore.selectedItemId) || null
+  })
+
   const selectedPart = computed(() => {
     const invPart = gameStore.inventory.find((p) => p.id === gameStore.selectedItemId)
     if (invPart) return invPart
@@ -189,6 +193,7 @@ export function useSelectionContext() {
   return {
     selectedServer,
     selectedPart,
+    selectedNote,
     displayedPart,
     parentServer,
     parentPart,

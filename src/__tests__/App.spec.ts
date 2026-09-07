@@ -26,25 +26,25 @@ describe('App', () => {
     const wrapper = mount(App)
 
     // Initial time
-    expect(wrapper.text()).toContain('Day 1, 00:00')
+    expect(wrapper.text()).toContain('Day 1, 08:00')
 
     // Simulate 1 tick (60s)
     store.tick(60)
     await wrapper.vm.$nextTick()
 
-    expect(wrapper.text()).toContain('Day 1, 00:01')
+    expect(wrapper.text()).toContain('Day 1, 08:01')
 
     // Simulate 10 default ticks (10 x 6s = 60s / 1 game-minute)
     for (let i = 0; i < 10; i++) {
       store.tick()
     }
     await wrapper.vm.$nextTick()
-    expect(wrapper.text()).toContain('Day 1, 00:02')
+    expect(wrapper.text()).toContain('Day 1, 08:02')
 
     // Simulate enough ticks to advance to next day (24 hours = 1440 minutes)
     store.tick(1440 * 60)
     await wrapper.vm.$nextTick()
 
-    expect(wrapper.text()).toContain('Day 2, 00:02')
+    expect(wrapper.text()).toContain('Day 2, 08:02')
   })
 })

@@ -1,19 +1,22 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useGameStore } from '../stores/game'
-import type { Part, ServerNode } from '../types'
+import type { Part, ServerNode, Decoration } from '../types'
 import { useDraggable } from '../composables/useDraggable'
 import { usePanZoom } from '../composables/usePanZoom'
 import {
   ROOM_WIDTH,
   ROOM_HEIGHT,
   type RoomRect,
-  TRANSFER_ZONE_START_X,
-  TRANSFER_ZONE_WIDTH,
+  OUTSIDE_LEFT_WIDTH,
+  OUTSIDE_RIGHT_WIDTH,
+  STORAGE_UNIT_START_X,
+  STORAGE_UNIT_WIDTH,
+  STORAGE_UNIT_END_X,
 } from '../utils/physics'
 import { GRID_CELL_SIZE } from '../thermal'
 
-import TransferPanel from './TransferPanel.vue'
+import { isItemOutside } from '../utils/physics'
 import RoomItemView from './RoomItemView.vue'
 
 const gameStore = useGameStore()
@@ -21,9 +24,7 @@ const baseUrl = import.meta.env.BASE_URL
 
 const SCALE = 3 // 1 unit = 3px
 
-const maxWidth = computed(() =>
-  gameStore.showTransferPanel ? TRANSFER_ZONE_START_X + TRANSFER_ZONE_WIDTH : ROOM_WIDTH,
-)
+const maxWidth = ref(ROOM_WIDTH)
 
 const {
   zoom,
@@ -70,23 +71,12 @@ interface RoomItem extends RoomRect {
 const roomItems = computed<RoomItem[]>(() => {
   const items: RoomItem[] = []
 
-  if (gameStore.showTransferPanel) {
-    items.push({
-      id: 'divider_wall',
-      name: 'Wall',
-      kind: 'WALL',
-      isServer: false,
-      ref: null,
-      x: ROOM_WIDTH,
-      y: 0,
-      width: TRANSFER_ZONE_START_X - ROOM_WIDTH,
-      height: ROOM_HEIGHT,
-    })
-  }
-
   for (const s of gameStore.servers) {
     const casePart = s.installedParts.find((p) => p.kind === 'CASE')
     if (casePart) {
+      const isOutside = isItemOutside(s.x ?? 0, casePart.width)
+      if (gameStore.isViewingOutside && !isOutside) continue
+
       items.push({
         id: s.id, // Using server ID for selecting
         name: s.name,
@@ -103,6 +93,9 @@ const roomItems = computed<RoomItem[]>(() => {
   }
 
   for (const p of gameStore.inventory) {
+    const isOutside = isItemOutside(p.x ?? 0, p.width)
+    if (gameStore.isViewingOutside && !isOutside) continue
+
     items.push({
       id: p.id,
       name: p.name,
@@ -153,11 +146,19 @@ function getCellColor(temp: number): string {
     return `rgba(255, ${gb}, ${gb}, 0.4)`
   }
 }
+
+
+const hoveredNote = ref<Decoration | null>(null)
+function onNoteHover(note: Decoration) {
+  hoveredNote.value = note
+}
+function onNoteLeave() {
+  hoveredNote.value = null
+}
 </script>
 
 <template>
   <div class="server-room-wrapper">
-    <TransferPanel />
 
     <div
       class="room-container"
@@ -175,14 +176,48 @@ function getCellColor(temp: number): string {
           transformOrigin: '0 0'
         }"
       >
+                <!-- Left Outside Zone -->
         <div
-          v-if="gameStore.showTransferPanel"
-          class="transfer-zone-bg"
+          class="outside-zone-bg"
           :style="{
-            left: TRANSFER_ZONE_START_X * SCALE + 'px',
-            width: TRANSFER_ZONE_WIDTH * SCALE + 'px',
+            left: 0 + 'px',
+            width: OUTSIDE_LEFT_WIDTH * SCALE + 'px',
           }"
         ></div>
+        <!-- Right Outside Zone -->
+        <div
+          class="outside-zone-bg"
+          :style="{
+            left: STORAGE_UNIT_END_X * SCALE + 'px',
+            width: OUTSIDE_RIGHT_WIDTH * SCALE + 'px',
+          }"
+        ></div>
+
+        <!-- Garage Door (Closed state) -->
+        <div
+          v-if="gameStore.isViewingOutside"
+          class="garage-door"
+          :style="{
+            left: STORAGE_UNIT_START_X * SCALE + 'px',
+            width: STORAGE_UNIT_WIDTH * SCALE + 'px',
+          }"
+        >
+          <!-- Decorations attached to door -->
+          <div
+            v-for="dec in gameStore.decorations.filter(d => d.parentObjectId === 'exterior_door')"
+            :key="dec.id"
+            class="decoration-note"
+            :style="{
+              left: dec.relativeX * SCALE + 'px',
+              top: dec.relativeY * SCALE + 'px',
+            }"
+            @click="gameStore.selectItem(dec.id)"
+            @mouseenter="onNoteHover(dec)"
+            @mouseleave="onNoteLeave"
+          >
+            &#128221;
+          </div>
+        </div>
 
         <RoomItemView
           v-for="item in roomItems"
@@ -225,12 +260,22 @@ function getCellColor(temp: number): string {
 
     <!-- Hover Tooltip -->
     <div
-      v-if="hoveredItem && !isPanning && !draggedItemId && !gameStore.showHeatMap"
+      v-if="hoveredItem && !isPanning && !draggedItemId && !gameStore.showHeatMap && !hoveredNote"
       class="hover-tooltip"
       :style="{ left: mouseX + 15 + 'px', top: mouseY + 15 + 'px' }"
     >
       <div>{{ hoveredItem.name }}</div>
       <div style="color: #555;">{{ hoveredItem.kind }}</div>
+    </div>
+
+    <!-- Note Hover Tooltip -->
+    <div
+      v-if="hoveredNote && !isPanning && !draggedItemId"
+      class="hover-tooltip note-tooltip"
+      :style="{ left: mouseX + 15 + 'px', top: mouseY + 15 + 'px' }"
+    >
+      <div class="note-tooltip-header">📝 Note</div>
+      <div class="note-tooltip-content">{{ hoveredNote.content }}</div>
     </div>
 
     <div
@@ -241,6 +286,7 @@ function getCellColor(temp: number): string {
       <div>Air Temp</div>
       <div style="color: #ff8c00;">{{ hoveredCellTemp.toFixed(1) }} °C</div>
     </div>
+
   </div>
 </template>
 
@@ -283,12 +329,74 @@ function getCellColor(temp: number): string {
   box-shadow: 1px 1px 0px var(--surf-shadow);
   white-space: nowrap;
 }
-.transfer-zone-bg {
+
+.outside-zone-bg {
   position: absolute;
   top: 0;
   height: 100%;
   background: repeating-linear-gradient(45deg, var(--surf-base), var(--surf-base) 10px, var(--bg-sunken) 10px, var(--bg-sunken) 20px);
-  border-left: 2px dashed var(--accent-3);
   z-index: 0;
+  border-right: 2px dashed var(--accent-3);
 }
+.outside-zone-bg:nth-of-type(2) {
+  border-left: 2px dashed var(--accent-3);
+  border-right: none;
+}
+.garage-door {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  background: repeating-linear-gradient(to bottom, #444, #444 8px, #333 8px, #333 10px);
+  border-left: 4px solid #222;
+  border-right: 4px solid #222;
+  z-index: 10;
+  pointer-events: auto;
+}
+.decoration-note {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  background-color: #ffea70;
+  box-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  border: 1px solid #d4b106;
+  border-radius: 2px;
+  z-index: 20;
+  transition: transform 0.1s ease;
+}
+.decoration-note:hover {
+  transform: scale(1.15);
+  background-color: #fff176;
+}
+.note-tooltip {
+  max-width: 320px;
+  white-space: normal !important;
+  background: #ffea70;
+  color: #111;
+  border: 1px solid #c9a600;
+  box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.4);
+  padding: 8px 10px;
+  font-family: inherit;
+  pointer-events: none;
+}
+.note-tooltip-header {
+  font-weight: bold;
+  font-size: 11px;
+  color: #5d4037;
+  margin-bottom: 4px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+  padding-bottom: 2px;
+}
+.note-tooltip-content {
+  font-size: 11px;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+
 </style>

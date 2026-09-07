@@ -217,3 +217,18 @@ export interface Job {
   serverNodeIds?: string[] // IDs of assigned server nodes (supports multi-node)
   servers?: ServerNode[] // Assigned server node objects (supports multi-node)
 }
+
+// ==========================================
+// DECORATIONS (Notes, Stickers)
+// ==========================================
+
+export type DecorationType = 'NOTE' | 'STICKER'
+
+export interface Decoration {
+  id: string
+  type: DecorationType
+  content: string // Text content for notes, or image URL for stickers
+  parentObjectId: string | null // null means attached to background/room
+  relativeX: number
+  relativeY: number
+}

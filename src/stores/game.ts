@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import * as u from 'safe-units'
 import {
   s,
@@ -12,6 +12,7 @@ import {
   ETC,
   W,
   type Power,
+  type Decoration,
 } from '../types'
 import { getPartTemplate, allParts } from '../data'
 import { generateProceduralJob } from '../generators'
@@ -20,9 +21,10 @@ import { tickThermal, createInitialGrid, getServerOperatingLimits } from '../the
 import {
   findValidDropLocation,
   type RoomRect,
-  TRANSFER_ZONE_START_X,
-  TRANSFER_ZONE_WIDTH,
   ROOM_WIDTH,
+  OUTSIDE_LEFT_WIDTH,
+  isItemOutside,
+  STORAGE_UNIT_START_X,
 } from '../utils/physics'
 import { autoAssembleRewards } from '../utils/assembly'
 
@@ -48,7 +50,7 @@ export const useGameStore = defineStore('game', () => {
       id: 'server_01',
       name: 'Scrap Node 1',
       installedParts: [c, mb, cpu, ram, hdd, psu, fan],
-      x: 10,
+      x: STORAGE_UNIT_START_X + 20,
       y: 250 - c.height, // Placed directly on the floor
     }
   }
@@ -94,15 +96,27 @@ export const useGameStore = defineStore('game', () => {
   const completedJobs = ref<Job[]>([])
   const pastJobs = ref<Job[]>([])
   const selectedJobId = ref<string | null>(null)
-  const selectedItemId = ref<string | null>(servers.value[0]?.id ?? null)
+  const selectedItemId = ref<string | null>(null)
 
   const etc = ref<Currency>(u.Measure.of(0.025, ETC))
   const currentPowerDraw = ref<Power>(u.Measure.of(0, W))
   const outOfPower = ref<boolean>(false)
 
-  // Game clock: starts at 0, unit is game-seconds
-  const gameTimeSeconds = ref<number>(0)
+  // Game clock: starts at 8 AM, unit is game-seconds
+  const gameTimeSeconds = ref<number>(8 * 3600)
   const gameSpeed = ref<number>(1) // 0 (paused), 1 (1x), 4 (4x), 16 (16x), 64 (64x)
+
+  const isViewingOutside = ref<boolean>(true)
+  const decorations = ref<Decoration[]>([
+    {
+      id: 'tut_note_1',
+      type: 'NOTE',
+      content: "Hey kid, heard you're looking to run some compute. Here's a junker case and some old DDR3 to get you started. Hook it up and check the local intranet for jobs. - Uncle Dave\n\nP.S. I leave items outside the unit to be sold by the scrapper at 6 AM. Deliveries arrive at 8 AM.",
+      parentObjectId: 'exterior_door', // special ID for the garage door
+      relativeX: 40,
+      relativeY: 40,
+    }
+  ])
 
   interface TimeseriesData {
     time: number[]
@@ -344,16 +358,34 @@ export const useGameStore = defineStore('game', () => {
   }
 
   const pendingRewardPartIds = ref<string[]>([])
-  const currentDay = ref<number>(0)
-  const showTransferPanel = ref<boolean>(false)
 
-  function sellTransferPanel() {
+  const pendingSaleValue = computed(() => {
+    let totalValue = 0
+    for (const server of servers.value) {
+      const casePart = server.installedParts.find(p => p.kind === 'CASE')
+      if (server.x !== undefined && casePart && isItemOutside(server.x, casePart.width)) {
+        for (const part of server.installedParts) {
+          totalValue += part.value.value
+        }
+      }
+    }
+    for (const part of inventory.value) {
+      if (part.x !== undefined && isItemOutside(part.x, part.width)) {
+        totalValue += part.value.value
+      }
+    }
+    return totalValue * 0.25 // 25% of base value
+  })
+
+  function processAutoSell() {
     let totalValue = 0
 
-    // Remove servers in transfer zone
+    // Remove servers in outside zone
     for (let i = servers.value.length - 1; i >= 0; i--) {
       const server = servers.value[i]
-      if (server && server.x !== undefined && server.x >= TRANSFER_ZONE_START_X) {
+      if (!server) continue
+      const casePart = server.installedParts.find(p => p.kind === 'CASE')
+      if (server.x !== undefined && casePart && isItemOutside(server.x, casePart.width)) {
         for (const part of server.installedParts) {
           totalValue += part.value.value
         }
@@ -361,42 +393,54 @@ export const useGameStore = defineStore('game', () => {
       }
     }
 
-    // Remove inventory parts in transfer zone
+    // Remove inventory parts in outside zone
     for (let i = inventory.value.length - 1; i >= 0; i--) {
       const part = inventory.value[i]
-      if (part && part.x !== undefined && part.x >= TRANSFER_ZONE_START_X) {
+      if (part && part.x !== undefined && isItemOutside(part.x, part.width)) {
         totalValue += part.value.value
         inventory.value.splice(i, 1)
       }
     }
 
     const earned = totalValue * 0.25
-    etc.value = u.Measure.of(etc.value.value + earned, ETC)
-    showTransferPanel.value = false
-    setGameSpeed(1)
+    if (earned > 0) {
+      etc.value = u.Measure.of(etc.value.value + earned, ETC)
+    }
+  }
+
+  function toggleOutsideView() {
+    isViewingOutside.value = !isViewingOutside.value
   }
 
   function tick(dtSeconds: number = 6) {
+    const oldTime = gameTimeSeconds.value
     gameTimeSeconds.value += dtSeconds
+    const newTime = gameTimeSeconds.value
 
-    const day = Math.floor(gameTimeSeconds.value / 86400)
-    if (day > currentDay.value && gameTimeSeconds.value > 0) {
-      currentDay.value = day
-      setGameSpeed(0)
-      showTransferPanel.value = true
+    const dayLength = 86400
+    const newDay = Math.floor(newTime / dayLength)
 
-      const { newServers, leftoverParts } = autoAssembleRewards(
-        pendingRewardPartIds.value,
-        servers.value.length,
-        getRoomItems,
-        findValidDropLocation,
-        TRANSFER_ZONE_START_X,
-        TRANSFER_ZONE_START_X + TRANSFER_ZONE_WIDTH,
-      )
+    const sixAmTime = newDay * dayLength + 6 * 3600
+    if (oldTime < sixAmTime && newTime >= sixAmTime) {
+      processAutoSell()
+    }
 
-      servers.value.push(...newServers)
-      inventory.value.push(...leftoverParts)
-      pendingRewardPartIds.value = []
+    const eightAmTime = newDay * dayLength + 8 * 3600
+    if (oldTime < eightAmTime && newTime >= eightAmTime) {
+      if (pendingRewardPartIds.value.length > 0) {
+        const { newServers, leftoverParts } = autoAssembleRewards(
+          pendingRewardPartIds.value,
+          servers.value.length,
+          getRoomItems,
+          findValidDropLocation,
+          0,
+          OUTSIDE_LEFT_WIDTH, // Drop rewards in the left outside zone
+        )
+
+        servers.value.push(...newServers)
+        inventory.value.push(...leftoverParts)
+        pendingRewardPartIds.value = []
+      }
 
       pastJobs.value.push(...completedJobs.value)
       completedJobs.value = []
@@ -561,7 +605,9 @@ export const useGameStore = defineStore('game', () => {
     outOfPower,
     gameTimeSeconds,
     gameSpeed,
-    showTransferPanel,
+    isViewingOutside,
+    decorations,
+    pendingSaleValue,
     showHeatMap,
     telemetryHistory,
     serverTemps,
@@ -578,6 +624,6 @@ export const useGameStore = defineStore('game', () => {
     abortJob,
     tick,
     setGameSpeed,
-    sellTransferPanel,
+    toggleOutsideView,
   }
 })

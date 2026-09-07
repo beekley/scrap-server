@@ -16,9 +16,15 @@ const ctx = useSelectionContext()
 <template>
   <div class="window window-drag-container context-panel" :style="{ left: x + 'px', top: y + 'px' }">
     <div class="title-bar" @mousedown="handleMouseDown" style="cursor: move;">
-      <div class="title-bar-text">Context Inspector - {{ ctx.selectedServer.value?.name || ctx.selectedPart.value?.name }}</div>
+      <div class="title-bar-text">Context Inspector - {{ ctx.selectedNote.value ? 'Note' : (ctx.selectedServer.value?.name || ctx.selectedPart.value?.name) }}</div>
     </div>
     <div class="window-body panel-content">
+      <!-- NOTE PANEL -->
+      <div v-if="ctx.selectedNote.value" style="display: flex; flex-direction: column; gap: 10px;">
+        <div class="sunken-panel" style="padding: 15px; background: #ffea70; color: #111; font-family: 'Courier New', Courier, monospace; font-weight: bold; white-space: pre-wrap;">
+          {{ ctx.selectedNote.value.content }}
+        </div>
+      </div>
       <!-- SERVER NODE PANEL -->
       <div v-if="ctx.selectedServer.value" style="display: flex; flex-direction: column; gap: 10px;">
         <ServerNodeDetails
@@ -64,7 +70,7 @@ const ctx = useSelectionContext()
         />
       </div>
 
-      <div v-if="!ctx.selectedServer.value && !ctx.displayedPart.value" class="sunken-panel" style="padding: 15px;">
+      <div v-if="!ctx.selectedServer.value && !ctx.displayedPart.value && !ctx.selectedNote.value" class="sunken-panel" style="padding: 15px;">
         <p>Select a server or part to view details.</p>
       </div>
     </div>
