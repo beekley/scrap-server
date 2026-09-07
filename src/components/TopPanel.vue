@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useGameStore } from '../stores/game'
+import { useWindowDrag } from '../composables/useWindowDrag'
 
 const gameStore = useGameStore()
+const { x, y, handleMouseDown } = useWindowDrag(window.innerWidth / 2 - 225, 10)
 
 const formattedClock = computed(() => {
   const totalMinutes = Math.floor(gameStore.gameTimeSeconds / 60)
@@ -14,30 +16,25 @@ const formattedClock = computed(() => {
 </script>
 
 <template>
-  <div class="top-panel">
-    <div class="hud-content">
-      <div class="stat cash">EarthCoin: {{ gameStore.etc.value.toFixed(4) }} $ETC</div>
-      <div class="stat power">Power: {{ gameStore.currentPowerDraw.value.toFixed(0) }} W</div>
+  <div class="window window-drag-container top-panel" :style="{ left: x + 'px', top: y + 'px' }">
+    <div class="title-bar" @mousedown="handleMouseDown" style="cursor: move;">
+      <div class="title-bar-text">Session Status</div>
+    </div>
+    <div class="window-body" style="margin: 4px;">
+      <div class="status-bar" style="margin: 0; flex-wrap: wrap;">
+        <p class="status-bar-field cash">ETC: {{ gameStore.etc.value.toFixed(4) }}</p>
+        <p class="status-bar-field power">Power: {{ gameStore.currentPowerDraw.value.toFixed(0) }} W</p>
+        
+        <div class="speed-controls" style="display: flex; gap: 4px; align-items: center; padding: 0 4px;">
+          <button :style="gameStore.gameSpeed === 0 ? 'color: blue; box-shadow: inset -1px -1px #fff, inset 1px 1px #0a0a0a, inset -2px -2px #dfdfdf, inset 2px 2px #808080;' : ''" @click="gameStore.setGameSpeed(0)">⏸️</button>
+          <button :style="gameStore.gameSpeed === 1 ? 'color: blue; box-shadow: inset -1px -1px #fff, inset 1px 1px #0a0a0a, inset -2px -2px #dfdfdf, inset 2px 2px #808080;' : ''" @click="gameStore.setGameSpeed(1)">1x</button>
+          <button :style="gameStore.gameSpeed === 4 ? 'color: blue; box-shadow: inset -1px -1px #fff, inset 1px 1px #0a0a0a, inset -2px -2px #dfdfdf, inset 2px 2px #808080;' : ''" @click="gameStore.setGameSpeed(4)">4x</button>
+          <button :style="gameStore.gameSpeed === 16 ? 'color: blue; box-shadow: inset -1px -1px #fff, inset 1px 1px #0a0a0a, inset -2px -2px #dfdfdf, inset 2px 2px #808080;' : ''" @click="gameStore.setGameSpeed(16)">16x</button>
+          <button :style="gameStore.gameSpeed === 64 ? 'color: blue; box-shadow: inset -1px -1px #fff, inset 1px 1px #0a0a0a, inset -2px -2px #dfdfdf, inset 2px 2px #808080;' : ''" @click="gameStore.setGameSpeed(64)">64x</button>
+        </div>
 
-      <div class="speed-controls">
-        <button :class="{ active: gameStore.gameSpeed === 0 }" @click="gameStore.setGameSpeed(0)">
-          ⏸️
-        </button>
-        <button :class="{ active: gameStore.gameSpeed === 1 }" @click="gameStore.setGameSpeed(1)">
-          1x
-        </button>
-        <button :class="{ active: gameStore.gameSpeed === 4 }" @click="gameStore.setGameSpeed(4)">
-          4x
-        </button>
-        <button :class="{ active: gameStore.gameSpeed === 16 }" @click="gameStore.setGameSpeed(16)">
-          16x
-        </button>
-        <button :class="{ active: gameStore.gameSpeed === 64 }" @click="gameStore.setGameSpeed(64)">
-          64x
-        </button>
+        <p class="status-bar-field clock">{{ formattedClock }}</p>
       </div>
-
-      <div class="stat clock">{{ formattedClock }}</div>
     </div>
   </div>
 </template>
@@ -45,59 +42,21 @@ const formattedClock = computed(() => {
 <style scoped>
 .top-panel {
   position: absolute;
-  top: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.75);
-  color: white;
-  padding: 10px 20px;
-  border-radius: 8px;
   z-index: 1000;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-  font-family: monospace;
-  font-size: 1.1em;
+  box-shadow: 2px 2px 8px rgba(0,0,0,0.5);
   pointer-events: auto;
-}
-.hud-content {
-  display: flex;
-  gap: 20px;
-  align-items: center;
-}
-.stat {
-  font-weight: bold;
+  min-width: 450px;
+  max-width: 95vw;
 }
 .cash {
-  color: #4ade80;
+  color: #006600;
 }
 .power {
-  color: #fb923c;
+  color: #994400;
 }
 .clock {
-  color: #60a5fa;
-  min-width: 130px;
+  color: #000066;
   text-align: right;
-}
-.speed-controls {
-  display: flex;
-  gap: 5px;
-  background: rgba(255, 255, 255, 0.1);
-  padding: 4px;
-  border-radius: 4px;
-}
-.speed-controls button {
-  background: transparent;
-  color: white;
-  border: 1px solid transparent;
-  cursor: pointer;
-  border-radius: 4px;
-  padding: 2px 6px;
-}
-.speed-controls button:hover {
-  background: rgba(255,255,255,0.2);
-}
-.speed-controls button.active {
-  background: rgba(255,255,255,0.3);
-  border-color: rgba(255,255,255,0.5);
-  font-weight: bold;
+  min-width: 100px;
 }
 </style>

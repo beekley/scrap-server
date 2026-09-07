@@ -170,13 +170,17 @@ const totalSellValue = computed(() => {
   <div class="server-room-wrapper">
     <div
       v-if="gameStore.showTransferPanel"
-      class="transfer-controls"
+      class="window transfer-controls"
       style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 1000;"
     >
-      <span class="transfer-title">Transfer Panel</span>
-      <button @click="gameStore.sellTransferPanel()" class="sell-btn">
-        Sell Items ({{ totalSellValue.toFixed(4) }} $ETC) & Close
-      </button>
+      <div class="title-bar">
+        <div class="title-bar-text">Transfer Panel</div>
+      </div>
+      <div class="window-body" style="display: flex; align-items: center; justify-content: center; padding: 10px;">
+        <button @click="gameStore.sellTransferPanel()" class="sell-btn">
+          Sell Items ({{ totalSellValue.toFixed(4) }} $ETC) & Close
+        </button>
+      </div>
     </div>
 
     <div
@@ -234,8 +238,8 @@ const totalSellValue = computed(() => {
       class="hover-tooltip"
       :style="{ left: mouseX + 15 + 'px', top: mouseY + 15 + 'px' }"
     >
-      <div class="tooltip-name">{{ hoveredItem.name }}</div>
-      <div class="tooltip-kind">{{ hoveredItem.kind }}</div>
+      <div>{{ hoveredItem.name }}</div>
+      <div style="color: #555;">{{ hoveredItem.kind }}</div>
     </div>
   </div>
 </template>
@@ -248,7 +252,7 @@ const totalSellValue = computed(() => {
   top: 0;
   left: 0;
   overflow: hidden;
-  background-color: #222;
+  background-color: #008080;
 }
 .room-container {
   width: 100%;
@@ -265,56 +269,19 @@ const totalSellValue = computed(() => {
   position: absolute;
   top: 0;
   left: 0;
-  background-color: #333;
+  background-color: #c0c0c0;
   will-change: transform;
 }
 .hover-tooltip {
   position: fixed;
   z-index: 9999;
-  background: rgba(0, 0, 0, 0.85);
-  color: white;
-  padding: 8px 12px;
-  border-radius: 4px;
-  border: 1px solid #555;
+  background: #ffffe1;
+  color: black;
+  border: 1px solid black;
+  padding: 2px 4px;
   pointer-events: none;
-  font-family: monospace;
-  box-shadow: 2px 2px 8px rgba(0,0,0,0.5);
+  box-shadow: 1px 1px 0px rgba(0,0,0,0.5);
   white-space: nowrap;
-}
-.tooltip-name {
-  font-weight: bold;
-  font-size: 1.1em;
-}
-.tooltip-kind {
-  color: #aaa;
-  font-size: 0.9em;
-  margin-top: 2px;
-}
-.transfer-controls {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  background: rgba(255, 243, 205, 0.9);
-  padding: 5px 15px;
-  border-radius: 4px;
-  border: 1px solid #ffeeba;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-}
-.transfer-title {
-  font-weight: bold;
-  color: #856404;
-}
-.sell-btn {
-  background: #28a745;
-  color: white;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: bold;
-}
-.sell-btn:hover {
-  background: #218838;
 }
 .transfer-zone-bg {
   position: absolute;
@@ -337,7 +304,6 @@ const totalSellValue = computed(() => {
   align-items: center;
   justify-content: center;
   text-align: center;
-  font-size: 6px;
   padding: 0;
   box-sizing: border-box;
   z-index: 10;

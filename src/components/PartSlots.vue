@@ -35,27 +35,27 @@ function getInstalledPart(partId: string): Part | undefined {
 
 <template>
   <ul
-    style="padding-left: 20px; list-style-type: none; margin: 5px 0; border-left: 1px dashed #ccc"
+    style="padding-left: 12px; list-style-type: none; margin: 4px 0; border-left: 1px dotted #888;"
   >
-    <li v-for="slot in slots" :key="slot.id" style="margin-bottom: 5px; position: relative">
+    <li v-for="slot in slots" :key="slot.id" style="margin-bottom: 4px; position: relative">
       <div style="display: flex; flex-direction: column; gap: 2px">
         <div style="display: flex; align-items: center; position: relative">
           <!-- A little line indicator for tree depth -->
           <div
             style="
               position: absolute;
-              left: -20px;
+              left: -12px;
               top: 50%;
-              width: 15px;
-              border-top: 1px dashed #ccc;
+              width: 10px;
+              border-top: 1px dotted #888;
             "
           ></div>
 
-          <span style="display: inline-block; width: 140px; font-size: 0.9em">{{
+          <span style="display: inline-block; width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" :title="slot.label">{{
             slot.label
           }}</span>
-          <div style="display: inline-flex; align-items: center; gap: 5px">
-            <select @change="handleSlotChange(slot.id, $event)" :disabled="isRunningJob || !serverNode">
+          <div style="display: inline-flex; align-items: center; gap: 4px; flex: 1;">
+            <select @change="handleSlotChange(slot.id, $event)" :disabled="isRunningJob || !serverNode" style="max-width: 130px; flex: 1;">
               <option value="" :selected="!slot.installedPartId">Empty</option>
               <option v-if="slot.installedPartId" :value="slot.installedPartId" selected>
                 {{ getInstalledPart(slot.installedPartId)?.name || slot.installedPartId }}
@@ -71,7 +71,6 @@ function getInstalledPart(partId: string): Part | undefined {
             <button
               v-if="slot.installedPartId"
               @click="gameStore.selectedItemId = slot.installedPartId"
-              style="padding: 2px 6px; font-size: 0.8em"
             >
               Inspect
             </button>

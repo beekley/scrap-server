@@ -34,7 +34,6 @@ onUnmounted(() => {
         color: white;
         padding: 10px;
         text-align: center;
-        font-weight: bold;
         border-radius: 4px;
         z-index: 1001;
       "
@@ -53,17 +52,26 @@ onUnmounted(() => {
 
 <style scoped>
 .app-container {
-  font-family: sans-serif;
   width: 100vw;
   height: 100vh;
   margin: 0;
   padding: 0;
   overflow: hidden;
   position: relative;
-  background: #1a1a2e; /* Darker background for game feel */
 }
 .main-content {
   width: 100%;
   height: 100%;
+}
+</style>
+
+<style>
+* {
+  -webkit-font-smoothing: none !important;
+  font-smooth: never !important;
+}
+
+h1, h2, h3, h4, h5, h6, legend {
+  font-family: "Arial", sans-serif !important;
 }
 </style>

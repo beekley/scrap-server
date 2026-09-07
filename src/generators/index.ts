@@ -187,7 +187,7 @@ export function generateProceduralJob(): Job {
 
   return {
     id: `job_gen_${Date.now()}_${jobCounter}`,
-    title: `[${rarity}] ${title}`,
+    title: `${title}`,
     description: `A ${rarity.toLowerCase()} difficulty task.`,
     rarity: rarity,
 

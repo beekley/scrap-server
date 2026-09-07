@@ -72,11 +72,9 @@ const svgPoints = computed(() => {
 </script>
 
 <template>
-  <div class="chart-container">
-    <div class="chart-header">
-      <span class="chart-label">{{ label }}</span>
-    </div>
-    <div class="chart-box">
+  <fieldset class="chart-container" style="margin-bottom: 8px;">
+    <legend class="chart-label">{{ label }}</legend>
+    <div class="sunken-panel chart-box">
       <svg width="100%" height="60" preserveAspectRatio="none" viewBox="0 0 100 60">
         <polyline :points="svgPoints" fill="none" :stroke="color" stroke-width="2" />
       </svg>
@@ -85,42 +83,25 @@ const svgPoints = computed(() => {
       <span>Min: {{ minVal.toFixed(1) }}{{ unit }}</span>
       <span>Max: {{ maxVal.toFixed(1) }}{{ unit }}</span>
     </div>
-  </div>
+  </fieldset>
 </template>
 
 <style scoped>
 .chart-container {
-  background: #fff;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  padding: 8px;
-  margin-bottom: 10px;
-}
-.chart-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 5px;
+  padding: 4px 8px;
 }
 .chart-label {
-  font-weight: bold;
-  font-size: 0.9em;
-  color: #333;
 }
 
 .chart-box {
-  background: #f9f9f9;
-  border: 1px solid #eee;
+  background: white;
   width: 100%;
   height: 60px;
-  border-radius: 2px;
   overflow: hidden;
 }
 .chart-footer {
   display: flex;
   justify-content: space-between;
-  font-size: 0.75em;
-  color: #666;
   margin-top: 4px;
 }
 </style>
