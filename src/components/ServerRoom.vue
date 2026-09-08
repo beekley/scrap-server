@@ -323,7 +323,7 @@ function getCellColor(temp: number): string {
   padding: 2px 4px;
   pointer-events: none;
   box-shadow: 1px 1px 0px var(--surf-shadow);
-  white-space: nowrap;
+  max-width: 250px;
 }
 
 .outside-zone-bg {

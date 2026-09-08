@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { tickJob } from './simulation'
-import type { Job } from './types'
+import type { Job, ServerNode } from './types'
 import { ETC, s } from './types'
 import * as u from 'safe-units'
 
@@ -22,12 +22,12 @@ describe('tickJob (Pure)', () => {
       workingSetType: 'SEQUENTIAL',
       computeType: 'INTEGER',
       rewardPartIds: [],
-    } as any
+    } as unknown as Job
 
     const server = {
       id: 's1',
       installedParts: [],
-    } as any
+    } as unknown as ServerNode
 
     const dt = u.Measure.of(1, s)
     const { newJob, result } = tickJob(job, server, dt, {})
