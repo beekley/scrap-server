@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ROOM_HEIGHT } from '../constants/room'
 
-const props = defineProps<{
+defineProps<{
   item: {
     id: string
     name: string
@@ -23,8 +23,8 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'mousedown', event: MouseEvent, id: string): void
-  (e: 'mouseenter', item: any): void
-  (e: 'mouseleave', item: any): void
+  (e: 'mouseenter', item: { id: string, kind: string, name: string }): void
+  (e: 'mouseleave', item: { id: string, kind: string, name: string }): void
 }>()
 </script>
 
@@ -40,7 +40,7 @@ const emit = defineEmits<{
     :style="{
       width: item.width * scale + 'px',
       height: item.height * scale + 'px',
-      transform: `translate(${(isDragging ? (dragX ?? 0) : item.x) * scale}px, ${(isDragging ? (dragY ?? 0) : item.y) * scale}px)`,
+      transform: `translate(${(isDragging ? (dragX ?? 0) : item.x) * scale}px, ${(ROOM_HEIGHT - (isDragging ? (dragY ?? 0) : item.y) - item.height) * scale}px)`,
     }"
     @mousedown.stop="item.kind !== 'WALL' ? emit('mousedown', $event, item.id) : null"
     @mouseenter="item.kind !== 'WALL' ? emit('mouseenter', item) : null"

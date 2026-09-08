@@ -147,7 +147,7 @@ export function isPartCompatibleWithSlot<K extends PartKind>(
 ): part is PartOfKind<K> {
   if (part.kind !== slot.acceptsKind) return false
   if (Array.isArray(slot.socketTag)) {
-    return slot.socketTag.includes(part.socketTag as any)
+    return slot.socketTag.includes(part.socketTag as string)
   }
   return part.socketTag === slot.socketTag
 }

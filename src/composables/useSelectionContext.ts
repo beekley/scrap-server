@@ -86,7 +86,7 @@ export function useSelectionContext() {
     const jobContext = isRunningJob.value ? activeJob.value : selectedJob.value
     if (!jobContext) return null
     try {
-      // @ts-ignore
+      // @ts-expect-error ignore type
       return calculateComputeDetails(selectedServer.value as ServerNode, jobContext as Job, gameStore.serverTemps)
     } catch {
       return null
@@ -95,13 +95,13 @@ export function useSelectionContext() {
 
   const serverTemp = computed(() => {
     if (!selectedServer.value) return 25
-    // @ts-ignore
+    // @ts-expect-error ignore type
     return gameStore.serverTemps[selectedServer.value.id] || 25
   })
 
   const operatingLimits = computed(() => {
     if (!selectedServer.value) return { maxOperatingTemp: 85, criticalTemp: 105 }
-    // @ts-ignore
+    // @ts-expect-error ignore type
     return getServerOperatingLimits(selectedServer.value as ServerNode)
   })
 

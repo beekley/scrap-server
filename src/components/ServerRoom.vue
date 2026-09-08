@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useGameStore } from '../stores/game'
-import type { Part, ServerNode, Decoration } from '../types'
+import type { Part, ServerNode } from '../types'
+import type { RoomRect } from '../utils/physics'
 import { useDraggable } from '../composables/useDraggable'
 import { usePanZoom } from '../composables/usePanZoom'
 import {
   ROOM_WIDTH,
   ROOM_HEIGHT,
-  type RoomRect,
   OUTSIDE_LEFT_WIDTH,
   OUTSIDE_RIGHT_WIDTH,
   STORAGE_UNIT_START_X,
@@ -148,7 +148,7 @@ const { draggedItemId, dragX, dragY, isDragValid, handleMouseDown } = useDraggab
   isViewingOutside: computed(() => gameStore.isViewingOutside),
 })
 
-function onMouseHover(item: any) {
+function onMouseHover(item: RoomItem) {
   hoveredItem.value = item
 }
 function onMouseLeave() {
@@ -173,13 +173,6 @@ function getCellColor(temp: number): string {
 }
 
 
-const hoveredNote = ref<Decoration | null>(null)
-function onNoteHover(note: Decoration) {
-  hoveredNote.value = note
-}
-function onNoteLeave() {
-  hoveredNote.value = null
-}
 </script>
 
 <template>
@@ -252,7 +245,7 @@ function onNoteLeave() {
                 style="position: absolute; pointer-events: auto;"
                 :style="{
                   left: (c * GRID_CELL_SIZE * SCALE) + 'px',
-                  top: (r * GRID_CELL_SIZE * SCALE) + 'px',
+                  bottom: (r * GRID_CELL_SIZE * SCALE) + 'px',
                   width: (GRID_CELL_SIZE * SCALE) + 'px',
                   height: (GRID_CELL_SIZE * SCALE) + 'px',
                   backgroundColor: getCellColor(temp)

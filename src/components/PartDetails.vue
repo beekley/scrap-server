@@ -66,7 +66,7 @@ const asFan = computed(() => (props.displayedPart?.kind === 'FAN' ? props.displa
       <legend>Attached Components</legend>
       <PartSlots
         :slots="displayedPart.slots"
-        :serverNode="parentServer as ServerNode | undefined"
+        :serverNode="parentServer || undefined"
         :isRunningJob="!!isRunningJob"
       />
     </fieldset>

@@ -3,14 +3,9 @@ import { useGameStore } from '../stores/game'
 import { formatGB, formatMB, formatOps } from '../utils/formatting'
 import TelemetryDashboard from './TelemetryDashboard.vue'
 import type { ServerNode, Job } from '../types'
-import { useSelectionContext } from '../composables/useSelectionContext'
-
 const gameStore = useGameStore()
 
-// We can either pass these as props or just use the composable directly in the child.
-// For Vue best practices, presentation components should ideally receive props.
-// Let's receive props to keep it functional, except for global game actions.
-const props = defineProps<{
+defineProps<{
   selectedServer: ServerNode
   selectedJob: Job | null
   activeJob: Job | null
@@ -28,8 +23,8 @@ const props = defineProps<{
   usedStorage: number
   totalStorage: number
   storagePercent: string | number
-  serverTelemetry: any
-  telemetry: any
+  serverTelemetry: unknown
+  telemetry: unknown
   serverTemp: number
   operatingLimits: { maxOperatingTemp: number; criticalTemp: number }
 }>()

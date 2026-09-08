@@ -3,8 +3,9 @@ import { ref } from 'vue'
 import SimpleChart from './SimpleChart.vue'
 import { useGameStore } from '../stores/game'
 
-const props = defineProps<{
-  serverTelemetry: any
+defineProps<{
+  telemetry: unknown
+  serverTelemetry: unknown
 }>()
 
 const gameStore = useGameStore()

@@ -300,92 +300,112 @@ export function getJobProgress(job: Job): number {
  * Advances a running job by a time increment dt.
  * Mutates job state and returns tick results.
  */
+export interface PureJobTickResult {
+  newJob: Job
+  result: JobTickResult
+}
+
+/**
+ * Advances a running job by a time increment dt.
+ * Pure function: returns a new Job state and tick results.
+ */
 export function tickJob(
   job: Job,
   serverOrServers: ServerNode | ServerNode[],
   dt: Time,
   serverTemps?: Record<string, number>,
-): JobTickResult {
-  if (job.status === 'NOT_STARTED') {
-    job.status = 'LOADING'
+): PureJobTickResult {
+  const newJob = { ...job }
+
+  if (newJob.status === 'NOT_STARTED') {
+    newJob.status = 'LOADING'
   }
 
-  if (job.status === 'COMPLETED') {
+  if (newJob.status === 'COMPLETED') {
     return {
-      progress: 1.0,
-      isCompleted: true,
-      currentPhase: 'COMPLETED',
-      rate: 0,
+      newJob,
+      result: {
+        progress: 1.0,
+        isCompleted: true,
+        currentPhase: 'COMPLETED',
+        rate: 0,
+      }
     }
   }
 
-  if (!canServerRunJob(serverOrServers, job)) {
+  if (!canServerRunJob(serverOrServers, newJob)) {
     return {
-      progress: getJobProgress(job),
-      isCompleted: false,
-      currentPhase: job.status,
-      rate: 0,
+      newJob,
+      result: {
+        progress: getJobProgress(newJob),
+        isCompleted: false,
+        currentPhase: newJob.status,
+        rate: 0,
+      }
     }
   }
 
   let rate = 0
 
   // Phase 1: LOADING
-  if (job.status === 'LOADING') {
-    if (job.downloadSize.value <= 0 || job.downloadedBytes.gte(job.downloadSize)) {
-      job.downloadedBytes = job.downloadSize
-      job.status = 'COMPUTING'
+  if (newJob.status === 'LOADING') {
+    if (newJob.downloadSize.value <= 0 || newJob.downloadedBytes.gte(newJob.downloadSize)) {
+      newJob.downloadedBytes = newJob.downloadSize
+      newJob.status = 'COMPUTING'
     } else {
       const storageBw = calculateTotalStorageBandwidth(serverOrServers)
       rate = storageBw.value
       const bytesThisTick = storageBw.times(dt)
-      job.downloadedBytes = job.downloadedBytes.plus(bytesThisTick)
-      if (job.downloadedBytes.gte(job.downloadSize)) {
-        job.downloadedBytes = job.downloadSize
-        job.status = 'COMPUTING'
+      newJob.downloadedBytes = newJob.downloadedBytes.plus(bytesThisTick)
+      if (newJob.downloadedBytes.gte(newJob.downloadSize)) {
+        newJob.downloadedBytes = newJob.downloadSize
+        newJob.status = 'COMPUTING'
       }
     }
   }
 
   // Phase 2: COMPUTING
-  if (job.status === 'COMPUTING') {
-    if (job.operationsRequired.value <= 0 || job.workCompleted.gte(job.operationsRequired)) {
-      job.workCompleted = job.operationsRequired
-      job.status = 'SAVING'
+  if (newJob.status === 'COMPUTING') {
+    if (newJob.operationsRequired.value <= 0 || newJob.workCompleted.gte(newJob.operationsRequired)) {
+      newJob.workCompleted = newJob.operationsRequired
+      newJob.status = 'SAVING'
     } else {
-      const effectiveRate = calculateEffectiveComputeRate(serverOrServers, job, serverTemps)
+      const effectiveRate = calculateEffectiveComputeRate(serverOrServers, newJob, serverTemps)
       rate = effectiveRate.value
       const opsThisTick = effectiveRate.times(dt)
-      job.workCompleted = job.workCompleted.plus(opsThisTick)
-      if (job.workCompleted.gte(job.operationsRequired)) {
-        job.workCompleted = job.operationsRequired
-        job.status = 'SAVING'
+      newJob.workCompleted = newJob.workCompleted.plus(opsThisTick)
+      if (newJob.workCompleted.gte(newJob.operationsRequired)) {
+        newJob.workCompleted = newJob.operationsRequired
+        newJob.status = 'SAVING'
       }
     }
   }
 
   // Phase 3: SAVING
-  if (job.status === 'SAVING') {
-    if (job.uploadSize.value <= 0 || job.uploadedBytes.gte(job.uploadSize)) {
-      job.uploadedBytes = job.uploadSize
-      job.status = 'COMPLETED'
+  if (newJob.status === 'SAVING') {
+    if (newJob.uploadSize.value <= 0 || newJob.uploadedBytes.gte(newJob.uploadSize)) {
+      newJob.uploadedBytes = newJob.uploadSize
+      newJob.status = 'COMPLETED'
     } else {
       const storageBw = calculateTotalStorageBandwidth(serverOrServers)
       rate = storageBw.value
       const bytesThisTick = storageBw.times(dt)
-      job.uploadedBytes = job.uploadedBytes.plus(bytesThisTick)
-      if (job.uploadedBytes.gte(job.uploadSize)) {
-        job.uploadedBytes = job.uploadSize
-        job.status = 'COMPLETED'
+      newJob.uploadedBytes = newJob.uploadedBytes.plus(bytesThisTick)
+      if (newJob.uploadedBytes.gte(newJob.uploadSize)) {
+        newJob.uploadedBytes = newJob.uploadSize
+        newJob.status = 'COMPLETED'
       }
     }
   }
 
   return {
-    progress: getJobProgress(job),
-    isCompleted: job.status === 'COMPLETED',
-    currentPhase: job.status,
-    rate,
+    newJob,
+    result: {
+      progress: getJobProgress(newJob),
+      isCompleted: newJob.status === 'COMPLETED',
+      currentPhase: newJob.status,
+      rate,
+    }
   }
 }
 

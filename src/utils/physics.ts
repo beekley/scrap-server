@@ -1,11 +1,5 @@
-export const OUTSIDE_LEFT_WIDTH = 100
-export const STORAGE_UNIT_WIDTH = 120
-export const OUTSIDE_RIGHT_WIDTH = 100
-export const ROOM_WIDTH = OUTSIDE_LEFT_WIDTH + STORAGE_UNIT_WIDTH + OUTSIDE_RIGHT_WIDTH
-export const ROOM_HEIGHT = 180
-
-export const STORAGE_UNIT_START_X = OUTSIDE_LEFT_WIDTH
-export const STORAGE_UNIT_END_X = OUTSIDE_LEFT_WIDTH + STORAGE_UNIT_WIDTH
+export * from '../constants/room'
+import { ROOM_WIDTH, ROOM_HEIGHT, STORAGE_UNIT_START_X, STORAGE_UNIT_END_X } from '../constants/room'
 
 export function isItemOutside(x: number, width: number): boolean {
   return x + width <= STORAGE_UNIT_START_X || x >= STORAGE_UNIT_END_X
@@ -60,7 +54,7 @@ export function isSupported(
   items: RoomRect[],
   isViewingOutside: boolean = false,
 ): boolean {
-  if (y + height >= ROOM_HEIGHT) return true
+  if (y <= 0) return true // y=0 is the floor
 
   const draggedItem = items.find((i) => i.id === ignoreId)
   const isDecoration =
@@ -75,7 +69,7 @@ export function isSupported(
   const centerX = x + width / 2
   for (const other of items) {
     if (other.id === ignoreId) continue
-    if (y + height === other.y && centerX >= other.x && centerX <= other.x + other.width) {
+    if (y === other.y + other.height && centerX >= other.x && centerX <= other.x + other.width) {
       return true
     }
   }
@@ -104,7 +98,7 @@ export function isSupportingAnotherObject(itemId: string, items: RoomRect[]): bo
 
   for (const other of items) {
     if (other.id === item.id) continue
-    if (other.y + other.height === item.y) {
+    if (other.y === item.y + item.height) {
       const overlapX = other.x < item.x + item.width && other.x + other.width > item.x
       if (overlapX) {
         return true
@@ -123,20 +117,20 @@ export function findValidDropLocation(
   maxX: number = ROOM_WIDTH,
 ): { x: number; y: number } {
   let bestX = minX
-  let bestY = -1
+  let bestY = Infinity
 
   for (let x = minX; x <= maxX - width; x += 5) {
-    let y = ROOM_HEIGHT - height
-    while (y >= 0 && !isValidPlacement(x, y, width, height, ignoreId, items, maxX)) {
-      y--
+    let y = 0
+    while (y <= ROOM_HEIGHT - height && !isValidPlacement(x, y, width, height, ignoreId, items, maxX)) {
+      y++
     }
-    if (y > bestY) {
+    if (y < bestY) {
       bestY = y
       bestX = x
-      if (bestY === ROOM_HEIGHT - height) break
+      if (bestY === 0) break
     }
   }
 
-  if (bestY >= 0) return { x: bestX, y: bestY }
+  if (bestY !== Infinity) return { x: bestX, y: bestY }
   return { x: minX, y: 0 }
 }

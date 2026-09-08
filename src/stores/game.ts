@@ -36,32 +36,12 @@ import {
 } from '../utils/physics'
 import { autoAssembleRewards } from '../utils/assembly'
 
+import { createStarterServer, initialDecorations } from '../data/initialState'
+import { SIMULATION } from '../constants/simulation'
+import { processAutoSellPure, calculatePowerCost, chargePower } from '../utils/tick'
+import { generateTelemetryData } from '../utils/telemetry'
+
 export const useGameStore = defineStore('game', () => {
-  function createStarterServer(): ServerNode {
-    const c = getPartTemplate('case_techmaker_atx')
-    const mb = getPartTemplate('mb_techmaker_am2')
-    const cpu = getPartTemplate('cpu_acc_titan_legacy_4200')
-    const ram = getPartTemplate('ram_techmaker_512mb')
-    const hdd = getPartTemplate('hdd_techmaker_250gb')
-    const psu = getPartTemplate('psu_techmaker_300w')
-    const fan = getPartTemplate('fan_basic_120mm')
-
-    // Wire up slots
-    c.slots![0]!.installedPartId = mb.id
-    c.slots![1]!.installedPartId = fan.id
-    mb.slots!.find((s) => s.id === 'cpu_0')!.installedPartId = cpu.id
-    mb.slots!.find((s) => s.id === 'ram_0')!.installedPartId = ram.id
-    mb.slots!.find((s) => s.id === 'sata_0')!.installedPartId = hdd.id
-    mb.slots!.find((s) => s.id === 'psu_0')!.installedPartId = psu.id
-
-    return {
-      id: 'server_01',
-      name: 'Scrap Node 1',
-      installedParts: [c, mb, cpu, ram, hdd, psu, fan],
-      x: STORAGE_UNIT_START_X + 20,
-      y: ROOM_HEIGHT - c.height, // Placed directly on the floor
-    }
-  }
 
   const isDebug =
     typeof window !== 'undefined' &&
@@ -117,20 +97,7 @@ export const useGameStore = defineStore('game', () => {
   const gameSpeed = ref<number>(1) // 0 (paused), 1 (1x), 4 (4x), 16 (16x), 64 (64x)
 
   const isViewingOutside = ref<boolean>(true)
-  const decorations = ref<Decoration[]>([
-    {
-      id: 'tut_note_1',
-      name: 'Welcome!',
-      type: 'NOTE',
-      content:
-        "Hey kid, heard you're looking to run some compute. Here's a junker case and some old DDR3 to get you started. Hook it up and check the local intranet for jobs. - Uncle Dave\n\nP.S. I leave items outside the unit to be sold by the scrapper at 6 AM. Deliveries arrive at 8 AM.",
-      x: STORAGE_UNIT_START_X + 40,
-      y: 40,
-      width: 21,
-      height: 30,
-      attachedToDoor: true,
-    },
-  ])
+  const decorations = ref<Decoration[]>([...initialDecorations])
 
   interface TimeseriesData {
     time: number[]
@@ -402,55 +369,37 @@ export const useGameStore = defineStore('game', () => {
     return totalValue * 0.25 // 25% of base value
   })
 
+
+
   function processAutoSell() {
-    let totalValue = 0
-
-    // Remove servers in outside zone
-    for (let i = servers.value.length - 1; i >= 0; i--) {
-      const server = servers.value[i]
-      if (!server) continue
-      const casePart = server.installedParts.find((p) => p.kind === 'CASE')
-      if (server.x !== undefined && casePart && isItemOutside(server.x, casePart.width)) {
-        for (const part of server.installedParts) {
-          totalValue += part.value.value
-        }
-        servers.value.splice(i, 1)
-      }
-    }
-
-    // Remove inventory parts in outside zone
-    for (let i = inventory.value.length - 1; i >= 0; i--) {
-      const part = inventory.value[i]
-      if (part && part.x !== undefined && isItemOutside(part.x, part.width)) {
-        totalValue += part.value.value
-        inventory.value.splice(i, 1)
-      }
-    }
-
-    const earned = totalValue * 0.25
-    if (earned > 0) {
-      etc.value = u.Measure.of(etc.value.value + earned, ETC)
-    }
+    const { newServers, newInventory, newEtc } = processAutoSellPure(
+      servers.value,
+      inventory.value,
+      etc.value,
+      SIMULATION.AUTO_SELL_MULTIPLIER
+    )
+    servers.value = newServers
+    inventory.value = newInventory
+    etc.value = newEtc
   }
 
   function toggleOutsideView() {
     isViewingOutside.value = !isViewingOutside.value
   }
 
-  function tick(dtSeconds: number = 6) {
+  function tick(dtSeconds: number = SIMULATION.TICK_GAME_SECONDS) {
     const oldTime = gameTimeSeconds.value
     gameTimeSeconds.value += dtSeconds
     const newTime = gameTimeSeconds.value
 
-    const dayLength = 86400
-    const newDay = Math.floor(newTime / dayLength)
+    const newDay = Math.floor(newTime / SIMULATION.DAY_LENGTH_SECONDS)
 
-    const sixAmTime = newDay * dayLength + 6 * 3600
+    const sixAmTime = newDay * SIMULATION.DAY_LENGTH_SECONDS + SIMULATION.SALE_TIME_SECONDS
     if (oldTime < sixAmTime && newTime >= sixAmTime) {
       processAutoSell()
     }
 
-    const eightAmTime = newDay * dayLength + 8 * 3600
+    const eightAmTime = newDay * SIMULATION.DAY_LENGTH_SECONDS + SIMULATION.DELIVERY_TIME_SECONDS
     if (oldTime < eightAmTime && newTime >= eightAmTime) {
       if (pendingRewardPartIds.value.length > 0) {
         const { newServers, leftoverParts } = autoAssembleRewards(
@@ -459,7 +408,7 @@ export const useGameStore = defineStore('game', () => {
           getRoomItems,
           findValidDropLocation,
           0,
-          OUTSIDE_LEFT_WIDTH, // Drop rewards in the left outside zone
+          OUTSIDE_LEFT_WIDTH,
         )
 
         servers.value.push(...newServers)
@@ -471,7 +420,6 @@ export const useGameStore = defineStore('game', () => {
       completedJobs.value = []
     }
 
-    // Power and Telemetry calculation
     let totalWatts = 0
     const serverWattsMap: Record<string, number> = {}
 
@@ -494,13 +442,6 @@ export const useGameStore = defineStore('game', () => {
       const runningJob = activeJobs.value.find((j) => j.serverNodeIds?.includes(server.id))
       const serverPower = serverWattsMap[server.id]
 
-      let cpuPercent = 0
-      let ramPercent = 0
-      let swapGb = 0
-      let ramThroughputPercent = 0
-      let storageThroughputPercent = 0
-
-      // Check for crashes
       const { criticalTemp } = getServerOperatingLimits(server as ServerNode)
       if ((serverTemps.value[server.id] ?? 25) >= criticalTemp) {
         if (runningJob) {
@@ -508,70 +449,7 @@ export const useGameStore = defineStore('game', () => {
         }
       }
 
-      if (runningJob && (serverTemps.value[server.id] ?? 25) < criticalTemp) {
-        const details = calculateComputeDetails(
-          server as ServerNode,
-          runningJob as Job,
-          serverTemps.value,
-        )
-
-        let totalRam = 0
-        let ramTotalThroughput = 0
-        let storageTotalThroughput = 0
-
-        for (const part of server.installedParts) {
-          if (part.kind === 'RAM') {
-            totalRam += (part as any).memoryCapacity?.value || 0
-            ramTotalThroughput += (part as any).ioBandwidth?.value || 0
-          } else if (part.kind === 'STORAGE' || part.kind === 'STORAGE_DEVICE') {
-            storageTotalThroughput += (part as any).ioBandwidth?.value || 0
-          }
-        }
-
-        let usedRam = 0
-
-        if (details.workingSetAllocation) {
-          for (const alloc of details.workingSetAllocation) {
-            if (alloc.part.kind === 'RAM') {
-              usedRam += alloc.allocatedStorage.value
-            } else {
-              swapGb += alloc.allocatedStorage.value / 1e9
-            }
-          }
-        }
-
-        if (totalRam > 0) ramPercent = (usedRam / totalRam) * 100
-
-        if (runningJob.status === 'LOADING' || runningJob.status === 'SAVING') {
-          storageThroughputPercent = 100
-        } else if (runningJob.status === 'COMPUTING') {
-          const totalCpu = details.totalCpuCompute.value
-          const usedCpu = details.effectiveComputeRate.value
-          if (totalCpu > 0) cpuPercent = (usedCpu / totalCpu) * 100
-
-          let ramUsedThroughput = 0
-          let storageUsedThroughput = 0
-
-          if (details.workingSetAllocation) {
-            const actualThroughputBytes =
-              details.effectiveComputeRate.value * runningJob.memoryAccessPerOp.value
-
-            for (const alloc of details.workingSetAllocation) {
-              const usedBw = actualThroughputBytes * alloc.fraction
-              if (alloc.part.kind === 'RAM') {
-                ramUsedThroughput += usedBw
-              } else {
-                storageUsedThroughput += usedBw
-              }
-            }
-          }
-
-          if (ramTotalThroughput > 0)
-            ramThroughputPercent = (ramUsedThroughput / ramTotalThroughput) * 100
-          if (storageTotalThroughput > 0)
-            storageThroughputPercent = (storageUsedThroughput / storageTotalThroughput) * 100
-        }
-      }
+      const telemetry = generateTelemetryData(server as ServerNode, runningJob, serverTemps.value, criticalTemp)
 
       if (!telemetryHistory.value[server.id]) {
         telemetryHistory.value[server.id] = {
@@ -585,29 +463,24 @@ export const useGameStore = defineStore('game', () => {
           temp: [],
         }
       }
+      
       const history = telemetryHistory.value[server.id]!
       history.time.push(gameTimeSeconds.value)
       history.power.push(serverPower ?? 0)
-      history.cpu.push(cpuPercent)
-      history.ram.push(ramPercent)
-      history.swap.push(swapGb)
-      history.ramThroughput.push(ramThroughputPercent)
-      history.storageThroughput.push(storageThroughputPercent)
+      history.cpu.push(telemetry.cpuPercent)
+      history.ram.push(telemetry.ramPercent)
+      history.swap.push(telemetry.swapGb)
+      history.ramThroughput.push(telemetry.ramThroughputPercent)
+      history.storageThroughput.push(telemetry.storageThroughputPercent)
       history.temp.push(serverTemps.value[server.id] ?? 25)
     }
 
     currentPowerDraw.value = u.Measure.of(totalWatts, W)
 
-    const kwh = (totalWatts / 1000) * (dtSeconds / 3600)
-    const cost = kwh * 0.0001
-
-    if (etc.value.value >= cost) {
-      etc.value = u.Measure.of(etc.value.value - cost, ETC)
-      outOfPower.value = false
-    } else {
-      etc.value = u.Measure.of(0, ETC)
-      outOfPower.value = true
-    }
+    const cost = calculatePowerCost(totalWatts, dtSeconds, SIMULATION.COST_PER_KWH_ETC)
+    const { newEtc, outOfPower: newOutOfPower } = chargePower(etc.value, cost)
+    etc.value = newEtc
+    outOfPower.value = newOutOfPower
 
     if (!outOfPower.value) {
       for (let i = activeJobs.value.length - 1; i >= 0; i--) {
@@ -617,19 +490,19 @@ export const useGameStore = defineStore('game', () => {
           const server = servers.value.find((s) => s.id === serverId)
           if (server) {
             const dt = u.Measure.of(dtSeconds, s)
-            const result = tickJob(job as Job, server as ServerNode, dt, serverTemps.value)
+            const { newJob, result } = tickJob(job as Job, server as ServerNode, dt, serverTemps.value)
+
+            activeJobs.value[i] = newJob
 
             if (result.isCompleted) {
-              // Payout - queue up rewards
-              pendingRewardPartIds.value.push(...job.rewardPartIds)
+              pendingRewardPartIds.value.push(...newJob.rewardPartIds)
 
-              // Remove old job and replace with new one
-              const oldJobIndex = availableJobs.value.findIndex((j) => j.id === job.id)
+              const oldJobIndex = availableJobs.value.findIndex((j) => j.id === newJob.id)
               if (oldJobIndex !== -1) {
                 availableJobs.value.splice(oldJobIndex, 1, generateProceduralJob())
               }
 
-              completedJobs.value.push(job)
+              completedJobs.value.push(newJob)
               activeJobs.value.splice(i, 1)
             }
           }

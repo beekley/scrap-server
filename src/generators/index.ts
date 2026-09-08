@@ -46,7 +46,7 @@ function getPartsByRarity(kind: PartKind, rarity: Rarity): Part[] {
 
 function getCompatiblePartsByRarity(kind: PartKind, rarity: Rarity, socketTag: string | string[]): Part[] {
   return parts.filter(
-    (p: Part) => p.kind === kind && p.rarity === rarity && (Array.isArray(socketTag) ? socketTag.includes(p.socketTag as any) : p.socketTag === socketTag),
+    (p: Part) => p.kind === kind && p.rarity === rarity && (Array.isArray(socketTag) ? socketTag.includes(p.socketTag as string) : p.socketTag === socketTag),
   )
 }
 
@@ -96,7 +96,7 @@ export function generateServerReward(rarity: Rarity): { description: string; par
       } else {
         // Fallback to any compatible part
         const anyCompatible = parts.filter(
-          (p: Part) => p.kind === slot.acceptsKind && (Array.isArray(slot.socketTag) ? slot.socketTag.includes(p.socketTag as any) : p.socketTag === slot.socketTag),
+          (p: Part) => p.kind === slot.acceptsKind && (Array.isArray(slot.socketTag) ? slot.socketTag.includes(p.socketTag as string) : p.socketTag === slot.socketTag),
         )
         if (anyCompatible.length > 0) {
           const selected = pickRandomElement(anyCompatible)

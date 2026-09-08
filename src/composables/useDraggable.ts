@@ -52,6 +52,9 @@ export function useDraggable(roomItems: Ref<RoomRect[]>, config: DragConfig) {
 
   function handleMouseMove(e: MouseEvent) {
     if (!draggedItemId.value) return
+    const item = roomItems.value.find((i) => i.id === draggedItemId.value)
+    if (!item) return
+    
     const container = document.getElementById('server-room-canvas') || document.getElementById('server-room-container')
     if (!container) return
 
@@ -60,7 +63,9 @@ export function useDraggable(roomItems: Ref<RoomRect[]>, config: DragConfig) {
     const rawY = e.clientY - rect.top - dragOffsetY.value
 
     dragX.value = Math.round(rawX / config.scale.value)
-    dragY.value = Math.round(rawY / config.scale.value)
+    
+    const topDownLogicalY = Math.round(rawY / config.scale.value)
+    dragY.value = ROOM_HEIGHT - item.height - topDownLogicalY
   }
 
   const isDragValid = computed(() => {
@@ -82,11 +87,11 @@ export function useDraggable(roomItems: Ref<RoomRect[]>, config: DragConfig) {
     let fallY = finalY
     if (isEmptySpace(finalX, fallY, item.width, item.height, item.id, roomItems.value, maxWidth, config.isViewingOutside?.value)) {
       while (
-        fallY < ROOM_HEIGHT - item.height &&
+        fallY > 0 &&
         !isSupported(finalX, fallY, item.width, item.height, item.id, roomItems.value, config.isViewingOutside?.value) &&
-        isEmptySpace(finalX, fallY + 1, item.width, item.height, item.id, roomItems.value, maxWidth, config.isViewingOutside?.value)
+        isEmptySpace(finalX, fallY - 1, item.width, item.height, item.id, roomItems.value, maxWidth, config.isViewingOutside?.value)
       ) {
-        fallY++
+        fallY--
       }
     }
 
@@ -94,7 +99,7 @@ export function useDraggable(roomItems: Ref<RoomRect[]>, config: DragConfig) {
       !isValidPlacement(finalX, fallY, item.width, item.height, item.id, roomItems.value, maxWidth, config.isViewingOutside?.value)
     ) {
       let foundValid = false
-      for (let y = ROOM_HEIGHT - item.height; y >= 0; y--) {
+      for (let y = 0; y <= ROOM_HEIGHT - item.height; y++) {
         if (
           isValidPlacement(finalX, y, item.width, item.height, item.id, roomItems.value, maxWidth, config.isViewingOutside?.value)
         ) {
@@ -129,11 +134,11 @@ export function useDraggable(roomItems: Ref<RoomRect[]>, config: DragConfig) {
     let fallY = finalY
     if (isEmptySpace(finalX, fallY, item.width, item.height, item.id, roomItems.value, maxWidth, config.isViewingOutside?.value)) {
       while (
-        fallY < ROOM_HEIGHT - item.height &&
+        fallY > 0 &&
         !isSupported(finalX, fallY, item.width, item.height, item.id, roomItems.value, config.isViewingOutside?.value) &&
-        isEmptySpace(finalX, fallY + 1, item.width, item.height, item.id, roomItems.value, maxWidth, config.isViewingOutside?.value)
+        isEmptySpace(finalX, fallY - 1, item.width, item.height, item.id, roomItems.value, maxWidth, config.isViewingOutside?.value)
       ) {
-        fallY++
+        fallY--
       }
     }
 
@@ -141,7 +146,7 @@ export function useDraggable(roomItems: Ref<RoomRect[]>, config: DragConfig) {
       !isValidPlacement(finalX, fallY, item.width, item.height, item.id, roomItems.value, maxWidth, config.isViewingOutside?.value)
     ) {
       let foundValid = false
-      for (let y = ROOM_HEIGHT - item.height; y >= 0; y--) {
+      for (let y = 0; y <= ROOM_HEIGHT - item.height; y++) {
         if (
           isValidPlacement(finalX, y, item.width, item.height, item.id, roomItems.value, maxWidth, config.isViewingOutside?.value)
         ) {

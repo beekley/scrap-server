@@ -2,7 +2,7 @@
 import { useGameStore } from '../stores/game'
 import { useWindowDrag } from '../composables/useWindowDrag'
 import { useSelectionContext } from '../composables/useSelectionContext'
-import type { ServerNode, Job, Part } from '../types'
+import type { ServerNode } from '../types'
 
 import ServerNodeDetails from './ServerNodeDetails.vue'
 import PartDetails from './PartDetails.vue'
@@ -29,8 +29,8 @@ const ctx = useSelectionContext()
       <div v-if="ctx.selectedServer.value" style="display: flex; flex-direction: column; gap: 10px;">
         <ServerNodeDetails
           :selectedServer="ctx.selectedServer.value as ServerNode"
-          :selectedJob="ctx.selectedJob.value as Job | null"
-          :activeJob="ctx.activeJob.value as Job | null"
+          :selectedJob="ctx.selectedJob.value"
+          :activeJob="ctx.activeJob.value"
           :canRunJob="ctx.canRunJob?.value ?? false"
           :isServerComplete="ctx.isServerComplete.value"
           :isRunningJob="ctx.isRunningJob.value"
@@ -64,8 +64,8 @@ const ctx = useSelectionContext()
         </div>
         
         <PartDetails
-          :displayedPart="ctx.displayedPart.value as Part"
-          :parentServer="ctx.parentServer.value as ServerNode | null"
+          :displayedPart="ctx.displayedPart.value"
+          :parentServer="ctx.parentServer.value"
           :isRunningJob="ctx.isRunningJob.value"
         />
       </div>

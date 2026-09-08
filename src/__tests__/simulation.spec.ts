@@ -468,14 +468,14 @@ describe('Simulation Engine & Job Execution Logic', () => {
 
       // 1 tick = 5 seconds
       const dt5s = u.Measure.of(5, s)
-      const result = tickJob(job, standardServer, dt5s)
+      const { newJob, result } = tickJob(job, standardServer, dt5s)
 
       // 50 op/s * 5s = 250 ops completed
 
-      expect(job.workCompleted.value).toBe(250)
+      expect(newJob.workCompleted.value).toBe(250)
       expect(result.progress).toBe(0.5)
       expect(result.isCompleted).toBe(false)
-      expect(getJobProgress(job)).toBe(0.5)
+      expect(getJobProgress(newJob)).toBe(0.5)
     })
 
     it('should complete a job and clamp progress at 100% when operationsRequired is reached', () => {
@@ -500,12 +500,12 @@ describe('Simulation Engine & Job Execution Logic', () => {
 
       // 1 tick = 10 seconds -> 50 op/s * 10s = 500 ops (more than 100 remaining)
       const dt10s = u.Measure.of(10, s)
-      const result = tickJob(job, standardServer, dt10s)
+      const { newJob, result } = tickJob(job, standardServer, dt10s)
 
-      expect(job.workCompleted.value).toBe(500)
+      expect(newJob.workCompleted.value).toBe(500)
       expect(result.progress).toBe(1.0)
       expect(result.isCompleted).toBe(true)
-      expect(getJobProgress(job)).toBe(1.0)
+      expect(getJobProgress(newJob)).toBe(1.0)
     })
 
     it('should perform no work if the job is already completed', () => {
@@ -529,10 +529,36 @@ describe('Simulation Engine & Job Execution Logic', () => {
       }
 
       const dt10s = u.Measure.of(10, s)
-      const result = tickJob(job, standardServer, dt10s)
+      const { newJob, result } = tickJob(job, standardServer, dt10s)
 
       expect(result.progress).toBe(1.0)
       expect(result.isCompleted).toBe(true)
+    })
+
+    it('should accurately report completion rate in JobTickResult', () => {
+      const job: Job = {
+        id: 'job_01',
+        title: 'Job',
+        description: 'Job',
+        operationsRequired: u.Measure.of(500, ops),
+        totalSize: u.Measure.of(10, GB),
+        workingSetSize: u.Measure.of(1, GB),
+        memoryAccessPerOp: u.Measure.of(0.2, megabytesPerOp),
+        rewardDescription: 'Some reward',
+        rarity: 'COMMON',
+        rewardPartIds: [],
+        status: 'COMPUTING',
+        downloadSize: u.Measure.of(0, B),
+        downloadedBytes: u.Measure.of(0, B),
+        uploadSize: u.Measure.of(0, B),
+        uploadedBytes: u.Measure.of(0, B),
+        workCompleted: u.Measure.of(0, ops),
+      }
+
+      const dt1s = u.Measure.of(1, s)
+      const { newJob, result } = tickJob(job, standardServer, dt1s)
+
+      expect(result.rate).toBe(50) // 50 ops / second
     })
 
     it('should perform no work if the server cannot run the job', () => {
@@ -555,16 +581,18 @@ describe('Simulation Engine & Job Execution Logic', () => {
         rewardPartIds: [],
         status: 'NOT_STARTED',
         downloadSize: u.Measure.of(0, B),
+        status: 'COMPUTING',
+        downloadSize: u.Measure.of(0, B),
         downloadedBytes: u.Measure.of(0, B),
         uploadSize: u.Measure.of(0, B),
         uploadedBytes: u.Measure.of(0, B),
         workCompleted: u.Measure.of(0, ops),
       }
 
-      const result = tickJob(job, invalidServer, u.Measure.of(10, s))
+      const { newJob: activeJob, result } = tickJob(job, invalidServer, u.Measure.of(10, s))
 
       expect(result.isCompleted).toBe(false)
-      expect(job.workCompleted.value).toBe(0)
+      expect(activeJob.workCompleted.value).toBe(0)
     })
   })
 })
